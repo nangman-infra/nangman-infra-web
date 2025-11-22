@@ -1,9 +1,23 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Background() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isSafari, setIsSafari] = useState(false);
+
+  // Detect Safari browser (including iOS Safari and iPad Safari)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    // Detect Safari: Safari exists but Chrome/Chromium doesn't, or iOS/iPadOS
+    const isSafariBrowser = 
+      (/safari/.test(userAgent) && !/chrome/.test(userAgent) && !/chromium/.test(userAgent)) ||
+      /iphone|ipad|ipod/.test(userAgent);
+    
+    setIsSafari(isSafariBrowser);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -84,7 +98,10 @@ export function Background() {
       ctx.fillRect(0, 0, width, height);
 
       // Soft blur for smooth, video-like effect
-      ctx.filter = "blur(80px)";
+      // Safari doesn't support ctx.filter properly, so we'll use CSS filter instead
+      if (!isSafari) {
+        ctx.filter = "blur(80px)";
+      }
       ctx.globalCompositeOperation = "screen";
 
       ribbons.forEach((ribbon, ribbonIndex) => {
@@ -146,7 +163,9 @@ export function Background() {
       });
 
       ctx.globalCompositeOperation = "source-over";
-      ctx.filter = "none";
+      if (!isSafari) {
+        ctx.filter = "none";
+      }
 
       animationFrameId = requestAnimationFrame(draw);
     };
@@ -159,7 +178,7 @@ export function Background() {
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isSafari]);
 
   return (
     <>
@@ -167,9 +186,11 @@ export function Background() {
       <div className="absolute inset-0 z-0 bg-linear-to-b from-black via-[#050505] to-black" />
       
       {/* Canvas for flowing ribbons */}
+      {/* Apply CSS blur for Safari since ctx.filter doesn't work */}
       <canvas 
         ref={canvasRef} 
         className="absolute inset-0 z-1 w-full h-full pointer-events-none"
+        style={isSafari ? { filter: "blur(80px)" } : undefined}
       />
       
       {/* Subtle noise texture */}

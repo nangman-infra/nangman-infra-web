@@ -10,13 +10,18 @@ export function Background() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    // Detect Safari: Safari exists but Chrome/Chromium doesn't, or iOS/iPadOS
-    const isSafariBrowser = 
-      (/safari/.test(userAgent) && !/chrome/.test(userAgent) && !/chromium/.test(userAgent)) ||
-      /iphone|ipad|ipod/.test(userAgent);
+    const detectSafari = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      // Detect Safari: Safari exists but Chrome/Chromium doesn't, or iOS/iPadOS
+      const isSafariBrowser = 
+        (/safari/.test(userAgent) && !/chrome/.test(userAgent) && !/chromium/.test(userAgent)) ||
+        /iphone|ipad|ipod/.test(userAgent);
+      
+      setIsSafari(isSafariBrowser);
+    };
     
-    setIsSafari(isSafariBrowser);
+    // Use requestAnimationFrame to defer state update
+    requestAnimationFrame(detectSafari);
   }, []);
 
   useEffect(() => {

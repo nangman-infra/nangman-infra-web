@@ -7,22 +7,22 @@ export function CurriculumSection() {
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-8 md:space-y-12"
-        >
+        <div className="space-y-8 md:space-y-12">
           {/* Section Title */}
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               학습 커리큘럼
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               기초부터 실무까지 체계적으로 배웁니다
             </p>
-          </div>
+          </motion.div>
 
           {/* Bento Grid Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -30,7 +30,7 @@ export function CurriculumSection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="group relative col-span-1 md:col-span-2 lg:col-span-2 p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
             >
@@ -286,7 +286,7 @@ export function CurriculumSection() {
               </div>
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

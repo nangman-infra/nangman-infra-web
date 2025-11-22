@@ -8,22 +8,22 @@ export function SeniorsSection() {
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-8 md:space-y-12"
-        >
+        <div className="space-y-8 md:space-y-12">
           {/* Section Title */}
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               선배들과 함께합니다
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               AWS, Equinix에서 근무하는 선배들과 함께 성장합니다
             </p>
-          </div>
+          </motion.div>
 
           {/* Seniors Profile Cards - Symmetric Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
@@ -31,7 +31,7 @@ export function SeniorsSection() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               className="group relative p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
             >
@@ -63,7 +63,7 @@ export function SeniorsSection() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="group relative p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
             >
@@ -98,7 +98,7 @@ export function SeniorsSection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="group p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center"
             >
@@ -139,7 +139,7 @@ export function SeniorsSection() {
               </p>
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

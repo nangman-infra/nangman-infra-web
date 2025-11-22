@@ -13,22 +13,22 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-8 md:space-y-12"
-        >
+        <div className="space-y-8 md:space-y-12">
           {/* Section Title */}
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               기술 블로그
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               문제 해결 과정과 기술적 깊이를 기록합니다
             </p>
-          </div>
+          </motion.div>
 
           {/* Blog Posts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -37,7 +37,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                 key={post.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group relative p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
@@ -90,7 +90,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-center pt-4"
           >
@@ -103,7 +103,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

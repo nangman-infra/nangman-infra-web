@@ -6,22 +6,21 @@ export function TechStackSection() {
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center space-y-8 md:space-y-12"
-        >
+        <div className="text-center space-y-8 md:space-y-12">
           {/* Section Title */}
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Our Expertise
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               네트워크, 운영체제, 클라우드부터 모니터링까지
             </p>
-          </div>
+          </motion.div>
 
           {/* Tech Categories Grid - Modern Minimal Design */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -29,7 +28,7 @@ export function TechStackSection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
               className="group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
             >
@@ -126,7 +125,7 @@ export function TechStackSection() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="w-full pt-8 mt-8 border-t border-border/30"
           >
@@ -166,7 +165,7 @@ export function TechStackSection() {
               </div>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

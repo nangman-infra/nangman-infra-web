@@ -274,22 +274,22 @@ export function MonitoringSection() {
   return (
     <section className="relative z-10 w-full px-4 py-16 md:py-20">
       <div className="relative max-w-6xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-10 md:space-y-14"
-        >
+        <div className="space-y-10 md:space-y-14">
           {/* Section Title - More Subtle */}
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
+          >
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
               실시간 모니터링
             </h2>
             <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
               시스템 상태를 실시간으로 확인합니다
             </p>
-          </div>
+          </motion.div>
 
           {/* KPI Cards - Top Row - More Spaced */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -298,7 +298,7 @@ export function MonitoringSection() {
                 key={metric.label}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className={`group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm transition-all duration-500 hover:bg-card/20 hover:border-border/40 ${statusBgColors[metric.status]}`}
               >
@@ -326,7 +326,7 @@ export function MonitoringSection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.4 }}
               className="group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500"
             >
@@ -420,7 +420,7 @@ export function MonitoringSection() {
               </div>
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

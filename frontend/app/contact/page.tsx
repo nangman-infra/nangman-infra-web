@@ -41,13 +41,13 @@ export default function ContactPage() {
           
           <div>
             <h3 className="text-lg font-bold mb-2 text-primary">Email</h3>
-            <p className="text-muted-foreground">contact@nangman.io</p>
+            <p className="text-muted-foreground">contact@nangman.cloud</p>
           </div>
 
           <div className="p-6 rounded-xl bg-primary/5 border border-primary/10">
             <p className="text-sm font-mono">
-              $ ping contact.nangman.io<br/>
-              PING contact.nangman.io (127.0.0.1): 56 data bytes<br/>
+              $ ping contact.nangman.cloud<br/>
+              PING contact.nangman.cloud (127.0.0.1): 56 data bytes<br/>
               64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.042 ms<br/>
               <span className="animate-pulse">_</span>
             </p>

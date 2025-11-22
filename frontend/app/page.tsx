@@ -97,8 +97,8 @@ export default function Home() {
             "@type": "Organization",
             name: "Nangman Infra",
             alternateName: "낭만 인프라",
-            url: "https://nangman.io",
-            logo: "https://nangman.io/icon.png",
+            url: "https://nangman.cloud",
+            logo: "https://nangman.cloud/icon.png",
             description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
             address: {
               "@type": "PostalAddress",
@@ -109,7 +109,7 @@ export default function Home() {
             },
             contactPoint: {
               "@type": "ContactPoint",
-              email: "contact@nangman.io",
+              email: "contact@nangman.cloud",
               contactType: "문의",
             },
             sameAs: [
@@ -125,14 +125,14 @@ export default function Home() {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Nangman Infra",
-            url: "https://nangman.io",
+            url: "https://nangman.cloud",
             description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
             inLanguage: "ko-KR",
             potentialAction: {
               "@type": "SearchAction",
               target: {
                 "@type": "EntryPoint",
-                urlTemplate: "https://nangman.io/search?q={search_term_string}",
+                urlTemplate: "https://nangman.cloud/search?q={search_term_string}",
               },
               "query-input": "required name=search_term_string",
             },

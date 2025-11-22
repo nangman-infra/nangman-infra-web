@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Contact Us | Nangman Infra",
     description: "프로젝트 협업, 채용, 기술 교류 등 언제든 환영합니다. 국립한밭대학교 N5동에서 만나요.",
-    url: "https://nangman.io/contact",
+    url: "https://nangman.cloud/contact",
   },
 };
 

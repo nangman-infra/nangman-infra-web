@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/_next/", "/admin/"],
       },
     ],
-    sitemap: "https://nangman.io/sitemap.xml",
+    sitemap: "https://nangman.cloud/sitemap.xml",
   };
 }
 

@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://nangman.io";
+  const baseUrl = "https://nangman.cloud";
 
   return [
     {

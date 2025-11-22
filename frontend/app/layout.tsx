@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nangman.io"),
+  metadataBase: new URL("https://nangman.cloud"),
   title: {
     default: "Nangman Infra | We Build the Invisible",
     template: "%s | Nangman Infra",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "https://nangman.io",
+    url: "https://nangman.cloud",
     siteName: "Nangman Infra",
     title: "Nangman Infra | We Build the Invisible",
     description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://nangman.io",
+    canonical: "https://nangman.cloud",
   },
 };
 

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Briefcase, GraduationCap, Users } from "lucide-react";
+import { useEffect } from "react";
 
 interface Member {
   name: string;
@@ -70,6 +71,10 @@ const members: Member[] = [
 ];
 
 export default function MembersPage() {
+  useEffect(() => {
+    document.title = "함께하는 사람들 | Nangman Infra";
+  }, []);
+
   const seniors = members.filter((m) => m.category === "senior");
   const students = members.filter((m) => m.category === "student");
 

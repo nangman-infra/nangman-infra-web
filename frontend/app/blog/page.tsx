@@ -1,8 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 export default function BlogPage() {
+  useEffect(() => {
+    document.title = "기술 블로그 | Nangman Infra";
+  }, []);
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 max-w-5xl mx-auto">
       <motion.div

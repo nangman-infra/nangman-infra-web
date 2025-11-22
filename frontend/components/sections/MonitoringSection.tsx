@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Activity, Wifi, AlertCircle, Clock, HardDrive, Cpu, Globe, Network, FileText, Zap, Server } from "lucide-react";
+import { Activity, Wifi, AlertCircle, Clock, Globe, Network, Zap } from "lucide-react";
+
+// NetworkInformation interface for TypeScript
+interface NetworkInformation extends EventTarget {
+  effectiveType?: string;
+  downlink?: number;
+  addEventListener(type: "change", listener: () => void): void;
+  removeEventListener(type: "change", listener: () => void): void;
+}
 
 interface Metric {
   value: string | number;
@@ -44,77 +52,90 @@ export function MonitoringSection() {
 
   // Initialize metrics on mount
   useEffect(() => {
-    // Performance Metrics
-    if (typeof window !== "undefined" && window.performance) {
-      const perfData = window.performance.timing;
-      const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-      
-      // Resource loading metrics
-      const resources = window.performance.getEntriesByType("resource") as PerformanceResourceTiming[];
-      const resourceCount = resources.length;
-      const resourceLoadTime = resources.reduce((sum, resource) => {
-        return sum + (resource.responseEnd - resource.startTime);
-      }, 0) / (resourceCount || 1);
+    // Helper function to get network connection
+    const getNetworkConnection = (): NetworkInformation | null => {
+      if (typeof navigator === "undefined") return null;
+      const nav = navigator as Navigator & {
+        connection?: NetworkInformation;
+        mozConnection?: NetworkInformation;
+        webkitConnection?: NetworkInformation;
+      };
+      return nav.connection || nav.mozConnection || nav.webkitConnection || null;
+    };
 
-      // Render time (DOMContentLoaded to Load)
-      const renderTime = perfData.loadEventEnd - perfData.domContentLoadedEventEnd;
+    // Batch all initial state updates into a single setMetrics call
+    const updateInitialMetrics = () => {
+      const updates: Partial<typeof metrics> = {};
 
-      setMetrics((prev) => ({
-        ...prev,
-        pageLoadTime,
-        resourceLoadTime: Math.round(resourceLoadTime),
-        resourceCount,
-        renderTime: Math.round(renderTime),
-      }));
-    }
+      // Performance Metrics
+      if (typeof window !== "undefined" && window.performance) {
+        const perfData = window.performance.timing;
+        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
+        
+        // Resource loading metrics
+        const resources = window.performance.getEntriesByType("resource") as PerformanceResourceTiming[];
+        const resourceCount = resources.length;
+        const resourceLoadTime = resources.reduce((sum, resource) => {
+          return sum + (resource.responseEnd - resource.startTime);
+        }, 0) / (resourceCount || 1);
 
-    // DOM Size
-    if (typeof document !== "undefined") {
-      const domSize = document.getElementsByTagName("*").length;
-      setMetrics((prev) => ({ ...prev, domSize }));
-    }
+        // Render time (DOMContentLoaded to Load)
+        const renderTime = perfData.loadEventEnd - perfData.domContentLoadedEventEnd;
 
-    // Network Information
-    if (typeof navigator !== "undefined") {
-      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-      if (connection) {
-        setMetrics((prev) => ({
-          ...prev,
-          networkType: connection.effectiveType || "unknown",
-          connectionSpeed: connection.downlink || 0,
-        }));
+        updates.pageLoadTime = pageLoadTime;
+        updates.resourceLoadTime = Math.round(resourceLoadTime);
+        updates.resourceCount = resourceCount;
+        updates.renderTime = Math.round(renderTime);
       }
 
-      // Online Status
-      setMetrics((prev) => ({ ...prev, onlineStatus: navigator.onLine }));
+      // DOM Size
+      if (typeof document !== "undefined") {
+        updates.domSize = document.getElementsByTagName("*").length;
+      }
 
-      // Browser Info
-      const userAgent = navigator.userAgent;
-      let browser = "unknown";
-      if (userAgent.indexOf("Chrome") > -1) browser = "Chrome";
-      else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
-      else if (userAgent.indexOf("Safari") > -1) browser = "Safari";
-      else if (userAgent.indexOf("Edge") > -1) browser = "Edge";
-      setMetrics((prev) => ({ ...prev, browserInfo: browser }));
-    }
+      // Network Information
+      if (typeof navigator !== "undefined") {
+        const connection = getNetworkConnection();
+        if (connection) {
+          updates.networkType = connection.effectiveType || "unknown";
+          updates.connectionSpeed = connection.downlink || 0;
+        }
 
-    // Screen Resolution & Viewport
+        // Online Status
+        updates.onlineStatus = navigator.onLine;
+
+        // Browser Info
+        const userAgent = navigator.userAgent;
+        let browser = "unknown";
+        if (userAgent.indexOf("Chrome") > -1) browser = "Chrome";
+        else if (userAgent.indexOf("Firefox") > -1) browser = "Firefox";
+        else if (userAgent.indexOf("Safari") > -1) browser = "Safari";
+        else if (userAgent.indexOf("Edge") > -1) browser = "Edge";
+        updates.browserInfo = browser;
+      }
+
+      // Screen Resolution & Viewport
+      if (typeof window !== "undefined") {
+        updates.screenResolution = `${window.screen.width}x${window.screen.height}`;
+        updates.viewport = `${window.innerWidth}x${window.innerHeight}`;
+
+        // Error Count (from sessionStorage - session only)
+        updates.errorCount = parseInt(sessionStorage.getItem("errorCount") || "0", 10);
+      }
+
+      // Apply all updates at once
+      setMetrics((prev) => ({ ...prev, ...updates }));
+    };
+
+    // Use requestAnimationFrame to batch updates
     if (typeof window !== "undefined") {
-      setMetrics((prev) => ({
-        ...prev,
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        viewport: `${window.innerWidth}x${window.innerHeight}`,
-      }));
-
-      // Error Count (from sessionStorage - session only)
-      const errorCount = parseInt(sessionStorage.getItem("errorCount") || "0", 10);
-      setMetrics((prev) => ({ ...prev, errorCount }));
+      requestAnimationFrame(updateInitialMetrics);
     }
 
     // Public IP (using ipify API)
     fetch("https://api.ipify.org?format=json")
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { ip?: string }) => {
         setMetrics((prev) => ({ ...prev, publicIP: data.ip || "Unknown" }));
       })
       .catch(() => {
@@ -145,7 +166,16 @@ export function MonitoringSection() {
     // Listen for network changes
     let connectionCleanup: (() => void) | undefined;
     if (typeof navigator !== "undefined") {
-      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+      const getNetworkConnection = (): NetworkInformation | null => {
+        const nav = navigator as Navigator & {
+          connection?: NetworkInformation;
+          mozConnection?: NetworkInformation;
+          webkitConnection?: NetworkInformation;
+        };
+        return nav.connection || nav.mozConnection || nav.webkitConnection || null;
+      };
+
+      const connection = getNetworkConnection();
       if (connection) {
         const handleConnectionChange = () => {
           setMetrics((prev) => ({

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Terminal } from "@/components/features/Terminal";
 import { Background } from "@/components/features/Background";
 import { FloatingParticles } from "@/components/features/FloatingParticles";
@@ -31,12 +31,17 @@ export default function Home() {
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-
+  
   // Get latest 3 blog posts
   const latestPosts = getLatestBlogPosts(3);
   
   // Get latest 3 announcements
   const latestAnnouncements = getLatestAnnouncements(3);
+
+  // Dynamic page title update
+  useEffect(() => {
+    document.title = "Nangman Infra | We Build the Invisible";
+  }, []);
 
   // Mouse tracking for parallax effect (desktop only)
   useEffect(() => {
@@ -82,63 +87,116 @@ export default function Home() {
   }, [mousePosition, mouseX, mouseY]);
 
   return (
-    <div 
-      ref={containerRef}
-      className="min-h-screen bg-background text-foreground relative selection:bg-primary/30"
-    >
-      {/* Web Terminal */}
-      <Terminal isOpen={isTerminalOpen} setIsOpen={setIsTerminalOpen} />
+    <>
+      {/* Structured Data (JSON-LD) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Nangman Infra",
+            alternateName: "낭만 인프라",
+            url: "https://nangman.io",
+            logo: "https://nangman.io/icon.png",
+            description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "대전광역시 유성구",
+              addressRegion: "대전광역시",
+              streetAddress: "동서대로 125",
+              addressCountry: "KR",
+            },
+            contactPoint: {
+              "@type": "ContactPoint",
+              email: "contact@nangman.io",
+              contactType: "문의",
+            },
+            sameAs: [
+              "https://github.com/nangman-infra",
+            ],
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Nangman Infra",
+            url: "https://nangman.io",
+            description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
+            inLanguage: "ko-KR",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: {
+                "@type": "EntryPoint",
+                urlTemplate: "https://nangman.io/search?q={search_term_string}",
+              },
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        }}
+      />
+      <div 
+        ref={containerRef}
+        className="min-h-screen bg-background text-foreground relative selection:bg-primary/30"
+      >
+        {/* Web Terminal */}
+        <Terminal isOpen={isTerminalOpen} setIsOpen={setIsTerminalOpen} />
 
-      {/* Background Elements - extends behind header */}
-      <div className="fixed inset-0 z-0">
-        <Background />
-        {/* Animated Grid Overlay */}
-        <div 
-          className="absolute inset-0 opacity-[0.03] animate-grid-move"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(251, 191, 36, 0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: '50px 50px',
-          }}
-        />
-        {/* Subtle Gradient Overlay for Text Readability */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.2)_60%,rgba(0,0,0,0.4)_100%)]"></div>
+        {/* Background Elements - extends behind header */}
+        <div className="fixed inset-0 z-0">
+          <Background />
+          {/* Animated Grid Overlay */}
+          <div 
+            className="absolute inset-0 opacity-[0.03] animate-grid-move"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(251, 191, 36, 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '50px 50px',
+            }}
+          />
+          {/* Subtle Gradient Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.2)_60%,rgba(0,0,0,0.4)_100%)]"></div>
+        </div>
+
+        {/* Floating Particles - Only render on client to prevent hydration mismatch */}
+        <FloatingParticles />
+
+        {/* Hero Section */}
+        <HeroSection x={x} y={y} setIsTerminalOpen={setIsTerminalOpen} />
+
+        {/* About Section */}
+        <AboutSection />
+
+        {/* Tech Stack Section */}
+        <TechStackSection />
+
+        {/* Terminal Section */}
+        <TerminalSection terminalCommands={terminalCommands} />
+
+        {/* Seniors Section */}
+        <SeniorsSection />
+
+        {/* Curriculum Section */}
+        <CurriculumSection />
+
+        {/* Monitoring Section */}
+        <MonitoringSection />
+
+        {/* Blog Section */}
+        <BlogSection latestPosts={latestPosts} />
+
+        {/* Announcements Section */}
+        <AnnouncementsSection latestAnnouncements={latestAnnouncements} />
+
+        {/* Contact Section */}
+        <ContactSection />
       </div>
-
-      {/* Floating Particles - Only render on client to prevent hydration mismatch */}
-      <FloatingParticles />
-
-      {/* Hero Section */}
-      <HeroSection x={x} y={y} setIsTerminalOpen={setIsTerminalOpen} />
-
-      {/* About Section */}
-      <AboutSection />
-
-      {/* Tech Stack Section */}
-      <TechStackSection />
-
-      {/* Terminal Section */}
-      <TerminalSection terminalCommands={terminalCommands} />
-
-      {/* Seniors Section */}
-      <SeniorsSection />
-
-      {/* Curriculum Section */}
-      <CurriculumSection />
-
-      {/* Monitoring Section */}
-      <MonitoringSection />
-
-      {/* Blog Section */}
-      <BlogSection latestPosts={latestPosts} />
-
-      {/* Announcements Section */}
-      <AnnouncementsSection latestAnnouncements={latestAnnouncements} />
-
-      {/* Contact Section */}
-      <ContactSection />
-    </div>
+    </>
   );
 }

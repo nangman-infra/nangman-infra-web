@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
+import { useEffect } from "react";
 
 interface Project {
   id: string;
@@ -46,6 +47,10 @@ const projects: Project[] = [
 ];
 
 export default function ProjectsPage() {
+  useEffect(() => {
+    document.title = "Projects & Case Studies | Nangman Infra";
+  }, []);
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="relative max-w-7xl mx-auto">

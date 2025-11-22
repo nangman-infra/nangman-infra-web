@@ -1,8 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 export default function AboutPage() {
+  useEffect(() => {
+    document.title = "About Us | Nangman Infra";
+  }, []);
   const timeline = [
     { year: "2024", title: "Team Formation", desc: "국립한밭대학교 인프라 엔지니어링 팀 결성" },
     { year: "2024", title: "First Deployment", desc: "학내 연구실 서버 인프라 구축 및 운영 시작" },

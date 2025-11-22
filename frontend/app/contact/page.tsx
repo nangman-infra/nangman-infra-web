@@ -3,8 +3,13 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useEffect } from "react";
 
 export default function ContactPage() {
+  useEffect(() => {
+    document.title = "Contact Us | Nangman Infra";
+  }, []);
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 max-w-4xl mx-auto">
       <motion.div

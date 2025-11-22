@@ -1,0 +1,102 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Package Manager (lock files should be committed)
+# pnpm-lock.yaml - Keep this file for consistent installs
+package-lock.json
+yarn.lock
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Production
+/build
+/.next
+/out
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# Turbopack
+.turbo
+
+# Playwright
+.playwright-mcp/
+.playwright/
+
+# Misc
+*.pem
+*.log
+.cache/
+.temp/
+.tmp/
+
+# Frontend specific (if needed)
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local development
+.local/
+
+# Project Info
+INFO/
+

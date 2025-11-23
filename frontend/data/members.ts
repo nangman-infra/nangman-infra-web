@@ -286,6 +286,7 @@ export const members: Member[] = [
     achievements: [
       "온프렘과 클라우드 인프라를 모두 잘 다루는 하이브리드 엔지니어",
     ],
+    profileImage: "/profiles/heehoon.png",
   },
 ];
 

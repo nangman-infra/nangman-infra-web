@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { Heart, TrendingUp, Users } from "lucide-react";
+import { Heart, TrendingUp, Users, Target, Users2, Calendar } from "lucide-react";
 
 export default function AboutPage() {
   useEffect(() => {
@@ -13,89 +13,144 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4 max-w-5xl mx-auto">
-      {/* Mission Section */}
-      <section className="mb-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 px-2">
-            Why <span className="text-primary">Nangman?</span>
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 mb-12">
-            우리는 차가운 서버실에서 가장 뜨거운 열정을 찾습니다.<br/>
-            보이지 않는 곳에서 세상의 연결을 지탱하는<br/>
-            <span className="text-foreground font-semibold">낭만있는 엔지니어들</span>입니다.
-          </p>
-          <div className="space-y-8 max-w-4xl mx-auto mt-16">
-            <motion.div
+    <div className="min-h-screen pt-24 pb-16 px-4">
+      <div className="relative max-w-7xl mx-auto">
+        <div className="space-y-12 md:space-y-16">
+          {/* Page Header */}
+          <div className="text-center">
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="group relative p-8 md:p-10 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-3xl md:text-4xl font-bold mb-4"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10">
-                <h3 className="text-xl md:text-2xl font-bold mb-4 text-foreground">우리의 목표</h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
-                  안정적이고 효율적인 인프라를 구축하여 모든 서비스의 기반이 되는 것이 우리의 목표입니다. 보이지 않는 곳에서도 최선을 다하는 것이 낭만 인프라의 철학입니다.
-                </p>
-              </div>
-            </motion.div>
-            <motion.div
+              Why <span className="text-primary">Nangman?</span>
+            </motion.h1>
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="group relative p-8 md:p-10 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-muted-foreground text-lg max-w-2xl mx-auto"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10">
-                <h3 className="text-xl md:text-2xl font-bold mb-4 text-foreground">우리의 역할</h3>
-                <p className="text-base text-muted-foreground leading-relaxed">
-                  클라우드부터 온프레미스까지, 네트워크부터 보안까지. 인프라의 모든 영역을 아우르며 실무 경험과 학습을 통해 성장하는 엔지니어들의 모임입니다.
-                </p>
-              </div>
-            </motion.div>
+              우리는 차가운 서버실에서 가장 뜨거운 열정을 찾습니다. 보이지 않는 곳에서 세상의 연결을 지탱하는 <span className="text-foreground font-semibold">낭만있는 엔지니어들</span>입니다.
+            </motion.p>
           </div>
-        </motion.div>
-      </section>
 
-      {/* Timeline Section */}
-      <section className="mb-20">
-        <h2 className="text-2xl font-bold mb-8 pl-4 border-l-4 border-primary">Our History</h2>
-        <div className="relative border-l border-border ml-4 md:ml-10 space-y-10 pb-10">
-          {timeline.map((item, index) => (
-            <motion.div 
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="relative pl-8 md:pl-12"
-            >
-              <div className="absolute -left-[5px] top-2 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-              <span className="text-sm font-mono text-primary mb-1 block">{item.year}</span>
-              <h3 className="text-xl font-bold">{item.title}</h3>
-              <p className="text-muted-foreground mt-1">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+          {/* Mission Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Our Mission</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                우리의 목표와 역할
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              >
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <Target className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">우리의 목표</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    안정적이고 효율적인 인프라를 구축하여 모든 서비스의 기반이 되는 것이 우리의 목표입니다. 보이지 않는 곳에서도 최선을 다하는 것이 낭만 인프라의 철학입니다.
+                  </p>
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              >
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <Users2 className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">우리의 역할</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    클라우드부터 온프레미스까지, 네트워크부터 보안까지. 인프라의 모든 영역을 아우르며 실무 경험과 학습을 통해 성장하는 엔지니어들의 모임입니다.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
 
-      {/* Values Section */}
-      <section className="mb-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h2 className="text-2xl md:text-3xl font-bold mb-8 pl-4 border-l-4 border-primary">Our Values</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          {/* History Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Our History</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                낭만 인프라의 여정
+              </p>
+            </div>
+            <div className="grid md:grid-cols-1 gap-6 max-w-2xl mx-auto">
+              {timeline.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+                >
+                  <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative z-10 flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 shrink-0">
+                      <Calendar className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-mono text-primary mb-2 block">{item.year}</span>
+                      <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Values Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
+            <div className="text-center">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Our Values</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                우리가 추구하는 가치
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -158,7 +213,7 @@ export default function AboutPage() {
             </motion.div>
           </div>
         </motion.div>
-      </section>
+      </div>
     </div>
   );
 }

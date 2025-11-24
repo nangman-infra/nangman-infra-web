@@ -8,9 +8,7 @@ export default function AboutPage() {
     document.title = "About Us | Nangman Infra";
   }, []);
   const timeline = [
-    { year: "2024", title: "Team Formation", desc: "국립한밭대학교 인프라 엔지니어링 팀 결성" },
-    { year: "2024", title: "First Deployment", desc: "학내 연구실 서버 인프라 구축 및 운영 시작" },
-    { year: "2025", title: "Nangman Infra v1", desc: "공식 홈페이지 및 포트폴리오 허브 런칭" },
+    { year: "2025.11", title: "낭만 인프라 런칭", desc: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 런칭" },
   ];
 
   return (
@@ -32,7 +30,7 @@ export default function AboutPage() {
         >
           우리는 차가운 서버실에서 가장 뜨거운 열정을 찾습니다.<br/>
           보이지 않는 곳에서 세상의 연결을 지탱하는<br/>
-          <span className="text-foreground font-semibold">낭만있는 건축가들</span>입니다.
+          <span className="text-foreground font-semibold">낭만있는 엔지니어들</span>입니다.
         </motion.p>
       </section>
 

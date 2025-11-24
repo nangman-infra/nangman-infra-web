@@ -129,6 +129,33 @@ export function MemberCard({
             </div>
           </div>
         )}
+
+        {/* Certifications - achievements가 없을 때 표시 */}
+        {!member.achievements && member.certifications && member.certifications.length > 0 && (
+          <div className="pt-2 border-t border-border/20">
+            <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
+              {member.certifications.slice(0, 3).map((cert, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 text-xs text-muted-foreground"
+                >
+                  <span
+                    className={`rounded-full bg-primary/60 shrink-0 ${
+                      isSenior ? "w-1.5 h-1.5" : "w-1 h-1"
+                    }`}
+                  />
+                  <span>{cert.name}</span>
+                </div>
+              ))}
+              {member.certifications.length > 3 && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                  <span className={`rounded-full bg-primary/40 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"}`} />
+                  <span>외 {member.certifications.length - 3}개</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

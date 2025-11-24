@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { Member } from "@/types/member";
-import { CLICKABLE_MEMBER_NAME } from "@/constants/members";
 
 interface MemberCardProps {
   member: Member;
@@ -20,10 +19,8 @@ export function MemberCard({
   isSenior = false,
   onClick,
 }: MemberCardProps) {
-  const isClickable = member.name === CLICKABLE_MEMBER_NAME;
-
   const handleClick = () => {
-    if (isClickable && onClick) {
+    if (onClick) {
       onClick(member);
     }
   };
@@ -34,9 +31,7 @@ export function MemberCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: baseDelay + index * 0.1 }}
       onClick={handleClick}
-      className={`group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 ${
-        isClickable ? "cursor-pointer" : ""
-      }`}
+      className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 cursor-pointer"
     >
       <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <div className="relative z-10 space-y-4">

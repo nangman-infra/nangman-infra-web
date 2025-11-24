@@ -3,6 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Activity, Wifi, AlertCircle, Clock, Globe, Network, Zap } from "lucide-react";
+import {
+  PAGE_LOAD_TIME_WARNING_MS,
+  PAGE_LOAD_TIME_CRITICAL_MS,
+  RESOURCE_LOAD_TIME_WARNING_MS,
+  RESOURCE_LOAD_TIME_CRITICAL_MS,
+  ERROR_COUNT_WARNING,
+  ERROR_COUNT_CRITICAL,
+} from "@/constants/monitoring";
 
 // NetworkInformation interface for TypeScript
 interface NetworkInformation extends EventTarget {
@@ -236,13 +244,13 @@ export function MonitoringSection() {
     {
       value: `${metrics.pageLoadTime}ms`,
       label: "Page Load Time",
-      status: getStatus(metrics.pageLoadTime, { warning: 2000, critical: 3000 }),
+      status: getStatus(metrics.pageLoadTime, { warning: PAGE_LOAD_TIME_WARNING_MS, critical: PAGE_LOAD_TIME_CRITICAL_MS }),
       icon: <Clock className="w-5 h-5" />,
     },
     {
       value: `${metrics.resourceLoadTime}ms`,
       label: "Resource Load",
-      status: getStatus(metrics.resourceLoadTime, { warning: 1000, critical: 2000 }),
+      status: getStatus(metrics.resourceLoadTime, { warning: RESOURCE_LOAD_TIME_WARNING_MS, critical: RESOURCE_LOAD_TIME_CRITICAL_MS }),
       icon: <Zap className="w-5 h-5" />,
     },
     {
@@ -254,7 +262,7 @@ export function MonitoringSection() {
     {
       value: metrics.errorCount,
       label: "Errors",
-      status: getStatus(metrics.errorCount, { warning: 3, critical: 5 }),
+      status: getStatus(metrics.errorCount, { warning: ERROR_COUNT_WARNING, critical: ERROR_COUNT_CRITICAL }),
       icon: <AlertCircle className="w-5 h-5" />,
     },
   ];

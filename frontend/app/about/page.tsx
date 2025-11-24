@@ -3,6 +3,17 @@
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { Heart, TrendingUp, Users, Target, Users2, Calendar } from "lucide-react";
+import {
+  ANIMATION_DURATION_SHORT,
+  ANIMATION_DURATION_LONG,
+  ANIMATION_DELAY_ABOUT_HEADER_SUBTITLE,
+  ANIMATION_DELAY_ABOUT_MISSION_CARD_1,
+  ANIMATION_DELAY_ABOUT_MISSION_CARD_2,
+  ANIMATION_DELAY_ABOUT_TIMELINE_INCREMENT,
+  ANIMATION_DELAY_ABOUT_VALUES_CARD_1,
+  ANIMATION_DELAY_ABOUT_VALUES_CARD_2,
+  ANIMATION_DELAY_ABOUT_VALUES_CARD_3,
+} from "@/constants/members";
 
 export default function AboutPage() {
   useEffect(() => {
@@ -21,7 +32,7 @@ export default function AboutPage() {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: ANIMATION_DURATION_LONG, ease: [0.16, 1, 0.3, 1] }}
               className="text-3xl md:text-4xl font-bold mb-4"
             >
               Why <span className="text-primary">Nangman?</span>
@@ -29,7 +40,7 @@ export default function AboutPage() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: ANIMATION_DURATION_LONG, delay: ANIMATION_DELAY_ABOUT_HEADER_SUBTITLE, ease: [0.16, 1, 0.3, 1] }}
               className="text-muted-foreground text-lg max-w-2xl mx-auto"
             >
               우리는 차가운 서버실에서 가장 뜨거운 열정을 찾습니다. 보이지 않는 곳에서 세상의 연결을 지탱하는 <span className="text-foreground font-semibold">낭만있는 엔지니어들</span>입니다.
@@ -40,7 +51,7 @@ export default function AboutPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: ANIMATION_DURATION_LONG, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             <div className="text-center">
@@ -53,7 +64,7 @@ export default function AboutPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ duration: ANIMATION_DURATION_SHORT, delay: ANIMATION_DELAY_ABOUT_MISSION_CARD_1 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -72,7 +83,7 @@ export default function AboutPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: ANIMATION_DURATION_SHORT, delay: ANIMATION_DELAY_ABOUT_MISSION_CARD_2 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -95,7 +106,7 @@ export default function AboutPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: ANIMATION_DURATION_LONG, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             <div className="text-center">
@@ -110,7 +121,7 @@ export default function AboutPage() {
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  transition={{ duration: ANIMATION_DURATION_SHORT, delay: index * ANIMATION_DELAY_ABOUT_TIMELINE_INCREMENT }}
                   className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
                 >
                   <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -133,7 +144,7 @@ export default function AboutPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: ANIMATION_DURATION_LONG, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             <div className="text-center">
@@ -146,7 +157,7 @@ export default function AboutPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+                transition={{ duration: ANIMATION_DURATION_SHORT, delay: ANIMATION_DELAY_ABOUT_VALUES_CARD_1 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -168,7 +179,7 @@ export default function AboutPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                transition={{ duration: ANIMATION_DURATION_SHORT, delay: ANIMATION_DELAY_ABOUT_VALUES_CARD_2 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -190,7 +201,7 @@ export default function AboutPage() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+                transition={{ duration: ANIMATION_DURATION_SHORT, delay: ANIMATION_DELAY_ABOUT_VALUES_CARD_3 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

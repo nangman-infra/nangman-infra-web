@@ -12,6 +12,7 @@ import {
   ANIMATION_DELAY_SENIORS_SECTION,
   ANIMATION_DELAY_STUDENTS_SECTION,
   ANIMATION_DELAY_MEMBER_CARD_BASE,
+  ANIMATION_DURATION_MEDIUM,
 } from "@/constants/members";
 
 export default function MembersPage() {
@@ -49,7 +50,7 @@ export default function MembersPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: ANIMATION_DELAY_SENIORS_SECTION }}
+              transition={{ duration: ANIMATION_DURATION_MEDIUM, delay: ANIMATION_DELAY_SENIORS_SECTION }}
               className="space-y-6"
             >
               <div className="flex items-center gap-3 mb-6">
@@ -76,7 +77,7 @@ export default function MembersPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: ANIMATION_DELAY_STUDENTS_SECTION }}
+              transition={{ duration: ANIMATION_DURATION_MEDIUM, delay: ANIMATION_DELAY_STUDENTS_SECTION }}
               className="space-y-6"
             >
               <div className="flex items-center gap-3 mb-6">

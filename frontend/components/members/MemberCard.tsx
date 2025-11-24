@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import type { Member } from "@/types/member";
+import { ANIMATION_DURATION_SHORT, ANIMATION_DELAY_MEMBER_CARD_INCREMENT } from "@/constants/members";
 
 interface MemberCardProps {
   member: Member;
@@ -29,7 +30,7 @@ export function MemberCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: baseDelay + index * 0.1 }}
+      transition={{ duration: ANIMATION_DURATION_SHORT, delay: baseDelay + index * ANIMATION_DELAY_MEMBER_CARD_INCREMENT }}
       onClick={handleClick}
       className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 cursor-pointer"
     >

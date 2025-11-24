@@ -374,7 +374,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
           )}
 
           {/* Technical Skills Section - 비활성화 */}
-          {/* TODO: 기술 스택 섹션 재활성화 시 아래 주석 해제
+          {/* 기술 스택 섹션 재활성화 시 아래 주석 해제
           {member.technicalSkills && member.technicalSkills.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}

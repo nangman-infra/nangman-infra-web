@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Briefcase, GraduationCap, Users } from "lucide-react";
 import {
   ANIMATION_DELAY_STATS_SECTION,
+  ANIMATION_DURATION_MEDIUM,
 } from "@/constants/members";
 
 interface StatsSectionProps {
@@ -21,7 +22,7 @@ export function StatsSection({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: ANIMATION_DELAY_STATS_SECTION }}
+      transition={{ duration: ANIMATION_DURATION_MEDIUM, delay: ANIMATION_DELAY_STATS_SECTION }}
       className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8"
     >
       <div className="group relative p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center">

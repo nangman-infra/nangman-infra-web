@@ -33,12 +33,7 @@ export default function MembersPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="relative max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-12 md:space-y-16"
-        >
+        <div className="space-y-12 md:space-y-16">
           {/* Page Header */}
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -53,7 +48,8 @@ export default function MembersPage() {
           {seniors.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.6, delay: ANIMATION_DELAY_SENIORS_SECTION }}
               className="space-y-6"
             >
@@ -80,7 +76,8 @@ export default function MembersPage() {
           {students.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
               transition={{ duration: 0.6, delay: ANIMATION_DELAY_STUDENTS_SECTION }}
               className="space-y-6"
             >
@@ -109,7 +106,7 @@ export default function MembersPage() {
             seniorsCount={seniors.length}
             studentsCount={students.length}
           />
-        </motion.div>
+        </div>
       </div>
 
       {/* Profile Modal */}

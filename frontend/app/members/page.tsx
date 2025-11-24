@@ -48,8 +48,7 @@ export default function MembersPage() {
           {seniors.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: ANIMATION_DELAY_SENIORS_SECTION }}
               className="space-y-6"
             >
@@ -76,8 +75,7 @@ export default function MembersPage() {
           {students.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: ANIMATION_DELAY_STUDENTS_SECTION }}
               className="space-y-6"
             >

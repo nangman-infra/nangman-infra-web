@@ -151,13 +151,15 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="group p-6 md:p-8 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
-            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              >
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                   <Heart className="w-5 h-5 text-primary" />
@@ -167,17 +169,20 @@ export default function AboutPage() {
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 인프라에 대한 열정
               </p>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                차가운 서버실에서도 가장 뜨거운 열정을 유지합니다. 보이지 않는 곳에서도 최선을 다하는 것이 우리의 신념입니다.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="group p-6 md:p-8 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
-            >
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                    차가운 서버실에서도 가장 뜨거운 열정을 유지합니다. 보이지 않는 곳에서도 최선을 다하는 것이 우리의 신념입니다.
+                  </p>
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              >
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
                   <TrendingUp className="w-5 h-5 text-primary" />
@@ -187,32 +192,37 @@ export default function AboutPage() {
               <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                 지속적인 학습과 성장
               </p>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                실무 경험과 이론 학습을 병행하며 끊임없이 성장합니다. 멘토와 학생이 함께 배우고 성장하는 환경을 만들어갑니다.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="group p-6 md:p-8 rounded-xl border border-border bg-card/50 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <Users className="w-5 h-5 text-primary" />
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                    실무 경험과 이론 학습을 병행하며 끊임없이 성장합니다. 멘토와 학생이 함께 배우고 성장하는 환경을 만들어갑니다.
+                  </p>
                 </div>
-                <h3 className="font-mono text-lg font-bold text-primary">Collaboration</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                협업과 지식 공유
-              </p>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                개인의 성장보다 팀의 성장을 우선시합니다. 지식을 공유하고 함께 문제를 해결하며 더 나은 인프라를 만들어갑니다.
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              >
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-mono text-lg font-bold text-primary">Collaboration</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    협업과 지식 공유
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                    개인의 성장보다 팀의 성장을 우선시합니다. 지식을 공유하고 함께 문제를 해결하며 더 나은 인프라를 만들어갑니다.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

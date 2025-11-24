@@ -25,24 +25,42 @@ export default function AboutPage() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 px-2">
             Why <span className="text-primary">Nangman?</span>
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4 mb-12">
             우리는 차가운 서버실에서 가장 뜨거운 열정을 찾습니다.<br/>
             보이지 않는 곳에서 세상의 연결을 지탱하는<br/>
             <span className="text-foreground font-semibold">낭만있는 엔지니어들</span>입니다.
           </p>
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto mt-12">
-            <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm text-left">
-              <h3 className="font-semibold text-lg mb-2">우리의 목표</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                안정적이고 효율적인 인프라를 구축하여 모든 서비스의 기반이 되는 것이 우리의 목표입니다. 보이지 않는 곳에서도 최선을 다하는 것이 낭만 인프라의 철학입니다.
-              </p>
-            </div>
-            <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm text-left">
-              <h3 className="font-semibold text-lg mb-2">우리의 역할</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                클라우드부터 온프레미스까지, 네트워크부터 보안까지. 인프라의 모든 영역을 아우르며 실무 경험과 학습을 통해 성장하는 엔지니어들의 모임입니다.
-              </p>
-            </div>
+          <div className="space-y-8 max-w-4xl mx-auto mt-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="group relative p-8 md:p-10 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+            >
+              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10">
+                <h3 className="text-xl md:text-2xl font-bold mb-4 text-foreground">우리의 목표</h3>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  안정적이고 효율적인 인프라를 구축하여 모든 서비스의 기반이 되는 것이 우리의 목표입니다. 보이지 않는 곳에서도 최선을 다하는 것이 낭만 인프라의 철학입니다.
+                </p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="group relative p-8 md:p-10 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+            >
+              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10">
+                <h3 className="text-xl md:text-2xl font-bold mb-4 text-foreground">우리의 역할</h3>
+                <p className="text-base text-muted-foreground leading-relaxed">
+                  클라우드부터 온프레미스까지, 네트워크부터 보안까지. 인프라의 모든 영역을 아우르며 실무 경험과 학습을 통해 성장하는 엔지니어들의 모임입니다.
+                </p>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </section>

@@ -55,17 +55,22 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Organization Section Placeholder */}
+      {/* Values Section */}
       <section>
-        <h2 className="text-2xl font-bold mb-8 pl-4 border-l-4 border-primary">Organization</h2>
+        <h2 className="text-2xl font-bold mb-8 pl-4 border-l-4 border-primary">Our Values</h2>
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Placeholders for Org Chart */}
-          {['Lead', 'Infrastructure', 'Security'].map((role) => (
-            <div key={role} className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
-              <h3 className="font-mono text-lg font-bold text-primary mb-2">{role} Team</h3>
-              <p className="text-sm text-muted-foreground">Responsible for core system stability and performance.</p>
-            </div>
-          ))}
+          <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+            <h3 className="font-mono text-lg font-bold text-primary mb-2">Passion</h3>
+            <p className="text-sm text-muted-foreground">인프라에 대한 열정</p>
+          </div>
+          <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+            <h3 className="font-mono text-lg font-bold text-primary mb-2">Growth</h3>
+            <p className="text-sm text-muted-foreground">지속적인 학습과 성장</p>
+          </div>
+          <div className="p-6 rounded-xl border border-border bg-card/50 backdrop-blur-sm">
+            <h3 className="font-mono text-lg font-bold text-primary mb-2">Collaboration</h3>
+            <p className="text-sm text-muted-foreground">협업과 지식 공유</p>
+          </div>
         </div>
       </section>
     </div>

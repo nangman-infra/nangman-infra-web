@@ -242,6 +242,30 @@ export const members: Member[] = [
     role: "3학년 컴퓨터공학과",
     affiliation: "국립한밭대학교",
     category: "student",
+    bio: "클라우드 인프라와 DevOps에 관심을 가지고 있습니다. 학교에서 AWS, 네이버 클라우드, Docker, Kubernetes, CI/CD 등을 활용한 여러 프로젝트를 수행하며 클라우드 플랫폼 운영과 자동화 역량을 키워왔습니다. 앞으로 클라우드 엔지니어로서 효율적인 시스템 설계와 안정적인 서비스 운영에 기여하고 싶습니다.",
+    specialties: ["클라우드", "Github", "AWS", "네이버클라우드", "Linux"],
+    certifications: [
+      {
+        name: "NAVER Cloud Platform Certified Associate",
+        issuer: "네이버 클라우드 플랫폼",
+      },
+      {
+        name: "AWS Certified Cloud Practitioner",
+        issuer: "Amazon Web Services",
+      },
+      {
+        name: "네이버 클라우드 플랫폼 실무 특강 수료",
+        issuer: "네이버 클라우드 플랫폼",
+      },
+      {
+        name: "KRAFTON Jungle 웹개발 집중 캠프 수료",
+        issuer: "KRAFTON",
+      },
+      {
+        name: "AWS 클라우드 실무 특강 수료",
+        issuer: "Amazon Web Services",
+      },
+    ],
   },
   {
     name: "정택준",
@@ -275,6 +299,8 @@ export const members: Member[] = [
     role: "2학년 모바일융합공학과",
     affiliation: "국립한밭대학교",
     category: "student",
+    bio: "기업의 취약점 진단 관리자를 희망하고 있으며 더 나아가 인하우스 담당자까지 목표를 하고 있습니다. 리눅스와 c++언어 기반으로 공부하고 있고 구축된 서버의 외부접근, 내부 모니터링과 내부 패치 등을 직접 진행해 보면서 CERT 관리자로써의 역량을 키우는데 중점을 두고 있습니다.",
+    specialties: ["리눅스", "C++", "CERT", "보안", "모니터링"],
   },
   {
     name: "정희훈",

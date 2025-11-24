@@ -20,8 +20,7 @@ export default function AboutPage() {
           <div className="text-center">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="text-3xl md:text-4xl font-bold mb-4"
             >
@@ -29,8 +28,7 @@ export default function AboutPage() {
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
               className="text-muted-foreground text-lg max-w-2xl mx-auto"
             >
@@ -41,8 +39,7 @@ export default function AboutPage() {
           {/* Mission Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
@@ -55,8 +52,7 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-2 gap-6 md:gap-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
@@ -75,8 +71,7 @@ export default function AboutPage() {
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
@@ -99,8 +94,7 @@ export default function AboutPage() {
           {/* History Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
@@ -115,8 +109,7 @@ export default function AboutPage() {
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
                 >
@@ -139,8 +132,7 @@ export default function AboutPage() {
           {/* Values Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
@@ -153,22 +145,21 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-3 gap-6 md:gap-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <Heart className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-mono text-lg font-bold text-primary">Passion</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                인프라에 대한 열정
-              </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <Heart className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-mono text-lg font-bold text-primary">Passion</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    인프라에 대한 열정
+                  </p>
                   <p className="text-xs text-muted-foreground/80 leading-relaxed">
                     차가운 서버실에서도 가장 뜨거운 열정을 유지합니다. 보이지 않는 곳에서도 최선을 다하는 것이 우리의 신념입니다.
                   </p>
@@ -176,22 +167,21 @@ export default function AboutPage() {
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-mono text-lg font-bold text-primary">Growth</h3>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                지속적인 학습과 성장
-              </p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-mono text-lg font-bold text-primary">Growth</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    지속적인 학습과 성장
+                  </p>
                   <p className="text-xs text-muted-foreground/80 leading-relaxed">
                     실무 경험과 이론 학습을 병행하며 끊임없이 성장합니다. 멘토와 학생이 함께 배우고 성장하는 환경을 만들어갑니다.
                   </p>
@@ -199,8 +189,7 @@ export default function AboutPage() {
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >

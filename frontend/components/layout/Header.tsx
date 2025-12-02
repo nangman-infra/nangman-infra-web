@@ -42,7 +42,7 @@ export function Header() {
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300 gpu-accelerated-blur",
       scrolled 
         ? "bg-background/80 backdrop-blur-md border-b border-border/50" 
         : "bg-transparent"
@@ -110,43 +110,44 @@ export function Header() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="md:hidden absolute top-16 left-0 right-0 bg-background/95 backdrop-blur-md border-b border-border/50"
+          className="md:hidden absolute top-16 left-0 right-0"
         >
-          <nav className="flex flex-col py-4">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
+          <div className="gpu-accelerated-blur bg-background/95 backdrop-blur-md border-b border-border/50">
+            <nav className="flex flex-col py-4">
+              {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      "px-4 py-3 text-base font-medium transition-colors",
+                      isActive 
+                        ? "text-primary bg-primary/10 border-l-2 border-primary" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+              <div className="px-4 py-3 border-t border-border/50 mt-2">
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  href="https://github.com/nangman-infra"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "px-4 py-3 text-base font-medium transition-colors",
-                    isActive 
-                      ? "text-primary bg-primary/10 border-l-2 border-primary" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-                  )}
                 >
-                  {item.name}
+                  <Github className="w-5 h-5" />
+                  <span>GitHub</span>
                 </Link>
-              );
-            })}
-            <div className="px-4 py-3 border-t border-border/50 mt-2">
-              <Link
-                href="https://github.com/nangman-infra"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Github className="w-5 h-5" />
-                <span>GitHub</span>
-              </Link>
-            </div>
-          </nav>
+              </div>
+            </nav>
+          </div>
         </motion.div>
       )}
     </header>
   );
 }
-

@@ -43,72 +43,73 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="group relative p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
                 >
-                  <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4 relative z-10">
-                    {post.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="text-xs font-mono text-primary px-2 py-0.5 rounded-md bg-background/40 border border-primary/20"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
+                  <div className="gpu-accelerated-blur group relative p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                    <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  {/* Title */}
-                  {isExternal ? (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <h3 className="text-xl font-semibold mb-3 relative z-10 group-hover:text-primary transition-colors">
-                        {post.title}
-                      </h3>
-                    </a>
-                  ) : (
-                    <Link href={href}>
-                      <h3 className="text-xl font-semibold mb-3 relative z-10 group-hover:text-primary transition-colors">
-                        {post.title}
-                      </h3>
-                    </Link>
-                  )}
-
-                  {/* Description */}
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-3 relative z-10">
-                    {post.description}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs text-muted-foreground relative z-10">
-                    <div className="flex items-center gap-3">
-                      <span>{post.date}</span>
-                      <span>·</span>
-                      <span>By {post.author}</span>
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4 relative z-10">
+                      {post.tags.map((tag: string) => (
+                        <span
+                          key={tag}
+                          className="text-xs font-mono text-primary px-2 py-0.5 rounded-md bg-background/40 border border-primary/20"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
                     </div>
+
+                    {/* Title */}
                     {isExternal ? (
                       <a
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-primary hover:gap-2 transition-all"
                       >
-                        <span>읽기</span>
-                        <ArrowRight className="w-4 h-4" />
+                        <h3 className="text-xl font-semibold mb-3 relative z-10 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </h3>
                       </a>
                     ) : (
-                      <Link
-                        href={href}
-                        className="flex items-center gap-1 text-primary hover:gap-2 transition-all"
-                      >
-                        <span>읽기</span>
-                        <ArrowRight className="w-4 h-4" />
+                      <Link href={href}>
+                        <h3 className="text-xl font-semibold mb-3 relative z-10 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </h3>
                       </Link>
                     )}
+
+                    {/* Description */}
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-3 relative z-10">
+                      {post.description}
+                    </p>
+
+                    {/* Meta Info */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground relative z-10">
+                      <div className="flex items-center gap-3">
+                        <span>{post.date}</span>
+                        <span>·</span>
+                        <span>By {post.author}</span>
+                      </div>
+                      {isExternal ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-primary hover:gap-2 transition-all"
+                        >
+                          <span>읽기</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </a>
+                      ) : (
+                        <Link
+                          href={href}
+                          className="flex items-center gap-1 text-primary hover:gap-2 transition-all"
+                        >
+                          <span>읽기</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               );

@@ -308,20 +308,22 @@ export function MonitoringSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm transition-all duration-500 hover:bg-card/20 hover:border-border/40 ${statusBgColors[metric.status]}`}
+                className="h-full"
               >
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`p-1.5 rounded-md ${statusBgColors[metric.status]}`}>
-                      <div className={statusColors[metric.status]}>{metric.icon}</div>
+                <div className={`gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm transition-all duration-500 hover:bg-card/20 hover:border-border/40 ${statusBgColors[metric.status]}`}>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className={`p-1.5 rounded-md ${statusBgColors[metric.status]}`}>
+                        <div className={statusColors[metric.status]}>{metric.icon}</div>
+                      </div>
+                      <div className={`w-1.5 h-1.5 rounded-full ${statusColors[metric.status]}`}></div>
                     </div>
-                    <div className={`w-1.5 h-1.5 rounded-full ${statusColors[metric.status]}`}></div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className={`text-xl md:text-2xl font-bold font-mono ${statusColors[metric.status]}`}>
-                      {metric.value}
+                    <div className="space-y-1">
+                      <div className={`text-xl md:text-2xl font-bold font-mono ${statusColors[metric.status]}`}>
+                        {metric.value}
+                      </div>
+                      <div className="text-xs md:text-sm text-muted-foreground">{metric.label}</div>
                     </div>
-                    <div className="text-xs md:text-sm text-muted-foreground">{metric.label}</div>
                   </div>
                 </div>
               </motion.div>
@@ -336,33 +338,35 @@ export function MonitoringSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500"
+              className="h-full"
             >
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <Network className="w-4 h-4 text-primary" />
-                  <h3 className="text-base font-semibold">Network</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className={metrics.onlineStatus ? "text-[#00ff00]" : "text-[#ff0000]"}>
-                      {metrics.onlineStatus ? "Online" : "Offline"}
-                    </span>
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Network className="w-4 h-4 text-primary" />
+                    <h3 className="text-base font-semibold">Network</h3>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type:</span>
-                    <span className="font-mono">{metrics.networkType.toUpperCase()}</span>
-                  </div>
-                  {metrics.connectionSpeed > 0 && (
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Speed:</span>
-                      <span className="font-mono">{metrics.connectionSpeed.toFixed(1)} Mbps</span>
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className={metrics.onlineStatus ? "text-[#00ff00]" : "text-[#ff0000]"}>
+                        {metrics.onlineStatus ? "Online" : "Offline"}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Public IP:</span>
-                    <span className="font-mono text-xs break-all text-right ml-2">{metrics.publicIP}</span>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className="font-mono">{metrics.networkType.toUpperCase()}</span>
+                    </div>
+                    {metrics.connectionSpeed > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Speed:</span>
+                        <span className="font-mono">{metrics.connectionSpeed.toFixed(1)} Mbps</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Public IP:</span>
+                      <span className="font-mono text-xs break-all text-right ml-2">{metrics.publicIP}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -374,25 +378,27 @@ export function MonitoringSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500"
+              className="h-full"
             >
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <Activity className="w-4 h-4 text-primary" />
-                  <h3 className="text-base font-semibold">Performance</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Render Time:</span>
-                    <span className="font-mono">{metrics.renderTime}ms</span>
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Activity className="w-4 h-4 text-primary" />
+                    <h3 className="text-base font-semibold">Performance</h3>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Resources:</span>
-                    <span className="font-mono">{metrics.resourceCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">DOM Size:</span>
-                    <span className="font-mono">{metrics.domSize.toLocaleString()}</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Render Time:</span>
+                      <span className="font-mono">{metrics.renderTime}ms</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Resources:</span>
+                      <span className="font-mono">{metrics.resourceCount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">DOM Size:</span>
+                      <span className="font-mono">{metrics.domSize.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -404,25 +410,27 @@ export function MonitoringSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.6 }}
-              className="group relative p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500"
+              className="h-full"
             >
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <Globe className="w-4 h-4 text-primary" />
-                  <h3 className="text-base font-semibold">Environment</h3>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Browser:</span>
-                    <span className="font-mono">{metrics.browserInfo}</span>
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-lg border border-border/20 bg-card/10 backdrop-blur-sm hover:bg-card/20 hover:border-border/40 transition-all duration-500">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Globe className="w-4 h-4 text-primary" />
+                    <h3 className="text-base font-semibold">Environment</h3>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Resolution:</span>
-                    <span className="font-mono">{metrics.screenResolution}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Viewport:</span>
-                    <span className="font-mono">{metrics.viewport}</span>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Browser:</span>
+                      <span className="font-mono">{metrics.browserInfo}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Resolution:</span>
+                      <span className="font-mono">{metrics.screenResolution}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Viewport:</span>
+                      <span className="font-mono">{metrics.viewport}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -433,4 +441,3 @@ export function MonitoringSection() {
     </section>
   );
 }
-

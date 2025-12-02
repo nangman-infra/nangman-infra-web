@@ -87,24 +87,36 @@ body {
 }
 
 /* Prevent awkward line breaks in Korean text */
-p, span, h1, h2, h3, h4, h5, h6, li, td, th {
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+li,
+td,
+th {
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 
 .dark {
   /* Nangman Infra Theme: Dark Butter & Void */
-  --background: oklch(0.1 0 0); /* Deep Void Black */
+  --background: oklch(0.1 0 0);
+  /* Deep Void Black */
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.15 0 0); /* Slightly lighter than bg */
+  --card: oklch(0.15 0 0);
+  /* Slightly lighter than bg */
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.15 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  
+
   /* Primary: Electric Amber (Warm & Energetic) */
-  --primary: oklch(0.75 0.18 70); 
+  --primary: oklch(0.75 0.18 70);
   --primary-foreground: oklch(0.145 0 0);
-  
+
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -112,12 +124,13 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  
+
   /* Borders & Inputs: Subtle glass effect */
   --border: oklch(1 0 0 / 15%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.75 0.18 70 / 50%); /* Amber ring */
-  
+  --ring: oklch(0.75 0.18 70 / 50%);
+  /* Amber ring */
+
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -137,21 +150,27 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 @keyframes radial-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     background: radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.1) 0%, transparent 50%);
   }
+
   25% {
     background: radial-gradient(circle at 60% 40%, rgba(251, 191, 36, 0.15) 0%, transparent 50%);
   }
+
   50% {
     background: radial-gradient(circle at 50% 60%, rgba(251, 191, 36, 0.1) 0%, transparent 50%);
   }
+
   75% {
     background: radial-gradient(circle at 40% 50%, rgba(251, 191, 36, 0.15) 0%, transparent 50%);
   }
@@ -161,6 +180,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
   0% {
     transform: translate(0, 0);
   }
+
   100% {
     transform: translate(50px, 50px);
   }
@@ -170,6 +190,7 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-100%);
   }
@@ -186,4 +207,23 @@ p, span, h1, h2, h3, h4, h5, h6, li, td, th {
 .animate-marquee {
   animation: marquee 60s linear infinite;
   will-change: transform;
+}
+
+/* GPU Acceleration for smooth animations across all browsers */
+.gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.gpu-accelerated-blur {
+  will-change: transform, opacity, backdrop-filter;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
 }

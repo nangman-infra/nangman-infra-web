@@ -73,57 +73,59 @@ export default function ProjectsPage() {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {projects.map((project, index) => (
-          <motion.div
+              <motion.div
                 key={project.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+                className="h-full"
               >
-                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-                <div className="relative z-10">
-                  {/* Status Badge */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                      project.status === "live"
-                        ? "border-green-500/30 bg-green-500/10 text-green-500"
-                        : "border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground"
-                    }`}>
-                      {project.status === "live" ? "Live Service" : "Archived"}
-                    </span>
-                    {project.version && (
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {project.version}
-                </span>
-                    )}
-              </div>
+                <div className="gpu-accelerated-blur group relative h-full p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                  <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               
-                  {/* Project Info */}
-                  <h3 className="text-xl md:text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
-                    {project.name}
-              </h3>
-                  
-                  {project.description && (
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">
-                      {project.description}
-                    </p>
-                  )}
+                  <div className="relative z-10">
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                        project.status === "live"
+                          ? "border-green-500/30 bg-green-500/10 text-green-500"
+                          : "border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground"
+                      }`}>
+                        {project.status === "live" ? "Live Service" : "Archived"}
+                      </span>
+                      {project.version && (
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {project.version}
+                        </span>
+                      )}
+                    </div>
+                
+                    {/* Project Info */}
+                    <h3 className="text-xl md:text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
+                      {project.name}
+                    </h3>
+                    
+                    {project.description && (
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                        {project.description}
+                      </p>
+                    )}
 
-                  {/* Action Links */}
-                  {project.url && (
-                    <a
-                      href={project.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      <span>Visit Site</span>
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-            </div>
-          </motion.div>
+                    {/* Action Links */}
+                    {project.url && (
+                      <a
+                        href={project.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <span>Visit Site</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
         ))}
           </div>
         </motion.div>

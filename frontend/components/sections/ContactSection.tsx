@@ -33,20 +33,22 @@ export function ContactSection() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
-                    <MapPin className="w-6 h-6 text-primary" />
+              <div className="gpu-accelerated-blur group relative h-full p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
+                      <MapPin className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Location</h3>
                   </div>
-                  <h3 className="text-lg font-semibold">Location</h3>
+                  <p className="text-base text-muted-foreground leading-relaxed">
+                    대전광역시 유성구 동서대로 125<br />
+                    국립한밭대학교 N5동
+                  </p>
                 </div>
-                <p className="text-base text-muted-foreground leading-relaxed">
-                  대전광역시 유성구 동서대로 125<br />
-                  국립한밭대학교 N5동
-                </p>
               </div>
             </motion.div>
 
@@ -56,22 +58,24 @@ export function ContactSection() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
-                    <Mail className="w-6 h-6 text-primary" />
+              <div className="gpu-accelerated-blur group relative h-full p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
+                      <Mail className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold">Email</h3>
                   </div>
-                  <h3 className="text-lg font-semibold">Email</h3>
+                  <a
+                    href="mailto:judo0179@gmail.com"
+                    className="text-base text-primary hover:text-primary/80 transition-colors font-mono break-all"
+                  >
+                    judo0179@gmail.com
+                  </a>
                 </div>
-                <a
-                  href="mailto:judo0179@gmail.com"
-                  className="text-base text-primary hover:text-primary/80 transition-colors font-mono break-all"
-                >
-                  judo0179@gmail.com
-                </a>
               </div>
             </motion.div>
           </div>
@@ -98,4 +102,3 @@ export function ContactSection() {
     </section>
   );
 }
-

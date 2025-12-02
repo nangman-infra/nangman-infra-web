@@ -14,7 +14,7 @@ const navItems = [
 
 export function Footer() {
   return (
-    <footer className="relative z-10 w-full border-t border-border/20 bg-background/40 backdrop-blur-sm">
+    <footer className="relative z-10 w-full border-t border-border/20 bg-background/40 backdrop-blur-sm gpu-accelerated-blur">
       <div className="relative max-w-7xl mx-auto px-4 py-12 md:py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -127,4 +127,3 @@ export function Footer() {
     </footer>
   );
 }
-

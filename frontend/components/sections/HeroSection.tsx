@@ -18,16 +18,19 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         whileHover={{ scale: 1.05 }}
-        className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium font-mono backdrop-blur-sm"
-        style={{
-          textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-        }}
       >
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-        </span>
-        System Operational
+        <div
+          className="gpu-accelerated-blur mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm text-primary font-medium font-mono backdrop-blur-sm"
+          style={{
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+          System Operational
+        </div>
       </motion.div>
 
       {/* Main Title with Parallax */}
@@ -150,7 +153,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
           />
           <TerminalIcon className="w-4 h-4 relative z-10" />
           <span className="relative z-10">Open Terminal</span>
-          <kbd className="ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/40 bg-background/30 px-1.5 font-mono text-[10px] font-medium text-foreground/80 opacity-100 relative z-10 backdrop-blur-sm">
+          <kbd className="gpu-accelerated-blur ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/40 bg-background/30 px-1.5 font-mono text-[10px] font-medium text-foreground/80 opacity-100 relative z-10 backdrop-blur-sm">
             <span className="text-xs">⌘</span>K
           </kbd>
         </motion.button>
@@ -158,4 +161,3 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
     </main>
   );
 }
-

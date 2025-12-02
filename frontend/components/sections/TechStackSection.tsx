@@ -30,21 +30,23 @@ export function TechStackSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                Network
-              </h3>
-              <div className="grid grid-cols-2 gap-2 relative z-10">
-                {['TCP/IP', 'DNS', 'Routing', 'CDN'].map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
+                  Network
+                </h3>
+                <div className="grid grid-cols-2 gap-2 relative z-10">
+                  {['TCP/IP', 'DNS', 'Routing', 'CDN'].map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </motion.div>
 
@@ -54,21 +56,23 @@ export function TechStackSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                OS
-              </h3>
-              <div className="grid grid-cols-2 gap-2 relative z-10">
-                {['Linux', 'Unix', 'Shell', 'Systemd'].map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
+                  OS
+                </h3>
+                <div className="grid grid-cols-2 gap-2 relative z-10">
+                  {['Linux', 'Unix', 'Shell', 'Systemd'].map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </motion.div>
 
@@ -78,21 +82,23 @@ export function TechStackSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                Cloud
-              </h3>
-              <div className="grid grid-cols-2 gap-2 relative z-10">
-                {['AWS', 'Docker', 'K8s', 'Terraform'].map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
+                  Cloud
+                </h3>
+                <div className="grid grid-cols-2 gap-2 relative z-10">
+                  {['AWS', 'Docker', 'K8s', 'Terraform'].map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </motion.div>
 
@@ -102,21 +108,23 @@ export function TechStackSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
+              className="h-full"
             >
-              <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                Data & Monitor
-              </h3>
-              <div className="grid grid-cols-2 gap-2 relative z-10">
-                {['PostgreSQL', 'Redis', 'Prometheus', 'Grafana'].map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
-                  >
-                    {tech}
-                  </span>
-                ))}
+              <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
+                <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
+                  Data & Monitor
+                </h3>
+                <div className="grid grid-cols-2 gap-2 relative z-10">
+                  {['PostgreSQL', 'Redis', 'Prometheus', 'Grafana'].map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-2.5 py-1.5 text-xs font-mono rounded-md bg-background/40 border border-border/20 text-muted-foreground hover:border-primary/30 hover:text-primary/90 transition-colors duration-200 text-center"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -170,4 +178,3 @@ export function TechStackSection() {
     </section>
   );
 }
-

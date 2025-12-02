@@ -54,12 +54,12 @@ export default function ProjectsPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="relative max-w-7xl mx-auto">
-        <motion.div
+      <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="space-y-12 md:space-y-16"
-        >
+      >
           {/* Page Header */}
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -67,21 +67,21 @@ export default function ProjectsPage() {
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               실제 운영 중인 서비스와 아키텍처 설계 사례입니다
-            </p>
+        </p>
           </div>
 
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {projects.map((project, index) => (
-              <motion.div
+          <motion.div
                 key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500"
               >
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
+            
                 <div className="relative z-10">
                   {/* Status Badge */}
                   <div className="flex items-center gap-2 mb-4">
@@ -95,14 +95,14 @@ export default function ProjectsPage() {
                     {project.version && (
                       <span className="text-xs text-muted-foreground font-mono">
                         {project.version}
-                      </span>
+                </span>
                     )}
-                  </div>
-
+              </div>
+              
                   {/* Project Info */}
                   <h3 className="text-xl md:text-2xl font-bold mb-3 group-hover:text-primary transition-colors">
                     {project.name}
-                  </h3>
+              </h3>
                   
                   {project.description && (
                     <p className="text-muted-foreground text-sm leading-relaxed mb-4">
@@ -122,9 +122,9 @@ export default function ProjectsPage() {
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
-                </div>
-              </motion.div>
-            ))}
+            </div>
+          </motion.div>
+        ))}
           </div>
         </motion.div>
       </div>

@@ -286,6 +286,10 @@ export const members: Member[] = [
         ],
       },
     ],
+    links: {
+      blog: "https://se-juno.tistory.com/",
+      resume: "/resumes/juno-resume.pdf",
+    },
     projects: [
       {
         title: "서울교통공사 지하철 4호선 차량기지 이전 네트워크 구축",

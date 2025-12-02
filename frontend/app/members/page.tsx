@@ -47,9 +47,9 @@ export default function MembersPage() {
 
           {/* Seniors Section */}
           {seniors.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
               transition={{ duration: ANIMATION_DURATION_MEDIUM, delay: ANIMATION_DELAY_SENIORS_SECTION }}
               className="space-y-6"
             >
@@ -69,17 +69,17 @@ export default function MembersPage() {
                   />
                 ))}
               </div>
-            </motion.div>
+      </motion.div>
           )}
 
           {/* Students Section */}
           {students.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
               transition={{ duration: ANIMATION_DURATION_MEDIUM, delay: ANIMATION_DELAY_STUDENTS_SECTION }}
               className="space-y-6"
-            >
+          >
               <div className="flex items-center gap-3 mb-6">
                 <GraduationCap className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl md:text-3xl font-bold">학생</h2>
@@ -105,7 +105,7 @@ export default function MembersPage() {
             seniorsCount={seniors.length}
             studentsCount={students.length}
           />
-        </div>
+            </div>
       </div>
 
       {/* Profile Modal */}

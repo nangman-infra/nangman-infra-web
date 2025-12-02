@@ -109,7 +109,7 @@ export default function Home() {
             },
             contactPoint: {
               "@type": "ContactPoint",
-              email: "contact@nangman.cloud",
+          email: "judo0179@gmail.com",
               contactType: "문의",
             },
             sameAs: [

@@ -66,11 +66,11 @@ export function ContactSection() {
                   </div>
                   <h3 className="text-lg font-semibold">Email</h3>
                 </div>
-                <a 
-                  href="mailto:contact@nangman.cloud"
+                <a
+                  href="mailto:judo0179@gmail.com"
                   className="text-base text-primary hover:text-primary/80 transition-colors font-mono break-all"
                 >
-                  contact@nangman.cloud
+                  judo0179@gmail.com
                 </a>
               </div>
             </motion.div>

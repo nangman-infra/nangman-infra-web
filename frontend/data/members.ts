@@ -234,8 +234,77 @@ export const members: Member[] = [
   },
   {
     name: "손준호",
-    role: "에퀴닉스 데이터센터 엔지니어",
+    role: "Customer Operation Engineer, Equinix SL1 COE",
+    affiliation: "Equinix",
     category: "senior",
+    experience: "2025년 6월 ~ 재직중 • 2년차 온프레미스 인프라 경력",
+    bio: "온프레미스 기반의 네트워크 인프라 구축·운영을 중심으로 경력을 쌓아온 엔지니어입니다. L2/L3 스위칭 및 라우팅, 장비 구성, 점검, 문제 해결에 강점을 보유하고 있으며, 현장 중심의 실무 경험을 기반으로 안정적인 고객 인프라 운영을 지원하고 있습니다. 문서화·표준화에도 관심이 많아 팀 내 기술 문서를 정리하거나 템플릿을 구성하는 등 지식 관리 체계를 개선하는 업무도 함께 수행하고 있습니다.",
+    specialties: [
+      "네트워크 엔지니어링 (L2/L3)",
+      "VLAN",
+      "STP",
+      "Static Routing",
+      "OSPF/BGP 기본 구성",
+      "VRRP",
+      "온프레미스 인프라 구축 및 운영",
+      "Cisco / HPE 장비",
+      "현장 엔지니어링",
+      "트러블슈팅",
+      "문서화 및 지식 공유",
+    ],
+    education: [
+      {
+        degree: "학사",
+        major: "정보통신공학과",
+        university: "국립한밭대학교",
+        period: "2019년 3월 ~ 2024년 8월",
+        lab: "무선통신소프트웨어(WiSoft) 연구실",
+      },
+    ],
+    profileImage: "/profiles/junho.png",
+    workExperience: [
+      {
+        company: "Equinix",
+        position: "Customer Operation Engineer, COE",
+        period: "2025년 9월 ~ 재직중",
+        description: [
+          "엔터프라이즈·ISP·CSP 고객 온프레미스 인프라 운영 지원",
+          "IBX 현장 내 네트워크 장비 설치·설정·테스트",
+          "고객 네트워크 작업 지원 및 장애 분석",
+          "현장 네트워크 구성 검증 및 품질 유지 업무 수행",
+        ],
+      },
+      {
+        company: "(주)링네트",
+        position: "Network Engineer",
+        period: "2025년 1월 ~ 2025년 9월",
+        description: [
+          "L2/L3 네트워크 구축 및 운영 (Cisco, HPE)",
+          "스위치 컨피그 세팅, 링크 점검, 구성 백업",
+          "고객사 네트워크 구성도 분석 및 개선",
+          "네트워크 엔지니어링 현장 실무 전반 수행",
+        ],
+      },
+    ],
+    projects: [
+      {
+        title: "서울교통공사 지하철 4호선 차량기지 이전 네트워크 구축",
+        description:
+          "사당–진접 구간 광 심선 기반 링 구성 및 불암산역, 진접 차량기지 L2/L3 코어 네트워크 구축. 철도 환경에 맞는 고가용성 설계를 적용하여 안정적인 통신 인프라를 구현했습니다.",
+        technologies: ["L2/L3 네트워크", "광 링 구성", "고가용성 설계", "Cisco", "HPE"],
+        industry: "철도 / 공공 인프라",
+      },
+    ],
+    certifications: [
+      {
+        name: "AWS Certified Solutions Architect - Associate (SAA-C03)",
+        issuer: "Amazon Web Services",
+      },
+      {
+        name: "Cisco Certified Network Associate (CCNA)",
+        issuer: "Cisco Systems",
+      },
+    ],
   },
   {
     name: "임동건",
@@ -244,7 +313,7 @@ export const members: Member[] = [
     category: "student",
     bio: "클라우드 인프라와 DevOps에 관심을 가지고 있습니다. 학교에서 AWS, 네이버 클라우드, Docker, Kubernetes, CI/CD 등을 활용한 여러 프로젝트를 수행하며 클라우드 플랫폼 운영과 자동화 역량을 키워왔습니다. 앞으로 클라우드 엔지니어로서 효율적인 시스템 설계와 안정적인 서비스 운영에 기여하고 싶습니다.",
     specialties: ["클라우드", "Github", "AWS", "네이버클라우드", "Linux"],
-    profileImage: "/profiles/dongkwon.png",
+    profileImage: "/profiles/donggeon.png",
     certifications: [
       {
         name: "NAVER Cloud Platform Certified Associate",

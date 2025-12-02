@@ -105,7 +105,7 @@ export function Background() {
       // Soft blur for smooth, video-like effect
       // Safari doesn't support ctx.filter properly, so we'll use CSS filter instead
       if (!isSafari) {
-        ctx.filter = "blur(80px)";
+      ctx.filter = "blur(80px)";
       }
       ctx.globalCompositeOperation = "screen";
 
@@ -169,7 +169,7 @@ export function Background() {
 
       ctx.globalCompositeOperation = "source-over";
       if (!isSafari) {
-        ctx.filter = "none";
+      ctx.filter = "none";
       }
 
       animationFrameId = requestAnimationFrame(draw);

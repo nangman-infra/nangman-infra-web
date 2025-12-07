@@ -65,11 +65,11 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
               {member.affiliation && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                   <Briefcase className="w-4 h-4 shrink-0" />
-                  <span className="break-words">{member.affiliation}</span>
+                  <span className="wrap-break-word">{member.affiliation}</span>
                 </div>
               )}
               {member.experience && (
-                <p className="text-sm text-muted-foreground/80 break-words mb-3">
+                <p className="text-sm text-muted-foreground/80 wrap-break-word mb-3">
                   {member.experience}
                 </p>
               )}
@@ -185,12 +185,12 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                     {/* University and Degree */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-0 mb-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm sm:text-base break-words">{edu.university}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                        <p className="font-semibold text-sm sm:text-base wrap-break-word">{edu.university}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground wrap-break-word">
                           {edu.degree} • {edu.major}
                         </p>
                         {edu.lab && (
-                          <p className="text-xs text-muted-foreground/70 mt-1 break-words">
+                          <p className="text-xs text-muted-foreground/70 mt-1 wrap-break-word">
                             {edu.lab}
                           </p>
                         )}
@@ -206,14 +206,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                     {edu.thesis && (
                       <div className="mb-3 pb-3 border-b border-border/10">
                         <p className="text-xs text-muted-foreground/70 mb-1">졸업논문</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground break-words">{edu.thesis}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground wrap-break-word">{edu.thesis}</p>
                       </div>
                     )}
 
                     {/* Description */}
                     {edu.description && (
                       <div className="mb-3">
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed break-words">
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed wrap-break-word">
                           {edu.description}
                         </p>
                       </div>
@@ -226,7 +226,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                         <div className="space-y-2">
                           {edu.papers.map((paper, paperIdx) => (
                             <div key={paperIdx} className="text-xs sm:text-sm">
-                              <p className="text-muted-foreground break-words">{paper.title}</p>
+                              <p className="text-muted-foreground wrap-break-word">{paper.title}</p>
                               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 <span className="text-muted-foreground/70">{paper.type}</span>
                                 <span className="text-muted-foreground/50">•</span>
@@ -234,7 +234,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                                 {paper.authors && (
                                   <>
                                     <span className="text-muted-foreground/50">•</span>
-                                    <span className="text-muted-foreground/70 break-words">{paper.authors}</span>
+                                    <span className="text-muted-foreground/70 wrap-break-word">{paper.authors}</span>
                                   </>
                                 )}
                               </div>
@@ -269,8 +269,8 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-base sm:text-lg break-words">{exp.company}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">
+                        <p className="font-semibold text-base sm:text-lg wrap-break-word">{exp.company}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 wrap-break-word">
                           {exp.position}
                         </p>
                       </div>
@@ -285,7 +285,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                           className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground"
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                          <span className="break-words">{desc}</span>
+                          <span className="wrap-break-word">{desc}</span>
                         </li>
                       ))}
                     </ul>
@@ -313,8 +313,8 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                     key={idx}
                     className="p-2.5 sm:p-3 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
-                    <p className="font-medium text-xs sm:text-sm mb-1 break-words">{cert.name}</p>
-                    <p className="text-xs text-muted-foreground break-words">{cert.issuer}</p>
+                    <p className="font-medium text-xs sm:text-sm mb-1 wrap-break-word">{cert.name}</p>
+                    <p className="text-xs text-muted-foreground wrap-break-word">{cert.issuer}</p>
                     {cert.date && (
                       <p className="text-xs text-muted-foreground/70 mt-1 font-mono">
                         {cert.date}
@@ -346,7 +346,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm sm:text-base break-words">{project.title}</p>
+                        <p className="font-semibold text-sm sm:text-base wrap-break-word">{project.title}</p>
                         {project.industry && (
                           <span className="text-xs text-primary font-mono mt-1 inline-block px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
                             {project.industry}
@@ -354,7 +354,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 break-words">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 wrap-break-word">
                       {project.description}
                     </p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -423,14 +423,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 멘토링
               </h3>
               <div className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20">
-                <p className="text-sm sm:text-base text-muted-foreground break-words">
+                <p className="text-sm sm:text-base text-muted-foreground wrap-break-word">
                   <span className="font-semibold text-primary">
                     {member.mentoring.count}명
                   </span>
                   의 후배들을 멘토링하며 실무 경험과 기술 지식을 공유하고 있습니다.
                 </p>
                 {member.mentoring.description && (
-                  <p className="text-xs sm:text-sm text-muted-foreground/80 mt-2 break-words">
+                  <p className="text-xs sm:text-sm text-muted-foreground/80 mt-2 wrap-break-word">
                     {member.mentoring.description}
                   </p>
                 )}

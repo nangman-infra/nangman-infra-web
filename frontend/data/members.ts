@@ -305,6 +305,10 @@ export const members: Member[] = [
         issuer: "Amazon Web Services",
       },
       {
+        name: "AWS Certified Advanced Networking Specialty (ANS-C01)",
+        issuer: "Amazon Web Services",
+      },
+      {
         name: "Cisco Certified Network Associate (CCNA)",
         issuer: "Cisco Systems",
       },

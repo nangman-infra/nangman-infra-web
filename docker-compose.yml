@@ -29,17 +29,17 @@ services:
     container_name: nangman-infra-backend
     ports:
       - "3333:3333"
+    env_file:
+      - ./backend/.env.production
     environment:
       - NODE_ENV=production
       - PORT=3333
       - FRONTEND_URL=http://localhost:7777
-      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
-      - SLACK_CHANNEL=${SLACK_CHANNEL}
     restart: unless-stopped
     networks:
       - nangman-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3333/api/v1/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3333/api/v1/contact/health"]
       interval: 30s
       timeout: 10s
       retries: 3

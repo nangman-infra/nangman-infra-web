@@ -45,21 +45,38 @@ export default function Home() {
 
   // Mouse tracking for parallax effect (desktop only)
   useEffect(() => {
+    let rafId: number | null = null;
+    
     const handleMouseMove = (e: MouseEvent) => {
       // Skip parallax on touch devices
       if (window.matchMedia("(pointer: coarse)").matches) {
         return;
       }
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
-        setMousePosition({ x, y });
+      
+      // Cancel previous animation frame if exists
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
       }
+      
+      // Schedule update for next animation frame
+      rafId = requestAnimationFrame(() => {
+        if (containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width;
+          const y = (e.clientY - rect.top) / rect.height;
+          setMousePosition({ x, y });
+        }
+        rafId = null;
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   useEffect(() => {

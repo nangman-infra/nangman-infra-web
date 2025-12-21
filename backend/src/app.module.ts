@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ContactModule } from './modules/contact/contact.module';
+import { LoggerModule } from './common/logger/logger.module';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 
@@ -19,7 +20,6 @@ function findEnvFile(): string[] {
   for (const path of possiblePaths) {
     if (existsSync(path)) {
       foundPaths.push(path);
-      console.log(`환경 변수 파일 발견: ${path}`);
     }
   }
 
@@ -33,6 +33,7 @@ function findEnvFile(): string[] {
       envFilePath: findEnvFile(),
       ignoreEnvFile: false,
     }),
+    LoggerModule,
     ContactModule,
   ],
 })

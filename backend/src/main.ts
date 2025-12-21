@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ConfigService } from '@nestjs/config';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
@@ -16,21 +17,26 @@ const envFile = existsSync(resolve(process.cwd(), '.env.development'))
 
 if (existsSync(envFile)) {
   config({ path: envFile });
-  console.log(`✅ 환경 변수 파일 로드: ${envFile}`);
-} else {
-  console.warn(`⚠️ 환경 변수 파일을 찾을 수 없습니다: ${envFile}`);
 }
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Winston Logger를 NestJS 기본 Logger로 설정
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  
   // 환경 변수 로드 확인 (디버깅용)
   const configService = app.get(ConfigService);
   const botToken = configService.get<string>('SLACK_BOT_TOKEN') || process.env.SLACK_BOT_TOKEN;
   const channel = configService.get<string>('SLACK_CHANNEL') || process.env.SLACK_CHANNEL;
-  console.log('📋 환경 변수 로드 확인:');
-  console.log(`  SLACK_BOT_TOKEN: ${botToken ? '✅ 설정됨 (' + botToken.substring(0, 10) + '...)' : '❌ 없음'}`);
-  console.log(`  SLACK_CHANNEL: "${channel || '❌ 없음'}"`);
+  
+  logger.log('환경 변수 파일 로드', { envFile });
+  logger.debug('환경 변수 로드 확인', {
+    hasBotToken: !!botToken,
+    hasChannel: !!channel,
+    channelValue: channel,
+  });
 
   // Global prefix for API routes
   app.setGlobalPrefix('api/v1');
@@ -58,7 +64,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3333;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  logger.log(`Application is running on: http://localhost:${port}`, { port });
 }
 
 bootstrap();

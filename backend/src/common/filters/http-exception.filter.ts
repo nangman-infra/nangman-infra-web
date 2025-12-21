@@ -39,15 +39,29 @@ export class HttpExceptionFilter implements ExceptionFilter {
     };
 
     // 에러 로깅
+    const logMetadata = {
+      method: request.method,
+      url: request.url,
+      statusCode: status,
+      ip: request.ip,
+      userAgent: request.get('user-agent'),
+      timestamp: errorResponse.timestamp,
+    };
+
     if (status >= 500) {
-      this.logger.error(
-        `${request.method} ${request.url}`,
-        exception instanceof Error ? exception.stack : JSON.stringify(exception),
-      );
+      this.logger.error(`${request.method} ${request.url}`, {
+        ...logMetadata,
+        error: exception instanceof Error ? {
+          name: exception.name,
+          message: exception.message,
+          stack: exception.stack,
+        } : JSON.stringify(exception),
+      });
     } else {
-      this.logger.warn(
-        `${request.method} ${request.url} - ${JSON.stringify(errorResponse)}`,
-      );
+      this.logger.warn(`${request.method} ${request.url}`, {
+        ...logMetadata,
+        errorResponse,
+      });
     }
 
     response.status(status).json(errorResponse);

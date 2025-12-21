@@ -20,15 +20,26 @@ export class ContactService {
       channel = channel.replace(/^["']|["']$/g, '').trim();
     }
 
-    this.logger.debug(`환경 변수 확인 - BOT_TOKEN: ${botToken ? '설정됨 (' + botToken.substring(0, 10) + '...)' : '없음'}, CHANNEL: "${channel || '없음'}"`);
+    this.logger.debug('환경 변수 확인', {
+      hasBotToken: !!botToken,
+      hasChannel: !!channel,
+      channelValue: channel,
+    });
 
     if (!botToken || botToken.trim() === '') {
-      this.logger.error('SLACK_BOT_TOKEN이 설정되지 않았습니다.');
+      this.logger.error('SLACK_BOT_TOKEN이 설정되지 않았습니다.', {
+        service: 'ContactService',
+        action: 'sendToSlack',
+      });
       throw new Error('Slack Bot Token이 설정되지 않았습니다.');
     }
 
     if (!channel || channel.trim() === '') {
-      this.logger.error(`SLACK_CHANNEL이 설정되지 않았습니다. 현재 값: "${channel}"`);
+      this.logger.error('SLACK_CHANNEL이 설정되지 않았습니다.', {
+        service: 'ContactService',
+        action: 'sendToSlack',
+        channelValue: channel,
+      });
       throw new Error('Slack Channel이 설정되지 않았습니다.');
     }
 
@@ -60,7 +71,14 @@ export class ContactService {
         throw new Error(slackError || 'Slack API 호출 실패');
       }
 
-      this.logger.log(`Slack 메시지 전송 성공: ${dto.name} (${dto.email})`);
+      this.logger.log('Slack 메시지 전송 성공', {
+        service: 'ContactService',
+        action: 'sendToSlack',
+        name: dto.name,
+        email: dto.email,
+        subject: dto.subject,
+        channel: channel,
+      });
 
       return {
         success: true,
@@ -69,17 +87,18 @@ export class ContactService {
     } catch (error) {
       const errorMessage =
         error.response?.data?.error || error.message || '알 수 없는 오류';
-      const errorDetails = {
-        message: errorMessage,
+      
+      this.logger.error('Slack 메시지 전송 실패', {
+        service: 'ContactService',
+        action: 'sendToSlack',
+        error: errorMessage,
         status: error.response?.status,
-        data: error.response?.data,
+        slackError: error.response?.data?.error,
         channel: channel,
-        botTokenPrefix: botToken ? botToken.substring(0, 10) + '...' : '없음',
-      };
-      this.logger.error(
-        `Slack 메시지 전송 실패: ${JSON.stringify(errorDetails, null, 2)}`,
-        error.stack,
-      );
+        name: dto.name,
+        email: dto.email,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       // 사용자 친화적인 에러 메시지
       let userFriendlyMessage = `메시지 전송에 실패했습니다: ${errorMessage}`;
       if (errorMessage.includes('not_in_channel')) {

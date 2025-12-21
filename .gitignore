@@ -12,6 +12,8 @@ node_modules/
 # pnpm-lock.yaml - Keep this file for consistent installs
 package-lock.json
 yarn.lock
+.pnpm-store/
+.pnpm-store/**
 
 # Next.js
 .next/
@@ -84,10 +86,24 @@ next-env.d.ts
 .temp/
 .tmp/
 
-# Frontend specific (if needed)
+# Frontend specific
 frontend/.next/
 frontend/out/
 frontend/node_modules/
+frontend/.turbo/
+
+# Backend specific (Nest.js)
+backend/dist/
+backend/node_modules/
+backend/coverage/
+backend/.nyc_output/
+backend/logs/
+backend/*.tsbuildinfo
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/.env.development
+backend/.env.production
 
 # Backup files
 *.bak

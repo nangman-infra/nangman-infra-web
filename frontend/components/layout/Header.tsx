@@ -89,9 +89,11 @@ export function Header() {
           <Link href="https://github.com/nangman-infra" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
             <Github className="w-5 h-5" />
           </Link>
-          <Button variant="outline" className="hidden md:flex border-primary/20 hover:bg-primary/10 text-primary">
-            Recruit
-          </Button>
+          <Link href="/contact">
+            <Button variant="outline" className="hidden md:flex border-primary/20 hover:bg-primary/10 text-primary">
+              Contact
+            </Button>
+          </Link>
           <Button 
             variant="ghost" 
             size="icon" 

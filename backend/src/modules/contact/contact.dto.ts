@@ -20,4 +20,3 @@ export class CreateContactDto {
   @MaxLength(2000, { message: '메시지는 2000자 이하여야 합니다.' })
   message: string;
 }
-

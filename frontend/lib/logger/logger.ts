@@ -9,7 +9,7 @@ if (typeof window === 'undefined') {
   // 서버 사이드에서만 실행
   try {
     logger = pino(loggerConfig);
-  } catch (error) {
+  } catch {
     // 빌드 타임 에러 방지를 위한 fallback
     logger = pino({
       level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
@@ -26,11 +26,11 @@ if (typeof window === 'undefined') {
 export { logger };
 
 // 로그 헬퍼 함수들
-export const logInfo = (message: string, metadata?: Record<string, any>) => {
+export const logInfo = (message: string, metadata?: Record<string, unknown>) => {
   logger.info(metadata || {}, message);
 };
 
-export const logError = (message: string, error?: Error | unknown, metadata?: Record<string, any>) => {
+export const logError = (message: string, error?: Error | unknown, metadata?: Record<string, unknown>) => {
   if (error instanceof Error) {
     logger.error(
       {
@@ -48,11 +48,11 @@ export const logError = (message: string, error?: Error | unknown, metadata?: Re
   }
 };
 
-export const logWarn = (message: string, metadata?: Record<string, any>) => {
+export const logWarn = (message: string, metadata?: Record<string, unknown>) => {
   logger.warn(metadata || {}, message);
 };
 
-export const logDebug = (message: string, metadata?: Record<string, any>) => {
+export const logDebug = (message: string, metadata?: Record<string, unknown>) => {
   logger.debug(metadata || {}, message);
 };
 

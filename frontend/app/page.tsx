@@ -22,7 +22,6 @@ import { TechStackSection } from "@/components/sections/TechStackSection";
 import { TerminalSection } from "@/components/sections/TerminalSection";
 import { SeniorsSection } from "@/components/sections/SeniorsSection";
 import { CurriculumSection } from "@/components/sections/CurriculumSection";
-import { MonitoringSection } from "@/components/sections/MonitoringSection";
 import { BlogSection } from "@/components/sections/BlogSection";
 import { AnnouncementsSection } from "@/components/sections/AnnouncementsSection";
 import { ContactSection } from "@/components/sections/ContactSection";
@@ -201,9 +200,6 @@ export default function Home() {
 
         {/* Curriculum Section */}
         <CurriculumSection />
-
-        {/* Monitoring Section */}
-        <MonitoringSection />
 
         {/* Blog Section */}
         <BlogSection latestPosts={latestPosts} />

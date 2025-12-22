@@ -2,7 +2,7 @@
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 interface LogMetadata {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const createStructuredLog = (
@@ -11,7 +11,7 @@ const createStructuredLog = (
   metadata?: LogMetadata,
   error?: Error,
 ) => {
-  const log: any = {
+  const log: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     level,
     message,
@@ -29,18 +29,19 @@ const createStructuredLog = (
   return log;
 };
 
-const formatLog = (log: any): string => {
+const formatLog = (log: Record<string, unknown>): string => {
   if (isDevelopment) {
     // 개발 환경: 읽기 쉬운 포맷
-    const timestamp = new Date(log.timestamp).toLocaleTimeString();
-    const level = log.level.toUpperCase().padEnd(5);
+    const timestamp = new Date(log.timestamp as string).toLocaleTimeString();
+    const level = (log.level as string).toUpperCase().padEnd(5);
     const context = log.context ? `[${log.context}]` : '';
     let output = `${timestamp} [${level}]${context} ${log.message}`;
     
     if (log.error) {
-      output += `\n  Error: ${log.error.name}: ${log.error.message}`;
-      if (log.error.stack) {
-        output += `\n  ${log.error.stack}`;
+      const error = log.error as { name: string; message: string; stack?: string };
+      output += `\n  Error: ${error.name}: ${error.message}`;
+      if (error.stack) {
+        output += `\n  ${error.stack}`;
       }
     }
     

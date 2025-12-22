@@ -23,8 +23,9 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
+# Install pnpm and system dependencies (iputils for ping)
+RUN apk add --no-cache iputils && \
+    corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./

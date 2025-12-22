@@ -1,4 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Get,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ContactService } from './contact.service';
 import { CreateContactDto } from './contact.dto';

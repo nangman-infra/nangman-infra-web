@@ -34,7 +34,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3333
-      - FRONTEND_URL=http://localhost:7777
+      - FRONTEND_URL=https://nangman.cloud
+      - KUMA_URL=http://172.16.0.14:3001
+    volumes:
+      - /proc:/host/proc:ro
     restart: unless-stopped
     networks:
       - nangman-network

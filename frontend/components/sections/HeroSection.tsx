@@ -125,6 +125,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
         className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center px-4"
       >
         <motion.button 
+          onClick={() => window.open('https://console.nangman.cloud/', '_blank', 'noopener,noreferrer')}
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           className="group relative px-6 sm:px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold transition-all shadow-[0_0_20px_-5px_var(--primary)] hover:shadow-[0_0_40px_-5px_var(--primary)] overflow-hidden min-h-[44px] touch-manipulation"

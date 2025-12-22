@@ -10,17 +10,19 @@ export const loggerConfig: WinstonModuleOptions = {
         ? winston.format.combine(
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
             winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, context, message, ...metadata }) => {
-              let log = `${timestamp} [${level}]`;
-              if (context) {
-                log += ` [${context}]`;
-              }
-              log += ` ${message}`;
-              if (Object.keys(metadata).length > 0) {
-                log += ` ${JSON.stringify(metadata)}`;
-              }
-              return log;
-            }),
+            winston.format.printf(
+              ({ timestamp, level, context, message, ...metadata }) => {
+                let log = `${timestamp} [${level}]`;
+                if (context) {
+                  log += ` [${context}]`;
+                }
+                log += ` ${message}`;
+                if (Object.keys(metadata).length > 0) {
+                  log += ` ${JSON.stringify(metadata)}`;
+                }
+                return log;
+              },
+            ),
           )
         : winston.format.combine(
             winston.format.timestamp(),
@@ -31,4 +33,3 @@ export const loggerConfig: WinstonModuleOptions = {
   ],
   level: isDevelopment ? 'debug' : 'info',
 };
-

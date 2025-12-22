@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { CreateContactDto } from './contact.dto';
+import { ERROR_MESSAGES } from '../../common/constants/error-messages';
 
 @Injectable()
 export class ContactService {
@@ -12,8 +13,12 @@ export class ContactService {
 
   async sendToSlack(dto: CreateContactDto) {
     // ConfigService에서 읽기 시도, 없으면 process.env에서 직접 읽기
-    const botToken = this.configService.get<string>('SLACK_BOT_TOKEN') || process.env.SLACK_BOT_TOKEN;
-    let channel = this.configService.get<string>('SLACK_CHANNEL') || process.env.SLACK_CHANNEL;
+    const botToken =
+      this.configService.get<string>('SLACK_BOT_TOKEN') ||
+      process.env.SLACK_BOT_TOKEN;
+    let channel =
+      this.configService.get<string>('SLACK_CHANNEL') ||
+      process.env.SLACK_CHANNEL;
 
     // 따옴표 제거 (dotenv가 따옴표를 포함해서 로드할 수 있음)
     if (channel) {
@@ -31,7 +36,7 @@ export class ContactService {
         service: 'ContactService',
         action: 'sendToSlack',
       });
-      throw new Error('Slack Bot Token이 설정되지 않았습니다.');
+      throw new Error(ERROR_MESSAGES.SLACK.BOT_TOKEN_NOT_SET);
     }
 
     if (!channel || channel.trim() === '') {
@@ -40,7 +45,7 @@ export class ContactService {
         action: 'sendToSlack',
         channelValue: channel,
       });
-      throw new Error('Slack Channel이 설정되지 않았습니다.');
+      throw new Error(ERROR_MESSAGES.SLACK.CHANNEL_NOT_SET);
     }
 
     try {
@@ -54,7 +59,7 @@ export class ContactService {
         },
         {
           headers: {
-            'Authorization': `Bearer ${botToken}`,
+            Authorization: `Bearer ${botToken}`,
             'Content-Type': 'application/json',
           },
         },
@@ -64,11 +69,9 @@ export class ContactService {
         const slackError = response.data.error;
         // not_in_channel 에러는 Bot이 채널에 초대되지 않았을 때 발생
         if (slackError === 'not_in_channel') {
-          throw new Error(
-            `Slack Bot이 채널 "${channel}"에 초대되지 않았습니다. Slack에서 Bot을 해당 채널에 초대해주세요.`,
-          );
+          throw new Error(ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel));
         }
-        throw new Error(slackError || 'Slack API 호출 실패');
+        throw new Error(slackError || ERROR_MESSAGES.SLACK.API_CALL_FAILED);
       }
 
       this.logger.log('Slack 메시지 전송 성공', {
@@ -87,7 +90,7 @@ export class ContactService {
     } catch (error) {
       const errorMessage =
         error.response?.data?.error || error.message || '알 수 없는 오류';
-      
+
       this.logger.error('Slack 메시지 전송 실패', {
         service: 'ContactService',
         action: 'sendToSlack',
@@ -100,9 +103,10 @@ export class ContactService {
         stack: error instanceof Error ? error.stack : undefined,
       });
       // 사용자 친화적인 에러 메시지
-      let userFriendlyMessage = `메시지 전송에 실패했습니다: ${errorMessage}`;
+      let userFriendlyMessage =
+        ERROR_MESSAGES.SLACK.MESSAGE_SEND_FAILED(errorMessage);
       if (errorMessage.includes('not_in_channel')) {
-        userFriendlyMessage = `Slack Bot이 채널 "${channel}"에 초대되지 않았습니다. Slack 워크스페이스에서 Bot을 해당 채널에 초대해주세요.`;
+        userFriendlyMessage = ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel);
       }
       throw new Error(userFriendlyMessage);
     }
@@ -160,4 +164,3 @@ export class ContactService {
     };
   }
 }
-

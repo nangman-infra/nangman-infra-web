@@ -12,7 +12,7 @@ if (typeof window === 'undefined') {
   } catch {
     // 빌드 타임 에러 방지를 위한 fallback
     logger = pino({
-      level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+      level: process.env.NODE_ENV === 'development' ? 'debug' : 'warn',
       timestamp: pino.stdTimeFunctions.isoTime,
     });
   }

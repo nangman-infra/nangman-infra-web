@@ -31,5 +31,5 @@ export const loggerConfig: WinstonModuleOptions = {
           ),
     }),
   ],
-  level: isDevelopment ? 'debug' : 'info',
+  level: isDevelopment ? 'debug' : 'warn',
 };

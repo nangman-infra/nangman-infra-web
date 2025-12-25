@@ -8,6 +8,10 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { config } from 'dotenv';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
+import {
+  DEFAULT_FRONTEND_URL,
+  DEFAULT_BACKEND_PORT,
+} from './common/constants/app';
 
 // 환경 변수 파일 직접 로드 (ConfigModule보다 먼저 실행)
 const envFile = existsSync(resolve(process.cwd(), '.env.development'))
@@ -64,11 +68,11 @@ async function bootstrap() {
 
   // CORS 설정 (프론트엔드와의 통신을 위해)
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL,
     credentials: true,
   });
 
-  const port = process.env.PORT || 3333;
+  const port = process.env.PORT || DEFAULT_BACKEND_PORT;
   await app.listen(port);
   logger.log(`Application is running on: http://localhost:${port}`, { port });
 }

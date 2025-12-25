@@ -29,3 +29,11 @@ export const MAX_TRAFFIC_HISTORY_LENGTH = 20;
 
 // 로그 최대 표시 개수
 export const MAX_LOG_DISPLAY_COUNT = 6;
+
+// 시간 계산 상수 (초 단위)
+export const SECONDS_PER_MINUTE = 60;
+export const SECONDS_PER_HOUR = 3600;
+
+// 랙 로드 계산 상수 (KG)
+export const RACK_BASE_LOAD_KG = 500;
+export const RACK_LOAD_INCREMENT_PER_INDEX_KG = 45;

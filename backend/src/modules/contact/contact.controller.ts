@@ -5,10 +5,17 @@ import {
   HttpCode,
   HttpStatus,
   Get,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { ContactService } from './contact.service';
 import { CreateContactDto } from './contact.dto';
+import { EmailThrottlerGuard } from '../../common/guards/email-throttler.guard';
+import {
+  RATE_LIMIT_REQUESTS_PER_HOUR,
+  RATE_LIMIT_TTL_MS,
+} from '../../common/constants/rate-limiting';
 
 @Controller('contact')
 export class ContactController {
@@ -38,6 +45,13 @@ export class ContactController {
   }
 
   @Post()
+  @UseGuards(EmailThrottlerGuard)
+  @Throttle({
+    default: {
+      limit: RATE_LIMIT_REQUESTS_PER_HOUR,
+      ttl: RATE_LIMIT_TTL_MS,
+    },
+  }) // 1시간에 5회 제한 (이메일 기반)
   @HttpCode(HttpStatus.OK)
   async create(@Body() createContactDto: CreateContactDto) {
     return this.contactService.sendToSlack(createContactDto);

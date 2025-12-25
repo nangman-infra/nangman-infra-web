@@ -13,6 +13,26 @@ import {
   MonitoringStatusResponse,
 } from './monitoring.dto';
 import { ERROR_MESSAGES } from '../../common/constants/error-messages';
+import {
+  UPS_TIMEOUT_MS,
+  CPU_HIGH_THRESHOLD_PERCENT,
+  NETWORK_TRAFFIC_HIGH_THRESHOLD_MBPS,
+  MAX_LOG_DISPLAY_COUNT,
+  PERCENTAGE_MULTIPLIER,
+  BYTES_TO_MBPS_DIVISOR,
+  BITS_PER_BYTE,
+  MS_TO_SECONDS_DIVISOR,
+  UPTIME_PRECISION_MULTIPLIER,
+  UPTIME_PRECISION_DIVISOR,
+  GATEWAY_LATENCY_MULTIPLIER,
+  DECIMAL_PRECISION_MULTIPLIER,
+  DECIMAL_PRECISION_DIVISOR,
+  DEFAULT_IOWAIT_VALUE,
+  DEFAULT_NUT_SERVER_URL,
+  DEFAULT_NUT_UPS_NAME,
+  DEFAULT_KUMA_URL,
+  DEFAULT_KUMA_STATUS_PAGE_SLUG,
+} from '../../common/constants/monitoring';
 
 const execAsync = promisify(exec);
 
@@ -112,11 +132,11 @@ export class MonitoringService {
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
-    const memPercentage = (usedMem / totalMem) * 100;
+    const memPercentage = (usedMem / totalMem) * PERCENTAGE_MULTIPLIER;
 
     const cpuUsage = await this.calculateCpuUsage();
 
-    let ioWait = 0.02;
+    let ioWait = DEFAULT_IOWAIT_VALUE;
     try {
       if (process.platform === 'linux') {
         const stats = fs.readFileSync('/proc/stat', 'utf8');
@@ -126,25 +146,29 @@ export class MonitoringService {
         if (cpuLine) {
           const parts = cpuLine.split(/\s+/);
           if (parts.length >= 6) {
-            ioWait = Math.round((parseInt(parts[5], 10) / 1000000) * 100) / 100;
+            ioWait =
+              Math.round(
+                (parseInt(parts[5], 10) / BYTES_TO_MBPS_DIVISOR) *
+                  PERCENTAGE_MULTIPLIER,
+              ) / PERCENTAGE_MULTIPLIER;
           }
         }
       }
     } catch {
-      ioWait = 0.02;
+      ioWait = DEFAULT_IOWAIT_VALUE;
     }
 
     return {
-      load: load.map((v) => Math.round(v * 100) / 100) as [
-        number,
-        number,
-        number,
-      ],
+      load: load.map(
+        (v) => Math.round(v * PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER,
+      ) as [number, number, number],
       cpu: cpuUsage,
       memory: {
         used: usedMem,
         total: totalMem,
-        percentage: Math.round(memPercentage * 10) / 10,
+        percentage:
+          Math.round(memPercentage * DECIMAL_PRECISION_MULTIPLIER) /
+          DECIMAL_PRECISION_DIVISOR,
       },
       ioWait,
       stealTime: 0.0,
@@ -174,8 +198,11 @@ export class MonitoringService {
     this.prevCpuUsage = { idle, total };
 
     if (diffTotal === 0) return 0;
-    const usage = 100 * (1 - diffIdle / diffTotal);
-    return Math.round(usage * 10) / 10;
+    const usage = PERCENTAGE_MULTIPLIER * (1 - diffIdle / diffTotal);
+    return (
+      Math.round(usage * DECIMAL_PRECISION_MULTIPLIER) /
+      DECIMAL_PRECISION_DIVISOR
+    );
   }
 
   private async getNetworkMetrics() {
@@ -211,7 +238,12 @@ export class MonitoringService {
 
     return {
       dnsLatency,
-      gatewayLatency: Math.round(backbonePing * 0.15 * 10) / 10,
+      gatewayLatency:
+        Math.round(
+          backbonePing *
+            GATEWAY_LATENCY_MULTIPLIER *
+            DECIMAL_PRECISION_MULTIPLIER,
+        ) / DECIMAL_PRECISION_DIVISOR,
       backbonePing,
       sslStatus: 'SECURE' as const,
     };
@@ -250,10 +282,16 @@ export class MonitoringService {
 
             if (this.prevNetStats[iface]) {
               const prev = this.prevNetStats[iface];
-              const timeDiff = (now - prev.time) / 1000;
+              const timeDiff = (now - prev.time) / MS_TO_SECONDS_DIVISOR;
               if (timeDiff > 0) {
-                inbound += ((rxBytes - prev.rxBytes) * 8) / 1000000 / timeDiff; // Mbps
-                outbound += ((txBytes - prev.txBytes) * 8) / 1000000 / timeDiff; // Mbps
+                inbound +=
+                  ((rxBytes - prev.rxBytes) * BITS_PER_BYTE) /
+                  BYTES_TO_MBPS_DIVISOR /
+                  timeDiff; // Mbps
+                outbound +=
+                  ((txBytes - prev.txBytes) * BITS_PER_BYTE) /
+                  BYTES_TO_MBPS_DIVISOR /
+                  timeDiff; // Mbps
                 inboundPps += (rxPackets - prev.rxPackets) / timeDiff;
                 outboundPps += (txPackets - prev.txPackets) / timeDiff;
               }
@@ -287,16 +325,20 @@ export class MonitoringService {
     const timestamp = new Date().toLocaleTimeString();
     this.trafficHistory.push({
       timestamp,
-      inbound: Math.round(inbound * 100) / 100,
-      outbound: Math.round(outbound * 100) / 100,
+      inbound:
+        Math.round(inbound * PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER,
+      outbound:
+        Math.round(outbound * PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER,
     });
     if (this.trafficHistory.length > this.MAX_HISTORY_LENGTH) {
       this.trafficHistory.shift();
     }
 
     return {
-      inbound: Math.round(inbound * 100) / 100,
-      outbound: Math.round(outbound * 100) / 100,
+      inbound:
+        Math.round(inbound * PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER,
+      outbound:
+        Math.round(outbound * PERCENTAGE_MULTIPLIER) / PERCENTAGE_MULTIPLIER,
       inboundPps: Math.round(inboundPps),
       outboundPps: Math.round(outboundPps),
       activeConnections,
@@ -309,7 +351,7 @@ export class MonitoringService {
     const now = new Date();
 
     // 1. 시스템 상태 로그
-    if (insights.system.cpu > 80) {
+    if (insights.system.cpu > CPU_HIGH_THRESHOLD_PERCENT) {
       logs.push({
         timestamp: now.toISOString(),
         level: 'WARN',
@@ -332,7 +374,9 @@ export class MonitoringService {
     }
 
     // 3. 네트워크 상태 로그
-    if (insights.network.traffic.inbound > 100) {
+    if (
+      insights.network.traffic.inbound > NETWORK_TRAFFIC_HIGH_THRESHOLD_MBPS
+    ) {
       logs.push({
         timestamp: now.toISOString(),
         level: 'WARN',
@@ -356,13 +400,13 @@ export class MonitoringService {
       message: `Gateway Latency: ${insights.network.gatewayLatency}ms / DNS: ${insights.network.dnsLatency}ms`,
     });
 
-    // 시간 역순 정렬 후 최대 6개만 유지
+    // 시간 역순 정렬 후 최대 개수만 유지
     return logs
       .sort(
         (a, b) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       )
-      .slice(0, 6);
+      .slice(0, MAX_LOG_DISPLAY_COUNT);
   }
 
   private transformKumaDataToMonitors(
@@ -388,7 +432,8 @@ export class MonitoringService {
         const uptimeValue = heartbeatData.uptimeList[uptimeKey];
         const uptime =
           uptimeValue !== undefined
-            ? Math.round(uptimeValue * 10000) / 100
+            ? Math.round(uptimeValue * UPTIME_PRECISION_MULTIPLIER) /
+              UPTIME_PRECISION_DIVISOR
             : null;
 
         const lastCheck = latestHeartbeat?.time || null;
@@ -479,18 +524,18 @@ export class MonitoringService {
     const nutServerUrl =
       this.configService.get<string>('NUT_SERVER_URL') ||
       process.env.NUT_SERVER_URL ||
-      '192.168.10.3:3493';
+      DEFAULT_NUT_SERVER_URL;
     const upsName =
       this.configService.get<string>('NUT_UPS_NAME') ||
       process.env.NUT_UPS_NAME ||
-      'ups';
+      DEFAULT_NUT_UPS_NAME;
 
     try {
       // upsc 명령어로 UPS 정보 조회
       // 형식: upsc ups@192.168.10.3:3493
       const command = `upsc ${upsName}@${nutServerUrl}`;
       const { stdout } = await execAsync(command, {
-        timeout: 5000, // 5초 타임아웃
+        timeout: UPS_TIMEOUT_MS,
       });
 
       // upsc 출력 파싱 (key: value 형식)
@@ -507,19 +552,25 @@ export class MonitoringService {
       const status = this.parseUPSStatus(upsData['ups.status'] || 'UNKNOWN');
       const batteryCharge = this.parseNumber(upsData['battery.charge']);
       const batteryVoltage = this.parseNumber(upsData['battery.voltage']);
-      const batteryVoltageNominal = this.parseNumber(upsData['battery.voltage.nominal']);
+      const batteryVoltageNominal = this.parseNumber(
+        upsData['battery.voltage.nominal'],
+      );
       const inputVoltage = this.parseNumber(upsData['input.voltage']);
-      const inputVoltageNominal = this.parseNumber(upsData['input.voltage.nominal']);
+      const inputVoltageNominal = this.parseNumber(
+        upsData['input.voltage.nominal'],
+      );
       const outputVoltage = this.parseNumber(upsData['output.voltage']);
       const load = this.parseNumber(upsData['ups.load']);
-      const realpowerNominal = this.parseNumber(upsData['ups.realpower.nominal']);
+      const realpowerNominal = this.parseNumber(
+        upsData['ups.realpower.nominal'],
+      );
       const temperature = this.parseNumber(upsData['battery.temperature']);
       const runtimeRemaining = this.parseNumber(upsData['battery.runtime']);
 
       // 현재 소비전력 계산 (부하율 * 정격 전력)
       const currentPower =
         load !== null && realpowerNominal !== null
-          ? Math.round((load / 100) * realpowerNominal)
+          ? Math.round((load / PERCENTAGE_MULTIPLIER) * realpowerNominal)
           : null;
 
       return {
@@ -549,13 +600,15 @@ export class MonitoringService {
     }
   }
 
-  private parseUPSStatus(status: string): 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN' {
+  private parseUPSStatus(
+    status: string,
+  ): 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN' {
     const statusUpper = status.toUpperCase();
-    
+
     // NUT 상태 코드 파싱
     // OL = Online, OB = On Battery, LB = Low Battery, CHRG = Charging
     // 여러 상태가 공백으로 구분되어 있을 수 있음 (예: "OL CHRG")
-    
+
     if (statusUpper.includes('OL') || statusUpper.includes('ONLINE')) {
       // CHRG가 포함되어 있으면 CHARGING, 아니면 ONLINE
       if (statusUpper.includes('CHRG') || statusUpper.includes('CHARGING')) {
@@ -563,19 +616,19 @@ export class MonitoringService {
       }
       return 'ONLINE';
     }
-    
+
     if (statusUpper.includes('OB') || statusUpper.includes('ONBATT')) {
       return 'ONBATT';
     }
-    
+
     if (statusUpper.includes('LB') || statusUpper.includes('LOWBATT')) {
       return 'LOWBATT';
     }
-    
+
     if (statusUpper.includes('CHRG') || statusUpper.includes('CHARGING')) {
       return 'CHARGING';
     }
-    
+
     return 'UNKNOWN';
   }
 
@@ -589,7 +642,7 @@ export class MonitoringService {
     const url =
       this.configService.get<string>('KUMA_URL') ||
       process.env.KUMA_URL ||
-      'http://172.16.0.14:3001';
+      DEFAULT_KUMA_URL;
 
     if (!url || url.trim() === '') {
       this.logger.error('KUMA_URL이 설정되지 않았습니다.', {
@@ -609,7 +662,7 @@ export class MonitoringService {
     const slug =
       this.configService.get<string>('KUMA_STATUS_PAGE_SLUG') ||
       process.env.KUMA_STATUS_PAGE_SLUG ||
-      'nangman';
+      DEFAULT_KUMA_STATUS_PAGE_SLUG;
 
     if (!slug || slug.trim() === '') {
       this.logger.error('KUMA_STATUS_PAGE_SLUG이 설정되지 않았습니다.', {

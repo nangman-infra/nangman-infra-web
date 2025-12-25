@@ -4,7 +4,12 @@ import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 import type { MonitorStatus } from "@/lib/api";
 import { RackSlot } from "./RackSlot";
-import { DEFAULT_DEVICE_U, TOTAL_RACK_U } from "@/constants/monitoring";
+import {
+  DEFAULT_DEVICE_U,
+  TOTAL_RACK_U,
+  RACK_BASE_LOAD_KG,
+  RACK_LOAD_INCREMENT_PER_INDEX_KG,
+} from "@/constants/monitoring";
 
 interface RackComponentProps {
   name: string;
@@ -121,7 +126,7 @@ export const RackComponent = memo<RackComponentProps>(
             <div className="flex gap-6 text-white">
               <span className="flex items-center gap-1.5">
                 <div className="w-1 h-1 bg-white/40 rounded-full" /> LOAD:{" "}
-                {500 + index * 45}KG
+                {RACK_BASE_LOAD_KG + index * RACK_LOAD_INCREMENT_PER_INDEX_KG}KG
               </span>
               <span className="flex items-center gap-1.5">
                 <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />{" "}

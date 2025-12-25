@@ -78,22 +78,28 @@ const formatLog = (log: LogEntry): string => {
 
 export const logger = {
   info: (message: string, metadata?: LogMetadata) => {
-    const log = createStructuredLog('info', message, metadata);
-    console.log(formatLog(log));
+    // 개발 환경에서만 info 레벨 출력
+    if (isDevelopment) {
+      const log = createStructuredLog('info', message, metadata);
+      console.log(formatLog(log));
+    }
   },
 
   error: (message: string, error?: Error | unknown, metadata?: LogMetadata) => {
+    // 운영 환경에서도 error 레벨 출력
     const err = error instanceof Error ? error : undefined;
     const log = createStructuredLog('error', message, metadata, err);
     console.error(formatLog(log));
   },
 
   warn: (message: string, metadata?: LogMetadata) => {
+    // 운영 환경에서도 warn 레벨 출력
     const log = createStructuredLog('warn', message, metadata);
     console.warn(formatLog(log));
   },
 
   debug: (message: string, metadata?: LogMetadata) => {
+    // 개발 환경에서만 debug 레벨 출력
     if (isDevelopment) {
       const log = createStructuredLog('debug', message, metadata);
       console.debug(formatLog(log));

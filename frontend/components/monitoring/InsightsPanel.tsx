@@ -594,12 +594,6 @@ function LogSection({
     }
   };
 
-  const getBatteryBar = (charge: number | null) => {
-    if (charge === null) return "░░░░░░░░░░░░░░░░";
-    const filled = Math.floor((charge / 100) * 16);
-    return "█".repeat(filled) + "░".repeat(16 - filled);
-  };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "ONLINE":

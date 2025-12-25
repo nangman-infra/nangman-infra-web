@@ -17,11 +17,10 @@ import {
   RACK_ORDER,
   MONITORING_REFRESH_INTERVAL_MS,
   LAST_UPDATE_TEXT_REFRESH_INTERVAL_MS,
+  SECONDS_PER_MINUTE,
+  SECONDS_PER_HOUR,
 } from "@/constants/monitoring";
 import type { MonitorStatus } from "@/lib/api";
-
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 3600;
 
 /**
  * 모니터링 섹션 컴포넌트

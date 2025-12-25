@@ -113,7 +113,7 @@ export const InsightsPanel = memo<InsightsPanelProps>(({ index, data }) => {
             <SystemResourcesSection data={data} />
 
             {/* 3. Terminal Log Section */}
-            <LogSection logs={displayedLogs} />
+            <LogSection logs={displayedLogs} ups={data?.ups} />
           </div>
 
           <div className="w-4 flex flex-col border-l border-white/10 bg-[#080809] shrink-0">
@@ -548,6 +548,7 @@ function SystemResourcesSection({
 // Log Section 서브 컴포넌트
 function LogSection({
   logs,
+  ups,
 }: {
   logs: Array<{
     timestamp: string;
@@ -555,6 +556,7 @@ function LogSection({
     source: string;
     message: string;
   }>;
+  ups?: InsightsData['ups'];
 }) {
   const getLogLevelColor = (level: string) => {
     switch (level) {
@@ -571,6 +573,47 @@ function LogSection({
     }
   };
 
+  const formatRuntime = (seconds: number | null): string => {
+    if (!seconds) return "N/A";
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}m ${secs}s`;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ONLINE":
+      case "CHARGING":
+        return "text-green-400";
+      case "ONBATT":
+        return "text-yellow-400";
+      case "LOWBATT":
+        return "text-red-400";
+      default:
+        return "text-white/60";
+    }
+  };
+
+  const getBatteryBar = (charge: number | null) => {
+    if (charge === null) return "░░░░░░░░░░░░░░░░";
+    const filled = Math.floor((charge / 100) * 16);
+    return "█".repeat(filled) + "░".repeat(16 - filled);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "ONLINE":
+      case "CHARGING":
+        return "●";
+      case "ONBATT":
+        return "◐";
+      case "LOWBATT":
+        return "◯";
+      default:
+        return "○";
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 2xl:col-span-3 mt-4">
       <div className="flex justify-between items-center border-b border-white/10 pb-2">
@@ -578,7 +621,96 @@ function LogSection({
           Infrastructure Automation Logs
         </span>
       </div>
-      <div className="h-64 bg-black/50 rounded-lg p-6 font-mono text-[11px] overflow-hidden border border-white/5 leading-relaxed shadow-inner">
+      <div className="h-64 bg-black/50 rounded-lg p-6 font-mono text-[11px] overflow-y-auto border border-white/5 leading-relaxed shadow-inner">
+        {/* UPS Status */}
+        {ups && (
+          <div className="mb-4 pb-3 border-b border-white/10">
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`text-[10px] font-bold ${getStatusColor(ups.status)}`}>
+                {getStatusIcon(ups.status)}
+              </span>
+              <span className="text-[10px] font-black text-white/80 tracking-wider uppercase">
+                UPS STATUS
+              </span>
+              <span className="flex-1 border-t border-white/10"></span>
+              <span className={`text-[10px] font-bold ${getStatusColor(ups.status)}`}>
+                {ups.status}
+                {ups.status === "CHARGING" && (
+                  <span className="text-blue-400 ml-1">+ CHARGING</span>
+                )}
+              </span>
+            </div>
+            
+            {/* Battery Progress Bar */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[9px] text-white/50 uppercase">Battery</span>
+                <span className="text-[10px] font-bold text-primary">
+                  {ups.batteryCharge ?? "N/A"}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${ups.batteryCharge ?? 0}%` }}
+                  className="h-full bg-primary shadow-[0_0_8px_rgba(251,191,36,0.3)]"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(251,191,36,0.6), rgb(251,191,36))',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 2 Column Grid */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[9px] font-mono">
+              <div className="flex justify-between">
+                <span className="text-white/40">Input:</span>
+                <span className="text-white/80">
+                  {ups.inputVoltage ?? "N/A"}V
+                  {ups.inputVoltageNominal && (
+                    <span className="text-white/50">/{ups.inputVoltageNominal}V</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">Battery:</span>
+                <span className="text-white/80">
+                  {ups.batteryVoltage ?? "N/A"}V
+                  {ups.batteryVoltageNominal && (
+                    <span className="text-white/50">/{ups.batteryVoltageNominal}V</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">Load:</span>
+                <span className="text-white/80">
+                  {ups.load ?? "N/A"}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/40">Power:</span>
+                <span className="text-white/80">
+                  {ups.currentPower !== null && ups.realpowerNominal !== null ? (
+                    <>
+                      <span className="text-primary">{ups.currentPower}W</span>
+                      <span className="text-white/50">/{ups.realpowerNominal}W</span>
+                    </>
+                  ) : (
+                    "N/A"
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between col-span-2 pt-1 border-t border-white/5">
+                <span className="text-white/40">Runtime:</span>
+                <span className="text-green-400 font-bold">
+                  {formatRuntime(ups.runtimeRemaining)} remaining
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* System Logs */}
         {logs.length > 0 ? (
           logs.map((log, idx) => (
             <div

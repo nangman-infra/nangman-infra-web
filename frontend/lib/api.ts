@@ -70,6 +70,21 @@ export interface MonitoringStatusResponse {
         source: string;
         message: string;
       }[];
+      ups?: {
+        status: 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN';
+        batteryCharge: number | null;
+        batteryVoltage: number | null;
+        batteryVoltageNominal: number | null;
+        inputVoltage: number | null;
+        inputVoltageNominal: number | null;
+        outputVoltage: number | null;
+        load: number | null;
+        realpowerNominal: number | null;
+        currentPower: number | null;
+        temperature: number | null;
+        runtimeRemaining: number | null;
+        lastUpdate: string | null;
+      };
     };
   };
   message?: string;

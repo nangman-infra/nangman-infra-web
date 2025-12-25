@@ -5,13 +5,26 @@ interface LogMetadata {
   [key: string]: unknown;
 }
 
+interface LogEntry {
+  timestamp: string | number | Date;
+  level: string;
+  message?: string;
+  context?: string;
+  error?: {
+    name?: string;
+    message?: string;
+    stack?: string;
+  };
+  [key: string]: unknown;
+}
+
 const createStructuredLog = (
   level: string,
   message: string,
   metadata?: LogMetadata,
   error?: Error,
-) => {
-  const log: Record<string, unknown> = {
+): LogEntry => {
+  const log: LogEntry = {
     timestamp: new Date().toISOString(),
     level,
     message,
@@ -29,17 +42,17 @@ const createStructuredLog = (
   return log;
 };
 
-const formatLog = (log: Record<string, unknown>): string => {
+const formatLog = (log: LogEntry): string => {
   if (isDevelopment) {
     // 개발 환경: 읽기 쉬운 포맷
-    const timestamp = new Date(log.timestamp as string).toLocaleTimeString();
-    const level = (log.level as string).toUpperCase().padEnd(5);
+    const timestamp = new Date(log.timestamp as string | number | Date).toLocaleTimeString();
+    const level = (log.level || '').toUpperCase().padEnd(5);
     const context = log.context ? `[${log.context}]` : '';
-    let output = `${timestamp} [${level}]${context} ${log.message}`;
+    let output = `${timestamp} [${level}]${context} ${log.message || ''}`;
     
     if (log.error) {
-      const error = log.error as { name: string; message: string; stack?: string };
-      output += `\n  Error: ${error.name}: ${error.message}`;
+      const error = log.error as { name?: string; message?: string; stack?: string };
+      output += `\n  Error: ${error.name || 'Unknown'}: ${error.message || 'Unknown error'}`;
       if (error.stack) {
         output += `\n  ${error.stack}`;
       }

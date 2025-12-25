@@ -94,12 +94,17 @@ export class MonitoringService {
   }
 
   private async collectInsights() {
-    const [system, network] = await Promise.all([
+    const [system, network, ups] = await Promise.all([
       this.getSystemMetrics(),
       this.getNetworkMetrics(),
+      this.getUPSStatus().catch(() => null), // UPS 실패 시 null 반환
     ]);
 
-    return { system, network };
+    return {
+      system,
+      network,
+      ...(ups && { ups }), // UPS 정보가 있을 때만 포함
+    };
   }
 
   private async getSystemMetrics() {
@@ -468,6 +473,116 @@ export class MonitoringService {
       offline,
       pending,
     };
+  }
+
+  private async getUPSStatus() {
+    const nutServerUrl =
+      this.configService.get<string>('NUT_SERVER_URL') ||
+      process.env.NUT_SERVER_URL ||
+      '192.168.10.3:3493';
+    const upsName =
+      this.configService.get<string>('NUT_UPS_NAME') ||
+      process.env.NUT_UPS_NAME ||
+      'ups';
+
+    try {
+      // upsc 명령어로 UPS 정보 조회
+      // 형식: upsc ups@192.168.10.3:3493
+      const command = `upsc ${upsName}@${nutServerUrl}`;
+      const { stdout } = await execAsync(command, {
+        timeout: 5000, // 5초 타임아웃
+      });
+
+      // upsc 출력 파싱 (key: value 형식)
+      const upsData: Record<string, string> = {};
+      stdout.split('\n').forEach((line) => {
+        const match = line.match(/^([^:]+):\s*(.+)$/);
+        if (match) {
+          const [, key, value] = match;
+          upsData[key.trim()] = value.trim();
+        }
+      });
+
+      // UPS 상태 파싱
+      const status = this.parseUPSStatus(upsData['ups.status'] || 'UNKNOWN');
+      const batteryCharge = this.parseNumber(upsData['battery.charge']);
+      const batteryVoltage = this.parseNumber(upsData['battery.voltage']);
+      const batteryVoltageNominal = this.parseNumber(upsData['battery.voltage.nominal']);
+      const inputVoltage = this.parseNumber(upsData['input.voltage']);
+      const inputVoltageNominal = this.parseNumber(upsData['input.voltage.nominal']);
+      const outputVoltage = this.parseNumber(upsData['output.voltage']);
+      const load = this.parseNumber(upsData['ups.load']);
+      const realpowerNominal = this.parseNumber(upsData['ups.realpower.nominal']);
+      const temperature = this.parseNumber(upsData['battery.temperature']);
+      const runtimeRemaining = this.parseNumber(upsData['battery.runtime']);
+
+      // 현재 소비전력 계산 (부하율 * 정격 전력)
+      const currentPower =
+        load !== null && realpowerNominal !== null
+          ? Math.round((load / 100) * realpowerNominal)
+          : null;
+
+      return {
+        status,
+        batteryCharge,
+        batteryVoltage,
+        batteryVoltageNominal,
+        inputVoltage,
+        inputVoltageNominal,
+        outputVoltage,
+        load,
+        realpowerNominal,
+        currentPower,
+        temperature,
+        runtimeRemaining,
+        lastUpdate: new Date().toISOString(),
+      };
+    } catch (error) {
+      this.logger.warn('UPS 정보를 가져오는데 실패했습니다', {
+        service: 'MonitoringService',
+        action: 'getUPSStatus',
+        error: error instanceof Error ? error.message : String(error),
+        nutServerUrl,
+        upsName,
+      });
+      return null;
+    }
+  }
+
+  private parseUPSStatus(status: string): 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN' {
+    const statusUpper = status.toUpperCase();
+    
+    // NUT 상태 코드 파싱
+    // OL = Online, OB = On Battery, LB = Low Battery, CHRG = Charging
+    // 여러 상태가 공백으로 구분되어 있을 수 있음 (예: "OL CHRG")
+    
+    if (statusUpper.includes('OL') || statusUpper.includes('ONLINE')) {
+      // CHRG가 포함되어 있으면 CHARGING, 아니면 ONLINE
+      if (statusUpper.includes('CHRG') || statusUpper.includes('CHARGING')) {
+        return 'CHARGING';
+      }
+      return 'ONLINE';
+    }
+    
+    if (statusUpper.includes('OB') || statusUpper.includes('ONBATT')) {
+      return 'ONBATT';
+    }
+    
+    if (statusUpper.includes('LB') || statusUpper.includes('LOWBATT')) {
+      return 'LOWBATT';
+    }
+    
+    if (statusUpper.includes('CHRG') || statusUpper.includes('CHARGING')) {
+      return 'CHARGING';
+    }
+    
+    return 'UNKNOWN';
+  }
+
+  private parseNumber(value: string | undefined): number | null {
+    if (!value) return null;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
   }
 
   private getKumaUrl(): string {

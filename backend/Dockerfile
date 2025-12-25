@@ -23,8 +23,8 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Install pnpm and system dependencies (iputils for ping)
-RUN apk add --no-cache iputils && \
+# Install pnpm and system dependencies (iputils for ping, nut for UPS monitoring)
+RUN apk add --no-cache iputils nut && \
     corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 # Copy package files

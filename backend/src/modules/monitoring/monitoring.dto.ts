@@ -87,8 +87,8 @@ export interface MonitoringStatusResponse {
         backbonePing: number;
         sslStatus: 'SECURE' | 'WARNING' | 'EXPIRED';
         traffic: {
-          inbound: number; // Mbps
-          outbound: number; // Mbps
+          inbound: number;
+          outbound: number;
           inboundPps: number;
           outboundPps: number;
           activeConnections: number;
@@ -105,6 +105,21 @@ export interface MonitoringStatusResponse {
         source: string;
         message: string;
       }[];
+      ups?: {
+        status: 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN';
+        batteryCharge: number | null; // 배터리 충전률 (%)
+        batteryVoltage: number | null; // 배터리 전압 (V)
+        batteryVoltageNominal: number | null; // 배터리 전압 정격 (V)
+        inputVoltage: number | null; // 입력 전압 (V)
+        inputVoltageNominal: number | null; // 입력 전압 정격 (V)
+        outputVoltage: number | null; // 출력 전압 (V)
+        load: number | null; // 부하율 (%)
+        realpowerNominal: number | null; // 정격 전력 (W)
+        currentPower: number | null; // 현재 소비전력 (W) = (load / 100) * realpowerNominal
+        temperature: number | null; // 온도 (°C)
+        runtimeRemaining: number | null; // 남은 런타임 (초)
+        lastUpdate: string | null; // 마지막 업데이트 시간
+      };
     };
   };
 }

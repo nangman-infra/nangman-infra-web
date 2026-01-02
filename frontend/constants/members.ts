@@ -29,3 +29,7 @@ export const PROFILE_IMAGE_SIZE_STUDENT = {
   desktop: 64,
 };
 
+// 멤버 카드 표시 제한 상수
+export const MAX_DISPLAY_ACHIEVEMENTS = 3;
+export const MAX_DISPLAY_CERTIFICATIONS = 3;
+

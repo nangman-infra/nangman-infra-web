@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Briefcase,
@@ -20,6 +21,7 @@ import {
   Download,
   Globe,
   BookOpen,
+  X,
 } from "lucide-react";
 import type { Member } from "@/types/member";
 
@@ -35,8 +37,15 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl lg:max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
-        <DialogHeader className="px-4 pt-6 pb-4 sm:px-6 lg:px-8 border-b border-border/30 sticky top-0 bg-background z-10">
+        <DialogHeader className="px-4 pt-6 pb-4 sm:px-6 lg:px-8 border-b border-border/30 sticky top-0 bg-background z-10 flex flex-row items-center justify-between">
           <DialogTitle className="sr-only">{member.name} 프로필</DialogTitle>
+          <DialogClose
+            onClick={onClose}
+            className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">닫기</span>
+          </DialogClose>
         </DialogHeader>
 
         <div className="overflow-y-auto flex-1 px-4 pt-6 pb-6 sm:px-6 lg:px-8 space-y-6 md:space-y-8">

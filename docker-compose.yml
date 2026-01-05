@@ -1,9 +1,9 @@
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: harbor.nangman.cloud/library/nangman-infra-frontend:latest
     container_name: nangman-infra-frontend
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     ports:
       - "7777:3000"
     environment:
@@ -23,10 +23,10 @@ services:
       start_period: 40s
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: harbor.nangman.cloud/library/nangman-infra-backend:latest
     container_name: nangman-infra-backend
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     expose:
       - "3333"
     env_file:
@@ -51,6 +51,29 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    command:
+      - --http-api-update
+      - --cleanup
+      - --label-enable
+      - --interval=0
+      - --api-version=1.44
+    environment:
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_TOKEN}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - nangman-network
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
 
 networks:
   nangman-network:

@@ -29,6 +29,9 @@ pipeline {
         
         // 타임스탬프 추가
         timestamps()
+        
+        // ANSI 컬러 출력
+        ansiColor('xterm')
     }
     
     stages {

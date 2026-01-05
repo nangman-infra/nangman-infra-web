@@ -50,56 +50,60 @@ pipeline {
                     echo "🔧 Setting up Docker Buildx for multi-platform builds"
                     sh '''
                         docker buildx version
-                        docker buildx inspect --bootstrap || docker buildx create --use --name multiarch-builder
+                        docker buildx inspect --bootstrap || docker buildx create --use --name multiarch-builder --platform linux/amd64,linux/arm64
                         docker buildx use multiarch-builder
                     '''
                 }
             }
         }
         
-        stage('Build Frontend') {
-            steps {
-                script {
-                    echo "🏗️ Building Frontend image (multi-architecture)"
-                    withCredentials([usernamePassword(
-                        credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
-                        usernameVariable: 'HARBOR_USERNAME',
-                        passwordVariable: 'HARBOR_PASSWORD'
-                    )]) {
-                        sh '''
-                            echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
-                            
-                            docker buildx build \
-                                --platform ${PLATFORMS} \
-                                --tag ${FRONTEND_IMAGE} \
-                                --push \
-                                --progress=plain \
-                                ./frontend
-                        '''
+        stage('Build Images') {
+            parallel {
+                stage('Build Frontend') {
+                    steps {
+                        script {
+                            echo "🏗️ Building Frontend image (multi-architecture)"
+                            withCredentials([usernamePassword(
+                                credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
+                                usernameVariable: 'HARBOR_USERNAME',
+                                passwordVariable: 'HARBOR_PASSWORD'
+                            )]) {
+                                sh '''
+                                    echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+                                    
+                                    docker buildx build \
+                                        --platform ${PLATFORMS} \
+                                        --tag ${FRONTEND_IMAGE} \
+                                        --push \
+                                        --progress=plain \
+                                        ./frontend
+                                '''
+                            }
+                        }
                     }
                 }
-            }
-        }
-        
-        stage('Build Backend') {
-            steps {
-                script {
-                    echo "🏗️ Building Backend image (multi-architecture)"
-                    withCredentials([usernamePassword(
-                        credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
-                        usernameVariable: 'HARBOR_USERNAME',
-                        passwordVariable: 'HARBOR_PASSWORD'
-                    )]) {
-                        sh '''
-                            echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
-                            
-                            docker buildx build \
-                                --platform ${PLATFORMS} \
-                                --tag ${BACKEND_IMAGE} \
-                                --push \
-                                --progress=plain \
-                                ./backend
-                        '''
+                
+                stage('Build Backend') {
+                    steps {
+                        script {
+                            echo "🏗️ Building Backend image (multi-architecture)"
+                            withCredentials([usernamePassword(
+                                credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
+                                usernameVariable: 'HARBOR_USERNAME',
+                                passwordVariable: 'HARBOR_PASSWORD'
+                            )]) {
+                                sh '''
+                                    echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+                                    
+                                    docker buildx build \
+                                        --platform ${PLATFORMS} \
+                                        --tag ${BACKEND_IMAGE} \
+                                        --push \
+                                        --progress=plain \
+                                        ./backend
+                                '''
+                            }
+                        }
                     }
                 }
             }

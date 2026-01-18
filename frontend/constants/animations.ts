@@ -21,3 +21,6 @@ export const SERVICE_CARD_EASE_CURVE = [0.16, 1, 0.3, 1] as const;
 export const SERVICE_PAGE_SECTION_DURATION = 0.6;
 export const SERVICE_PAGE_SECTION_DELAY = 0.1;
 export const SERVICE_PAGE_SECTION_INITIAL_Y = 20;
+
+// Terminal constants
+export const TERMINAL_INPUT_FOCUS_DELAY_MS = 100;

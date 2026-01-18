@@ -14,8 +14,8 @@ export interface Service {
 }
 
 /**
- * 내부 서비스 목록
- * URL은 추후 업데이트 예정
+ * 서비스 목록
+ * 운영 중인 서비스에 대한 통합 접근 정보
  */
 export const SERVICES: Service[] = [
   {

@@ -103,10 +103,10 @@ export const SERVICES: Service[] = [
   {
     id: 'rybbit',
     name: 'Rybbit',
-    description: '파일 공유 서비스',
+    description: '웹 및 제품 분석',
     icon: 'rybbit.png',
     url: 'https://analytics.nangman.cloud',
-    category: 'storage',
+    category: 'monitoring',
   },
   {
     id: 'synology',

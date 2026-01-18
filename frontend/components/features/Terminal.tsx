@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { X, Terminal as TerminalIcon, Minus, Maximize2, Plus } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 interface TerminalProps {
@@ -84,7 +84,9 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
               <span>projects/</span>
               <span>members/</span>
               <span>blog/</span>
-              <span>contact.md</span>
+              <span>contact/</span>
+              <span>monitoring/</span>
+              <span>services/</span>
             </div>
           ),
         });
@@ -106,7 +108,7 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
       default:
         if (trimmedCmd.startsWith("cd ")) {
           const target = trimmedCmd.split(" ")[1];
-          const routes = ["about", "projects", "members", "blog", "contact"];
+          const routes = ["about", "projects", "members", "blog", "contact", "monitoring", "services"];
           if (routes.includes(target)) {
             newLogs.push({ type: "system", content: `Navigating to /${target}...` });
             window.location.href = `/${target}`;
@@ -150,6 +152,7 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
           boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         }}
       >
+        <DialogTitle className="sr-only">터미널</DialogTitle>
         {/* Windows Terminal Style Tabs */}
         <div 
           className="flex items-center gap-0.5 px-2 pt-2"

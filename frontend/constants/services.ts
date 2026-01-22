@@ -51,6 +51,14 @@ export const SERVICES: Service[] = [
     category: 'communication',
   },
   {
+    id: 'mattermost',
+    name: 'Mattermost',
+    description: '오픈소스 협업 플랫폼',
+    icon: 'mattermost',
+    url: 'https://mattermost.nangman.cloud',
+    category: 'communication',
+  },
+  {
     id: 'grafana',
     name: 'Grafana',
     description: '시각화 및 모니터링 대시보드',
@@ -98,6 +106,7 @@ export const SERVICES: Service[] = [
     name: 'RustFS',
     description: '파일 서버',
     icon: 'rustfs.svg',
+    url: 'https://rustfs.nangman.cloud/rustfs/console/auth/login',
     category: 'storage',
   },
   {
@@ -145,6 +154,7 @@ export const SERVICES: Service[] = [
     name: 'SonarQube',
     description: '코드 품질 분석',
     icon: 'sonarqube',
+    url: 'https://sonarqube.console.nangman.cloud',
     category: 'automation',
   },
 ] as const;

@@ -14,8 +14,14 @@ import { Request } from 'express';
 export class EmailThrottlerGuard extends ThrottlerGuard {
   /**
    * Request Body에서 이메일을 추출하여 키로 사용
+   *
+   * @param {Request} req - Express Request 객체
+   * @returns {Promise<string>} 이메일 기반 트래커 키 또는 IP 주소
    */
-  protected async getTracker(req: Record<string, any>): Promise<string> {
+  protected async getTracker(req: {
+    body?: { email?: string };
+    ip?: string;
+  }): Promise<string> {
     // Request Body에서 이메일 추출
     const email = req.body?.email;
 
@@ -30,12 +36,17 @@ export class EmailThrottlerGuard extends ThrottlerGuard {
 
   /**
    * ThrottlerException 발생 시 사용자 친화적인 메시지
+   *
+   * @param {ExecutionContext} context - 실행 컨텍스트
+   * @param {ThrottlerLimitDetail} throttlerLimitDetail - 제한 상세 정보 (부모 클래스 시그니처 준수)
+   * @throws {ThrottlerException} Rate limit 초과 시
    */
   protected async throwThrottlingException(
     context: ExecutionContext,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _throttlerLimitDetail: ThrottlerLimitDetail,
+    throttlerLimitDetail: ThrottlerLimitDetail,
   ): Promise<void> {
+    // throttlerLimitDetail은 부모 클래스 시그니처를 준수하기 위해 필요하지만 사용하지 않음
+    void throttlerLimitDetail;
     const request = context.switchToHttp().getRequest<Request>();
     const email = request.body?.email || '이메일';
 

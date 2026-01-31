@@ -13,8 +13,20 @@ export interface Response<T> {
   message?: string;
 }
 
+/**
+ * 응답 인터셉터
+ * 모든 성공 응답을 표준 형식으로 변환
+ * { success: true, data: ... } 형식으로 래핑
+ */
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
+  /**
+   * 응답을 표준 형식으로 변환
+   *
+   * @param {ExecutionContext} context - 실행 컨텍스트
+   * @param {CallHandler} next - 다음 핸들러
+   * @returns {Observable<Response<T>>} 변환된 응답
+   */
   intercept(
     context: ExecutionContext,
     next: CallHandler,

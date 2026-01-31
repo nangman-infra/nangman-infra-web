@@ -5,6 +5,7 @@
 
 // 타임아웃 관련
 export const UPS_TIMEOUT_MS = 5_000; // UPS 조회 타임아웃 (5초)
+export const DEFAULT_TIMEOUT_MS = 10_000; // 기본 HTTP 요청 타임아웃 (10초)
 
 // 임계값 관련
 export const CPU_HIGH_THRESHOLD_PERCENT = 80; // CPU 고부하 임계값 (%)
@@ -12,6 +13,7 @@ export const NETWORK_TRAFFIC_HIGH_THRESHOLD_MBPS = 100; // 네트워크 트래�
 
 // 로그 관련
 export const MAX_LOG_DISPLAY_COUNT = 6; // 최대 로그 표시 개수
+export const MAX_TRAFFIC_HISTORY_LENGTH = 20; // 트래픽 히스토리 최대 길이
 
 // 계산식 관련 상수
 export const PERCENTAGE_MULTIPLIER = 100; // 퍼센트 계산용 (100%)
@@ -30,3 +32,7 @@ export const DEFAULT_NUT_SERVER_URL = '192.168.10.3:3493'; // NUT 서버 기본 
 export const DEFAULT_NUT_UPS_NAME = 'ups'; // NUT UPS 이름 기본값
 export const DEFAULT_KUMA_URL = 'http://172.16.0.14:3001'; // Kuma URL 기본값
 export const DEFAULT_KUMA_STATUS_PAGE_SLUG = 'nangman'; // Kuma Status Page Slug 기본값
+
+// 네트워크 프로브 관련
+export const DNS_PROBE_HOSTNAME = 'nangman.cloud'; // DNS 조회 대상 호스트명
+export const BACKBONE_PING_TARGET = '8.8.8.8'; // 백본 핑 대상 (Google DNS)

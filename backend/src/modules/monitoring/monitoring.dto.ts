@@ -12,6 +12,25 @@ export interface KumaPublicGroup {
   monitorList: KumaMonitor[];
 }
 
+export interface KumaIncident {
+  id: number;
+  title: string;
+  content: string;
+  style: string;
+  pin: boolean;
+  createdDate: string;
+}
+
+export interface KumaMaintenance {
+  id: number;
+  title: string;
+  description: string;
+  style: string;
+  startDate: string;
+  endDate: string;
+  active: boolean;
+}
+
 export interface KumaStatusPageResponse {
   config: {
     slug: string;
@@ -28,9 +47,9 @@ export interface KumaStatusPageResponse {
     googleAnalyticsId: string | null;
     showCertificateExpiry: boolean;
   };
-  incident: any;
+  incident: KumaIncident | null;
   publicGroupList: KumaPublicGroup[];
-  maintenanceList: any[];
+  maintenanceList: KumaMaintenance[];
 }
 
 export interface KumaHeartbeat {
@@ -57,6 +76,64 @@ export interface MonitorStatus {
   uptime: number | null;
   lastCheck: string | null;
   group: string;
+}
+
+export interface MonitoringLog {
+  timestamp: string;
+  level: 'INFO' | 'SUCCESS' | 'WARN' | 'ALERT' | 'PROBE';
+  source: string;
+  message: string;
+}
+
+export interface SystemInsights {
+  load: [number, number, number];
+  cpu: number;
+  memory: {
+    used: number;
+    total: number;
+    percentage: number;
+  };
+  ioWait: number;
+  stealTime: number;
+}
+
+export interface NetworkInsights {
+  dnsLatency: number;
+  gatewayLatency: number;
+  backbonePing: number;
+  sslStatus: 'SECURE' | 'WARNING' | 'EXPIRED';
+  traffic: {
+    inbound: number;
+    outbound: number;
+    inboundPps: number;
+    outboundPps: number;
+    activeConnections: number;
+    history: {
+      timestamp: string;
+      inbound: number;
+      outbound: number;
+    }[];
+  };
+}
+
+export interface InsightsData {
+  system: SystemInsights;
+  network: NetworkInsights;
+  ups?: {
+    status: 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN';
+    batteryCharge: number | null;
+    batteryVoltage: number | null;
+    batteryVoltageNominal: number | null;
+    inputVoltage: number | null;
+    inputVoltageNominal: number | null;
+    outputVoltage: number | null;
+    load: number | null;
+    realpowerNominal: number | null;
+    currentPower: number | null;
+    temperature: number | null;
+    runtimeRemaining: number | null;
+    lastUpdate: string | null;
+  };
 }
 
 export interface MonitoringStatusResponse {
@@ -99,12 +176,7 @@ export interface MonitoringStatusResponse {
           }[];
         };
       };
-      logs: {
-        timestamp: string;
-        level: 'INFO' | 'SUCCESS' | 'WARN' | 'ALERT' | 'PROBE';
-        source: string;
-        message: string;
-      }[];
+      logs: MonitoringLog[];
       ups?: {
         status: 'ONLINE' | 'ONBATT' | 'LOWBATT' | 'CHARGING' | 'UNKNOWN';
         batteryCharge: number | null; // 배터리 충전률 (%)

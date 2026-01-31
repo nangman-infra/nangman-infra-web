@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { CreateContactDto } from './contact.dto';
 import { ERROR_MESSAGES } from '../../common/constants/error-messages';
 
@@ -11,7 +11,17 @@ export class ContactService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async sendToSlack(dto: CreateContactDto) {
+  /**
+   * Slack으로 문의 메시지 전송
+   * 환경 변수에서 Slack Bot Token과 Channel을 가져와 메시지 전송
+   *
+   * @param {CreateContactDto} dto - 문의 데이터
+   * @returns {Promise<{success: boolean; message: string}>} 전송 결과
+   * @throws {HttpException} 환경 변수 미설정 또는 Slack API 호출 실패 시
+   */
+  async sendToSlack(
+    dto: CreateContactDto,
+  ): Promise<{ success: boolean; message: string }> {
     // ConfigService에서 읽기 시도, 없으면 process.env에서 직접 읽기
     const botToken =
       this.configService.get<string>('SLACK_BOT_TOKEN') ||
@@ -36,7 +46,10 @@ export class ContactService {
         service: 'ContactService',
         action: 'sendToSlack',
       });
-      throw new Error(ERROR_MESSAGES.SLACK.BOT_TOKEN_NOT_SET);
+      throw new HttpException(
+        ERROR_MESSAGES.SLACK.BOT_TOKEN_NOT_SET,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     if (!channel || channel.trim() === '') {
@@ -45,7 +58,10 @@ export class ContactService {
         action: 'sendToSlack',
         channelValue: channel,
       });
-      throw new Error(ERROR_MESSAGES.SLACK.CHANNEL_NOT_SET);
+      throw new HttpException(
+        ERROR_MESSAGES.SLACK.CHANNEL_NOT_SET,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     try {
@@ -69,9 +85,15 @@ export class ContactService {
         const slackError = response.data.error;
         // not_in_channel 에러는 Bot이 채널에 초대되지 않았을 때 발생
         if (slackError === 'not_in_channel') {
-          throw new Error(ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel));
+          throw new HttpException(
+            ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel),
+            HttpStatus.BAD_REQUEST,
+          );
         }
-        throw new Error(slackError || ERROR_MESSAGES.SLACK.API_CALL_FAILED);
+        throw new HttpException(
+          slackError || ERROR_MESSAGES.SLACK.API_CALL_FAILED,
+          HttpStatus.BAD_GATEWAY,
+        );
       }
 
       this.logger.log('Slack 메시지 전송 성공', {
@@ -87,32 +109,77 @@ export class ContactService {
         success: true,
         message: '문의가 성공적으로 전송되었습니다.',
       };
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.error || error.message || '알 수 없는 오류';
+    } catch (error: unknown) {
+      // HttpException은 그대로 재throw (이미 적절한 HTTP 상태 코드 포함)
+      if (error instanceof HttpException) {
+        throw error;
+      }
 
-      this.logger.error('Slack 메시지 전송 실패', {
+      // Axios 에러 처리
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ ok: boolean; error?: string }>;
+        const errorMessage =
+          axiosError.response?.data?.error ||
+          axiosError.message ||
+          '알 수 없는 오류';
+
+        this.logger.error('Slack 메시지 전송 실패', {
+          service: 'ContactService',
+          action: 'sendToSlack',
+          error: errorMessage,
+          status: axiosError.response?.status,
+          slackError: axiosError.response?.data?.error,
+          channel: channel,
+          name: dto.name,
+          email: dto.email,
+          stack: axiosError.stack,
+        });
+
+        // 사용자 친화적인 에러 메시지
+        let userFriendlyMessage =
+          ERROR_MESSAGES.SLACK.MESSAGE_SEND_FAILED(errorMessage);
+        if (errorMessage.includes('not_in_channel')) {
+          userFriendlyMessage =
+            ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel);
+        }
+
+        throw new HttpException(
+          userFriendlyMessage,
+          axiosError.response?.status || HttpStatus.BAD_GATEWAY,
+        );
+      }
+
+      // 알 수 없는 에러
+      const errorMessage =
+        error instanceof Error ? error.message : '알 수 없는 오류';
+      this.logger.error('Slack 메시지 전송 실패 (알 수 없는 에러)', {
         service: 'ContactService',
         action: 'sendToSlack',
         error: errorMessage,
-        status: error.response?.status,
-        slackError: error.response?.data?.error,
         channel: channel,
         name: dto.name,
         email: dto.email,
         stack: error instanceof Error ? error.stack : undefined,
       });
-      // 사용자 친화적인 에러 메시지
-      let userFriendlyMessage =
-        ERROR_MESSAGES.SLACK.MESSAGE_SEND_FAILED(errorMessage);
-      if (errorMessage.includes('not_in_channel')) {
-        userFriendlyMessage = ERROR_MESSAGES.SLACK.BOT_NOT_IN_CHANNEL(channel);
-      }
-      throw new Error(userFriendlyMessage);
+
+      throw new HttpException(
+        ERROR_MESSAGES.SLACK.MESSAGE_SEND_FAILED(errorMessage),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  private formatSlackMessage(dto: CreateContactDto) {
+  /**
+   * Slack 메시지 포맷팅
+   * CreateContactDto를 Slack Block Kit 형식으로 변환
+   *
+   * @param {CreateContactDto} dto - 문의 데이터
+   * @returns {object} Slack Block Kit 메시지 객체
+   */
+  private formatSlackMessage(dto: CreateContactDto): {
+    text: string;
+    blocks: Array<Record<string, unknown>>;
+  } {
     return {
       text: '새로운 문의가 도착했습니다',
       blocks: [

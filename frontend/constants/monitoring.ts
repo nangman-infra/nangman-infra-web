@@ -9,13 +9,13 @@ export const MONITORING_REFRESH_INTERVAL_MS = 30_000;
 // 마지막 업데이트 텍스트 업데이트 간격 (밀리초)
 export const LAST_UPDATE_TEXT_REFRESH_INTERVAL_MS = 1_000;
 
-// 랙 표시 순서 정의 (English Hierarchy)
+// 랙 표시 순서 정의 (5-Layer Hierarchical Structure)
 export const RACK_ORDER = [
-  'Network',
-  'Management Infrastructure',
-  'Compute Nodes',
-  'Web Servers',
-  'External Monitoring',
+  'Network Layer',
+  'Infrastructure Layer',
+  'Platform Services',
+  'Applications',
+  'External Services',
 ] as const;
 
 // 기본 디바이스 U 크기

@@ -2,35 +2,26 @@ pipeline {
     agent any
     
     parameters {
-        // 매터모스트 버튼 클릭 여부 (기본값 false)
         booleanParam(
             name: 'IS_DEPLOY_REQUEST', 
             defaultValue: false, 
-            description: '매터모스트 버튼 클릭으로 실행됨'
+            description: '매터모스트 버튼 클릭 시 true'
         )
     }
     
-    // 매터모스트 버튼 클릭용 트리거만 유지
-    // Push는 Organization Webhook이 자동으로 감지
     triggers {
-
-        // [수정] GitHub Push를 'GenericTrigger'로 받기 (권한 문제 해결!)
+        // 👇 [중요] GenericTrigger 하나로 통합!
+        // GitHub Push와 Mattermost 버튼을 모두 받습니다.
         GenericTrigger(
             genericVariables: [
-                [key: 'ref', value: '$.ref']
+                // 1. GitHub Push가 오면 'ref' 값이 들어옴 (예: refs/heads/main)
+                [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
+                // 2. Mattermost 버튼이 오면 'is_deploy' 값이 들어옴
+                [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
-            token: 'github-push-token',  
-            causeString: 'GitHub Push 감지됨',
-            printContributedVariables: true,
-            printPostContent: true
-        )
-
-        GenericTrigger(
-            genericVariables: [
-                [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy']
-            ],
-            token: 'mattermost-deploy-button',
-            causeString: '매터모스트 버튼 클릭으로 배포 실행됨',
+            // 👇 [핵심] 토큰을 하나로 통일
+            token: 'nangman-trigger',
+            causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
             printContributedVariables: true,
             printPostContent: true
         )
@@ -73,24 +64,35 @@ pipeline {
     }
     
     stages {
+        stage('Distinguish Event') {
+            steps {
+                script {
+                    // 디버깅용 로그
+                    echo "🔍 트리거 분석: GIT_REF=${env.GIT_REF}, IS_DEPLOY_REQUEST=${env.IS_DEPLOY_REQUEST}"
+                }
+            }
+        }
+        
         // =========================================================
-        // [경로 A] GitHub Push로 실행됨 -> 알림 보내고 종료
+        // [경로 1] Push 감지 (GIT_REF가 있고, 배포 요청이 아닐 때)
         // =========================================================
         stage('Notify Approval Request') {
             when {
-                // 버튼 클릭이 아닐 때 (= Push로 자동 실행됐을 때)
-                expression { return params.IS_DEPLOY_REQUEST == false }
+                allOf {
+                    expression { return env.GIT_REF != '' && env.GIT_REF != null }
+                    expression { return env.IS_DEPLOY_REQUEST == 'false' }
+                }
             }
             steps {
                 script {
-                    echo "📣 GitHub Push 감지됨. 매터모스트에 승인 요청 전송."
+                    echo "📣 GitHub Push 감지됨! 승인 요청 보냅니다."
                     
                     def branch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'unknown'
                     def jobName = env.JOB_NAME ?: 'nangman-infra'
                     def buildNumber = env.BUILD_NUMBER
                     def buildUrl = env.BUILD_URL
                     
-                    // 매터모스트로 버튼 달린 메시지 전송
+                    // Mattermost로 버튼 달린 메시지 전송
                     def payload = """
 {
   "text": "### 🚀 배포 승인 요청 (Push 감지)\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n\\n배포를 진행하시겠습니까?",
@@ -101,7 +103,7 @@ pipeline {
         {
           "name": "🚀 배포 시작",
           "integration": {
-            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=mattermost-deploy-button",
+            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=nangman-trigger",
             "context": {
               "is_deploy": "true",
               "job_name": "${jobName}",
@@ -113,7 +115,7 @@ pipeline {
         {
           "name": "❌ 배포 취소",
           "integration": {
-            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=mattermost-deploy-button",
+            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=nangman-trigger",
             "context": {
               "is_deploy": "false",
               "job_name": "${jobName}",
@@ -134,7 +136,7 @@ pipeline {
                         -d '${payload}'
                     """
                     
-                    echo "✅ 매터모스트 알림 전송 완료. 버튼 클릭 대기 중..."
+                    echo "✅ Mattermost 알림 전송 완료. 버튼 클릭 대기 중..."
                     currentBuild.result = 'SUCCESS'
                     currentBuild.description = "배포 승인 대기 중"
                 }
@@ -142,18 +144,43 @@ pipeline {
         }
         
         // =========================================================
-        // [경로 B] 매터모스트 버튼 클릭으로 실행됨 -> 진짜 빌드 시작
+        // [경로 3] 배포 취소 버튼 클릭 (IS_DEPLOY_REQUEST가 false일 때)
+        // =========================================================
+        stage('Deploy Cancelled') {
+            when {
+                allOf {
+                    expression { return env.GIT_REF == '' || env.GIT_REF == null }
+                    expression { return env.IS_DEPLOY_REQUEST == 'false' }
+                }
+            }
+            steps {
+                script {
+                    echo "❌ 배포 취소 버튼 클릭됨."
+                    sh """
+                        curl -X POST ${MATTERMOST_WEBHOOK} \
+                        -H 'Content-Type: application/json' \
+                        -d '{
+                            "text": "❌ **배포 취소됨** - 사용자가 배포를 취소했습니다.\\n**Build:** #${BUILD_NUMBER}"
+                        }'
+                    """
+                    currentBuild.result = 'ABORTED'
+                    currentBuild.description = "배포 취소됨"
+                }
+            }
+        }
+        
+        // =========================================================
+        // [경로 2] 버튼 클릭 감지 (IS_DEPLOY_REQUEST가 true일 때)
         // =========================================================
         stage('Deploy Pipeline') {
             when {
-                // 버튼 클릭으로 실행됐을 때만!
-                expression { return params.IS_DEPLOY_REQUEST == true }
+                expression { return env.IS_DEPLOY_REQUEST == 'true' }
             }
             stages {
                 stage('Deploy Start Notification') {
                     steps {
                         script {
-                            echo "✅ 배포 승인됨 - 빌드를 시작합니다."
+                            echo "🚀 배포 버튼 클릭됨! 배포 시작."
                             sh """
                                 curl -X POST ${MATTERMOST_WEBHOOK} \
                                 -H 'Content-Type: application/json' \
@@ -296,7 +323,7 @@ pipeline {
             script {
                 echo "✅ Pipeline completed successfully"
                 // 배포 파이프라인이 실행된 경우에만 성공 알림
-                if (params.IS_DEPLOY_REQUEST == true) {
+                if (env.IS_DEPLOY_REQUEST == 'true') {
                     sh """
                         curl -X POST ${MATTERMOST_WEBHOOK} \
                         -H 'Content-Type: application/json' \
@@ -324,7 +351,7 @@ pipeline {
         always {
             script {
                 // 배포 파이프라인이 실행된 경우에만 정리
-                if (params.IS_DEPLOY_REQUEST == true) {
+                if (env.IS_DEPLOY_REQUEST == 'true') {
                     echo "🧹 Cleaning up Docker resources"
                     sh '''
                         docker buildx prune -f || true

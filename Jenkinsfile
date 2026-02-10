@@ -26,7 +26,7 @@ pipeline {
 
             // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
             regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            regexpFilterExpression: 'true.*|.*nangman-infra-web.*',
+            regexpFilterExpression: '(true|false).*|.*nangman-infra-web.*',
             printContributedVariables: true,
             printPostContent: true
         )
@@ -154,22 +154,29 @@ pipeline {
         stage('Deploy Cancelled') {
             when {
                 allOf {
+                    // Push가 아니고(GIT_REF 없음) && 배포 요청이 'false'일 때
                     expression { return env.GIT_REF == '' || env.GIT_REF == null }
                     expression { return env.IS_DEPLOY_REQUEST == 'false' }
                 }
             }
             steps {
                 script {
-                    echo "❌ 배포 취소 버튼 클릭됨."
+                    echo "❌ 사용자가 배포를 취소했습니다."
+                    
+                    // 1. 매터모스트 메시지 수정 (버튼 없애기 위해)
                     sh """
                         curl -X POST ${MATTERMOST_WEBHOOK} \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "❌ **배포 취소됨** - 사용자가 배포를 취소했습니다.\\n**Build:** #${BUILD_NUMBER}"
+                            "text": "🚫 **배포가 취소되었습니다.**\\n(취소한 사람: Webhook User)\\n**Build:** #${BUILD_NUMBER}"
                         }'
                     """
+                    
+                    // 2. 빌드 상태를 'ABORTED(취소됨)'가 아니라 'SUCCESS'로 끝내거나
+                    // 굳이 빨간불/회색불 보기 싫으면 아래 줄을 지우셔도 됩니다.
+                    // 다만 "취소됨"을 명확히 하려면 ABORTED가 낫습니다.
                     currentBuild.result = 'ABORTED'
-                    currentBuild.description = "배포 취소됨"
+                    currentBuild.description = "사용자에 의해 취소됨"
                 }
             }
         }

@@ -14,8 +14,17 @@ pipeline {
     // Push는 Organization Webhook이 자동으로 감지
     triggers {
 
-        githubPush()
-        
+        // [수정] GitHub Push를 'GenericTrigger'로 받기 (권한 문제 해결!)
+        GenericTrigger(
+            genericVariables: [
+                [key: 'ref', value: '$.ref']
+            ],
+            token: 'github-push-token',  
+            causeString: 'GitHub Push 감지됨',
+            printContributedVariables: true,
+            printPostContent: true
+        )
+
         GenericTrigger(
             genericVariables: [
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy']

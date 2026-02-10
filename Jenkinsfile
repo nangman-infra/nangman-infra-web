@@ -108,7 +108,7 @@ pipeline {
         {
           "name": "🚀 배포 시작",
           "integration": {
-            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=nangman-trigger",
+            "url": "https://smee.io/ern85Drga3u3CCEP?token=nangman-trigger",
             "context": {
               "is_deploy": "true",
               "job_name": "${jobName}",
@@ -120,7 +120,7 @@ pipeline {
         {
           "name": "❌ 배포 취소",
           "integration": {
-            "url": "https://smee.io/eG3HzM0NYYmtt2t9?token=nangman-trigger",
+            "url": "https://smee.io/ern85Drga3u3CCEP?token=nangman-trigger",
             "context": {
               "is_deploy": "false",
               "job_name": "${jobName}",

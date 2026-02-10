@@ -26,7 +26,7 @@ pipeline {
 
             // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
             regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            regexpFilterExpression: 'true.*|.*nangman-infra-web.*'
+            regexpFilterExpression: 'true.*|.*nangman-infra-web.*',
             printContributedVariables: true,
             printPostContent: true
         )

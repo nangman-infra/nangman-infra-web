@@ -13,6 +13,9 @@ pipeline {
     // 매터모스트 버튼 클릭용 트리거만 유지
     // Push는 Organization Webhook이 자동으로 감지
     triggers {
+
+        githubPush()
+        
         GenericTrigger(
             genericVariables: [
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy']

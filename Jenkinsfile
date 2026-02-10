@@ -16,12 +16,17 @@ pipeline {
             genericVariables: [
                 // 1. GitHub Push가 오면 'ref' 값이 들어옴 (예: refs/heads/main)
                 [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
+                [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: ''],
                 // 2. Mattermost 버튼이 오면 'is_deploy' 값이 들어옴
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
             // 👇 [핵심] 토큰을 하나로 통일
             token: 'nangman-trigger',
             causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
+
+            // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
+            regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
+            regexpFilterExpression: 'true.*|.*nangman-infra-web.*'
             printContributedVariables: true,
             printPostContent: true
         )

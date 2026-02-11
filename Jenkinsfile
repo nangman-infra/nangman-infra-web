@@ -16,7 +16,7 @@ pipeline {
             genericVariables: [
                 // 1. GitHub Push가 오면 'ref' 값이 들어옴 (예: refs/heads/main)
                 [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
-                [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: ''],
+                [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: 'NO_REPO'],
                 // 2. Mattermost 버튼이 오면 'is_deploy' 값이 들어옴
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
@@ -26,7 +26,11 @@ pipeline {
 
             // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
             regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            regexpFilterExpression: '(true|false).*|.*nangman-infra-web.*',
+            // 👇 [수정 2] 필터링 규칙 강화!
+            // 1. true.* : 배포 시작 버튼 (항상 통과)
+            // 2. false NO_REPO       : 배포 취소 버튼 (리포지토리 주소가 없을 때만 통과)
+            // 3. .*nangman-infra-web.* : 인프라 리포지토리 Push일 때만 통과
+            regexpFilterExpression: 'true.*|false NO_REPO|.*nangman-infra-web.*',
             printContributedVariables: true,
             printPostContent: true
         )

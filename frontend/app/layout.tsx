@@ -101,7 +101,7 @@ export default function RootLayout({
         <Script
           id="nangman-analytics"
           src="https://analytics.nangman.cloud/api/script.js"
-          data-site-id="8a5068ffcd5a"
+          data-site-id="ab245b8e45ff"
           strategy="afterInteractive"
         />
         <ThemeProvider

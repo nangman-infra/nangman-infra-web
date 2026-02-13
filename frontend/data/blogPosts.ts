@@ -1,4 +1,4 @@
-import { BACKEND_URL } from '@/lib/config';
+import { buildBackendUrl, fetchBackend } from '@/lib/server/backend-proxy';
 
 // Blog posts data structure matching Backend API
 export interface BlogPost {
@@ -100,7 +100,7 @@ function getFrontendApiUrl(): string {
 }
 
 function getBackendApiUrl(): string {
-  return `${BACKEND_URL}${BLOG_BACKEND_PATH}`;
+  return buildBackendUrl(BLOG_BACKEND_PATH);
 }
 
 function getTargetApiUrl(): string {
@@ -110,36 +110,23 @@ function getTargetApiUrl(): string {
   return getBackendApiUrl();
 }
 
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit,
-  timeoutMs: number,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 // Get latest blog posts with SSR-safe fetch strategy
 export async function getLatestBlogPosts(count: number = 3): Promise<BlogPost[]> {
   const apiUrl = getTargetApiUrl();
 
   try {
-    const response = await fetchWithTimeout(apiUrl, {
+    const commonInit: RequestInit = {
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
       next: { revalidate: 60 }, // Revalidate every 60s
-    }, BLOG_FETCH_TIMEOUT_MS);
+    };
+
+    const response =
+      typeof window !== 'undefined'
+        ? await fetch(apiUrl, commonInit)
+        : await fetchBackend(BLOG_BACKEND_PATH, commonInit, BLOG_FETCH_TIMEOUT_MS);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch posts: ${response.status}`);

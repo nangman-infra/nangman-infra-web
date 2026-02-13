@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, CalendarDays } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import type { BlogPost } from "@/data/blogPosts";
+import { getLatestBlogPosts, type BlogPost } from "@/data/blogPosts";
 
 interface BlogListClientProps {
   posts: BlogPost[];
@@ -34,6 +34,7 @@ function formatDate(dateText: string): string {
 }
 
 export default function BlogListClient({ posts }: BlogListClientProps) {
+  const [runtimePosts, setRuntimePosts] = useState<BlogPost[]>(posts);
   const [query, setQuery] = useState("");
   const [selectedAuthor, setSelectedAuthor] = useState("all");
   const [sortOption, setSortOption] = useState<SortOption>("latest");
@@ -43,16 +44,33 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
     document.title = "기술 블로그 | Nangman Infra";
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBlogPosts() {
+      const latest = await getLatestBlogPosts(20);
+      if (isMounted) {
+        setRuntimePosts(latest);
+      }
+    }
+
+    void loadBlogPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const authorOptions = useMemo(() => {
-    return [...new Set(posts.map((post) => post.author))]
+    return [...new Set(runtimePosts.map((post) => post.author))]
       .filter(Boolean)
       .sort((a, b) => a.localeCompare(b, "ko-KR"));
-  }, [posts]);
+  }, [runtimePosts]);
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    const baseFiltered = posts.filter((post) => {
+    const baseFiltered = runtimePosts.filter((post) => {
       const matchesQuery =
         normalizedQuery.length === 0 ||
         post.title.toLowerCase().includes(normalizedQuery) ||
@@ -74,7 +92,7 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
       }
       return a.author.localeCompare(b.author, "ko-KR");
     });
-  }, [posts, query, selectedAuthor, sortOption]);
+  }, [runtimePosts, query, selectedAuthor, sortOption]);
 
   const visiblePosts = filteredPosts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredPosts.length;

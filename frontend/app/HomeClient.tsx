@@ -13,7 +13,7 @@ import {
     PARALLAX_Y_MIN,
     PARALLAX_Y_MAX,
 } from "@/constants/parallax";
-import type { BlogPost } from "@/data/blogPosts";
+import { getLatestBlogPosts, type BlogPost } from "@/data/blogPosts";
 import { getLatestAnnouncements } from "@/data/announcements";
 import { terminalCommands } from "@/data/terminalCommands";
 import { HeroSection } from "@/components/sections/HeroSection";
@@ -33,6 +33,7 @@ interface HomeClientProps {
 export default function HomeClient({ latestPosts }: HomeClientProps) {
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(latestPosts);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Get latest 3 announcements (static for now)
@@ -41,6 +42,23 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
     // Dynamic page title update
     useEffect(() => {
         document.title = "Nangman Infra | We Build the Invisible";
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadBlogPosts() {
+            const posts = await getLatestBlogPosts(4);
+            if (isMounted) {
+                setBlogPosts(posts);
+            }
+        }
+
+        void loadBlogPosts();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     // Mouse tracking for parallax effect (desktop only)
@@ -203,7 +221,7 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                 <CurriculumSection />
 
                 {/* Blog Section */}
-                <BlogSection latestPosts={latestPosts} />
+                <BlogSection latestPosts={blogPosts} />
 
                 {/* Announcements Section */}
                 <AnnouncementsSection latestAnnouncements={latestAnnouncements} />

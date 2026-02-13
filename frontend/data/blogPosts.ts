@@ -1,5 +1,3 @@
-import { buildBackendUrl, fetchBackend } from '@/lib/server/backend-proxy';
-
 // Blog posts data structure matching Backend API
 export interface BlogPost {
   title: string;
@@ -39,8 +37,6 @@ interface BlogProxyResponse {
 }
 
 const BLOG_API_PATH = '/api/blog/posts';
-const BLOG_BACKEND_PATH = '/api/v1/blog/posts';
-const BLOG_FETCH_TIMEOUT_MS = 5000;
 
 function isBlogPlatform(value: unknown): value is BlogPost['platform'] {
   return (
@@ -95,38 +91,22 @@ function parseBlogPosts(payload: unknown): BlogPost[] {
   return response.data.filter(isBlogPost).map(withLegacyFields);
 }
 
-function getFrontendApiUrl(): string {
-  return BLOG_API_PATH;
+export function getFallbackBlogPosts(count: number = 3): BlogPost[] {
+  return fallbackPosts.slice(0, count);
 }
 
-function getBackendApiUrl(): string {
-  return buildBackendUrl(BLOG_BACKEND_PATH);
-}
-
-function getTargetApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    return getFrontendApiUrl();
-  }
-  return getBackendApiUrl();
-}
-
-// Get latest blog posts with SSR-safe fetch strategy
+// Get latest blog posts from Next.js BFF API at runtime
 export async function getLatestBlogPosts(count: number = 3): Promise<BlogPost[]> {
-  const apiUrl = getTargetApiUrl();
+  const apiUrl = BLOG_API_PATH;
 
   try {
-    const commonInit: RequestInit = {
+    const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
-      next: { revalidate: 60 }, // Revalidate every 60s
-    };
-
-    const response =
-      typeof window !== 'undefined'
-        ? await fetch(apiUrl, commonInit)
-        : await fetchBackend(BLOG_BACKEND_PATH, commonInit, BLOG_FETCH_TIMEOUT_MS);
+      cache: 'no-store',
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch posts: ${response.status}`);
@@ -136,13 +116,9 @@ export async function getLatestBlogPosts(count: number = 3): Promise<BlogPost[]>
     const posts = parseBlogPosts(payload);
     return posts.slice(0, count);
   } catch (error) {
-    console.error('❌ [Frontend] Failed to fetch blog posts');
-    console.error('   - Target URL:', apiUrl);
-    if (error instanceof Error && error.name === 'AbortError') {
-      console.error('   - Error Details: Request timed out');
-      return fallbackPosts.slice(0, count);
-    }
-    console.error('   - Error Details:', error);
-    return fallbackPosts.slice(0, count);
+    console.warn('[Frontend] Failed to fetch blog posts from BFF API');
+    console.warn('  - Target URL:', apiUrl);
+    console.warn('  - Error Details:', error);
+    return getFallbackBlogPosts(count);
   }
 }

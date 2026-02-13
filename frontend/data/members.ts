@@ -243,7 +243,7 @@ export const members: Member[] = [
     role: "Customer Operation Engineer, Equinix SL1 COE",
     affiliation: "Equinix",
     category: "senior",
-    experience: "2025년 6월 ~ 재직중 • 2년차 온프레미스 인프라 경력",
+    experience: "2025년 1월 ~ 재직중 • 2년차 온프레미스 인프라 경력",
     bio: "온프레미스 기반의 네트워크 인프라 구축·운영을 중심으로 경력을 쌓아온 엔지니어입니다. L2/L3 스위칭 및 라우팅, 장비 구성, 점검, 문제 해결에 강점을 보유하고 있으며, 현장 중심의 실무 경험을 기반으로 안정적인 고객 인프라 운영을 지원하고 있습니다. 문서화·표준화에도 관심이 많아 팀 내 기술 문서를 정리하거나 템플릿을 구성하는 등 지식 관리 체계를 개선하는 업무도 함께 수행하고 있습니다.",
     specialties: [
       "네트워크 엔지니어링 (L2/L3)",

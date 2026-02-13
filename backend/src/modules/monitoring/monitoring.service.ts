@@ -342,7 +342,7 @@ export class MonitoringService {
     try {
       await dns.promises.resolve(DNS_PROBE_HOSTNAME);
       dnsLatency = Date.now() - startTime;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.warn('DNS 조회 실패', {
         service: 'MonitoringService',
         action: 'runProbes',
@@ -362,7 +362,7 @@ export class MonitoringService {
       const { stdout } = await execAsync(`ping -c 1 ${BACKBONE_PING_TARGET}`);
       const match = stdout.match(/time=([\d.]+)\s*ms/);
       backbonePing = match ? parseFloat(match[1]) : 0;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.warn('백본 핑 실패', {
         service: 'MonitoringService',
         action: 'runProbes',
@@ -465,8 +465,12 @@ export class MonitoringService {
           activeConnections = 0;
         }
       }
-    } catch (e) {
-      this.logger.warn('Failed to read network stats', e);
+    } catch (error: unknown) {
+      this.logger.warn('Failed to read network stats', {
+        service: 'MonitoringService',
+        action: 'calculateNetworkTraffic',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
 
     // 히스토리 업데이트
@@ -1029,7 +1033,7 @@ export class MonitoringService {
         runtimeRemaining,
         lastUpdate: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.warn('UPS 정보를 가져오는데 실패했습니다', {
         service: 'MonitoringService',
         action: 'getUPSStatus',

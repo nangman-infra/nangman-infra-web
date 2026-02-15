@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Get,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
@@ -48,6 +49,12 @@ export class ContactController {
     channelValue: string | undefined;
     botTokenPrefix: string | null;
   } {
+    const nodeEnv =
+      this.configService.get<string>('NODE_ENV') || process.env.NODE_ENV;
+    if (nodeEnv !== 'development') {
+      throw new NotFoundException();
+    }
+
     // 환경 변수 확인용 (개발 환경에서만 사용)
     const webhookUrl = this.configService.get<string>('MATTERMOST_WEBHOOK_URL');
     return {
@@ -77,6 +84,6 @@ export class ContactController {
   async create(
     @Body() createContactDto: CreateContactDto,
   ): Promise<{ success: boolean; message: string }> {
-    return this.contactService.sendToSlack(createContactDto);
+    return this.contactService.sendContactMessage(createContactDto);
   }
 }

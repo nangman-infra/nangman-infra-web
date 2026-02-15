@@ -3,17 +3,6 @@
  * 가이드라인: Magic Number/String을 상수로 정의하여 유지보수성 향상
  */
 export const ERROR_MESSAGES = {
-  // Slack 관련 에러
-  SLACK: {
-    BOT_TOKEN_NOT_SET: 'Slack Bot Token이 설정되지 않았습니다.',
-    CHANNEL_NOT_SET: 'Slack Channel이 설정되지 않았습니다.',
-    BOT_NOT_IN_CHANNEL: (channel: string) =>
-      `Slack Bot이 채널 "${channel}"에 초대되지 않았습니다. Slack에서 Bot을 해당 채널에 초대해주세요.`,
-    API_CALL_FAILED: 'Slack API 호출 실패',
-    MESSAGE_SEND_FAILED: (errorMessage: string) =>
-      `메시지 전송에 실패했습니다: ${errorMessage}`,
-  },
-
   // Mattermost 관련 에러
   MATTERMOST: {
     WEBHOOK_URL_NOT_SET: 'Mattermost Webhook URL이 설정되지 않았습니다.',

@@ -16,7 +16,7 @@ export class ContactService {
    * @returns {Promise<{success: boolean; message: string}>} 전송 결과
    * @throws {HttpException} 알림 전송 실패 시
    */
-  async sendToSlack(
+  async sendContactMessage(
     dto: CreateContactDto,
   ): Promise<{ success: boolean; message: string }> {
     return this.sendContactMessageUseCase.execute({

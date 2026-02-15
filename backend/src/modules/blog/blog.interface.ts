@@ -1,17 +1,3 @@
-export interface BlogPost {
-  title: string;
-  description: string;
-  link: string;
-  date: string; // ISO String
-  author: string;
-  authorImage?: string;
-  platform: 'tistory' | 'velog' | 'medium' | 'other';
-  tags: string[];
-}
+import { BlogPost as DomainBlogPost } from './domain/blog-post';
 
-export interface MemberBlogConfig {
-  name: string;
-  rssUrl: string;
-  profileImage: string;
-  platform: 'tistory' | 'velog' | 'medium' | 'other';
-}
+export type BlogPost = DomainBlogPost;

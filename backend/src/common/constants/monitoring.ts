@@ -14,6 +14,7 @@ export const NETWORK_TRAFFIC_HIGH_THRESHOLD_MBPS = 100; // 네트워크 트래�
 // 로그 관련
 export const MAX_LOG_DISPLAY_COUNT = 6; // 최대 로그 표시 개수
 export const MAX_TRAFFIC_HISTORY_LENGTH = 20; // 트래픽 히스토리 최대 길이
+export const MONITORING_CACHE_TTL_MS = 10_000; // 모니터링 API 캐시 TTL (10초)
 
 // 계산식 관련 상수
 export const PERCENTAGE_MULTIPLIER = 100; // 퍼센트 계산용 (100%)

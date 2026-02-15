@@ -14,6 +14,14 @@ export const ERROR_MESSAGES = {
       `메시지 전송에 실패했습니다: ${errorMessage}`,
   },
 
+  // Mattermost 관련 에러
+  MATTERMOST: {
+    WEBHOOK_URL_NOT_SET: 'Mattermost Webhook URL이 설정되지 않았습니다.',
+    WEBHOOK_CALL_FAILED: 'Mattermost Webhook 호출 실패',
+    MESSAGE_SEND_FAILED: (errorMessage: string) =>
+      `메시지 전송에 실패했습니다: ${errorMessage}`,
+  },
+
   // Kuma 관련 에러
   KUMA: {
     URL_NOT_SET: 'Kuma URL이 설정되지 않았습니다.',

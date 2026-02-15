@@ -33,16 +33,13 @@ async function bootstrap() {
 
   // 환경 변수 로드 확인 (디버깅용)
   const configService = app.get(ConfigService);
-  const botToken =
-    configService.get<string>('SLACK_BOT_TOKEN') || process.env.SLACK_BOT_TOKEN;
-  const channel =
-    configService.get<string>('SLACK_CHANNEL') || process.env.SLACK_CHANNEL;
+  const webhookUrl =
+    configService.get<string>('MATTERMOST_WEBHOOK_URL') ||
+    process.env.MATTERMOST_WEBHOOK_URL;
 
   logger.log('환경 변수 파일 로드', { envFile });
   logger.debug('환경 변수 로드 확인', {
-    hasBotToken: !!botToken,
-    hasChannel: !!channel,
-    channelValue: channel,
+    hasWebhookUrl: !!webhookUrl,
   });
 
   // Global prefix for API routes

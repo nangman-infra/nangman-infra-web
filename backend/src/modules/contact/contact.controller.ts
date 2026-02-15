@@ -49,18 +49,17 @@ export class ContactController {
     botTokenPrefix: string | null;
   } {
     // 환경 변수 확인용 (개발 환경에서만 사용)
-    const botToken = this.configService.get<string>('SLACK_BOT_TOKEN');
-    const channel = this.configService.get<string>('SLACK_CHANNEL');
+    const webhookUrl = this.configService.get<string>('MATTERMOST_WEBHOOK_URL');
     return {
-      hasBotToken: !!botToken,
-      hasChannel: !!channel,
-      channelValue: channel,
-      botTokenPrefix: botToken ? botToken.substring(0, 10) + '...' : null,
+      hasBotToken: !!webhookUrl,
+      hasChannel: !!webhookUrl,
+      channelValue: webhookUrl ? 'mattermost-webhook' : undefined,
+      botTokenPrefix: webhookUrl ? 'configured' : null,
     };
   }
 
   /**
-   * 문의 생성 및 Slack 전송
+   * 문의 생성 및 Mattermost 전송
    * 이메일 기반 Rate Limiting 적용 (1시간에 5회 제한)
    *
    * @param {CreateContactDto} createContactDto - 문의 데이터

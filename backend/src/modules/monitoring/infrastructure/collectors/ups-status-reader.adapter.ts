@@ -5,8 +5,6 @@ import { promisify } from 'util';
 import { UpsInsights } from '../../domain/models/monitoring.model';
 import { UpsStatusReaderPort } from '../../domain/ports/ups-status-reader.port';
 import {
-  DEFAULT_NUT_SERVER_URL,
-  DEFAULT_NUT_UPS_NAME,
   PERCENTAGE_MULTIPLIER,
   UPS_TIMEOUT_MS,
 } from '../../../../common/constants/monitoring';
@@ -22,19 +20,34 @@ export class UpsStatusReaderAdapter implements UpsStatusReaderPort {
   async read(): Promise<UpsInsights | null> {
     const rawNutServerUrl =
       this.configService.get<string>('NUT_SERVER_URL') ||
-      process.env.NUT_SERVER_URL ||
-      DEFAULT_NUT_SERVER_URL;
+      process.env.NUT_SERVER_URL;
     const rawUpsName =
       this.configService.get<string>('NUT_UPS_NAME') ||
-      process.env.NUT_UPS_NAME ||
-      DEFAULT_NUT_UPS_NAME;
+      process.env.NUT_UPS_NAME;
+
+    if (!rawNutServerUrl?.trim() || !rawUpsName?.trim()) {
+      this.logger.debug('NUT 환경 변수가 없어 UPS 수집을 생략합니다', {
+        service: UpsStatusReaderAdapter.name,
+        action: 'read',
+        hasNutServerUrl: !!rawNutServerUrl,
+        hasNutUpsName: !!rawUpsName,
+      });
+      return null;
+    }
 
     // 입력 값 검증 및 sanitization
-    const nutServerUrl = this.validateUPSInput(
-      rawNutServerUrl,
-      DEFAULT_NUT_SERVER_URL,
-    );
-    const upsName = this.validateUPSInput(rawUpsName, DEFAULT_NUT_UPS_NAME);
+    const nutServerUrl = this.validateUPSInput(rawNutServerUrl);
+    const upsName = this.validateUPSInput(rawUpsName);
+    if (!nutServerUrl || !upsName) {
+      this.logger.warn(
+        'NUT 환경 변수 값이 유효하지 않아 UPS 수집을 생략합니다',
+        {
+          service: UpsStatusReaderAdapter.name,
+          action: 'read',
+        },
+      );
+      return null;
+    }
 
     try {
       const command = `upsc ${upsName}@${nutServerUrl}`;
@@ -101,12 +114,15 @@ export class UpsStatusReaderAdapter implements UpsStatusReaderPort {
     }
   }
 
-  private validateUPSInput(value: string, defaultValue: string): string {
+  private validateUPSInput(value: string): string | null {
     const sanitized = value.replace(/[^a-zA-Z0-9.\-:_]/g, '');
     if (!sanitized || sanitized.length === 0) {
-      return defaultValue;
+      return null;
     }
-    return sanitized.length > 255 ? defaultValue : sanitized;
+    if (sanitized.length > 255) {
+      return null;
+    }
+    return sanitized;
   }
 
   private parseUPSStatus(status: string): UpsInsights['status'] {

@@ -46,9 +46,6 @@ export class MattermostWebhookNotifierAdapter implements ContactNotifierPort {
       this.logger.log('Mattermost 웹훅 메시지 전송 성공', {
         service: MattermostWebhookNotifierAdapter.name,
         action: 'sendContactMessage',
-        name: contactMessage.name,
-        email: contactMessage.email,
-        subject: contactMessage.subject,
       });
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -61,8 +58,6 @@ export class MattermostWebhookNotifierAdapter implements ContactNotifierPort {
           action: 'sendContactMessage',
           error: errorMessage,
           status: statusCode,
-          name: contactMessage.name,
-          email: contactMessage.email,
           stack: axiosError.stack,
         });
 
@@ -80,8 +75,6 @@ export class MattermostWebhookNotifierAdapter implements ContactNotifierPort {
         service: MattermostWebhookNotifierAdapter.name,
         action: 'sendContactMessage',
         error: errorMessage,
-        name: contactMessage.name,
-        email: contactMessage.email,
         stack: error instanceof Error ? error.stack : undefined,
       });
 

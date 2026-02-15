@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
       context: 'ContactAPI',
       action: 'POST',
       hasBody: !!body,
-      name: body?.name,
-      email: body?.email,
     });
 
     // 백엔드로 프록시
@@ -49,8 +47,6 @@ export async function POST(request: NextRequest) {
         action: 'POST',
         status: response.status,
         error: message,
-        name: body?.name,
-        email: body?.email,
       });
 
       return NextResponse.json(
@@ -65,8 +61,6 @@ export async function POST(request: NextRequest) {
     logInfo('Contact API 요청 성공', {
       context: 'ContactAPI',
       action: 'POST',
-      name: body?.name,
-      email: body?.email,
     });
 
     return NextResponse.json(data ?? { success: true });

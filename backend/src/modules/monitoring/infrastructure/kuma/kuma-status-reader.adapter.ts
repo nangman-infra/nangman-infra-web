@@ -1,11 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
-import {
-  DEFAULT_KUMA_STATUS_PAGE_SLUG,
-  DEFAULT_KUMA_URL,
-  DEFAULT_TIMEOUT_MS,
-} from '../../../../common/constants/monitoring';
+import { DEFAULT_TIMEOUT_MS } from '../../../../common/constants/monitoring';
 import { ERROR_MESSAGES } from '../../../../common/constants/error-messages';
 import { MonitoringOperationError } from '../../domain/errors/monitoring-operation.error';
 import { KumaStatusReaderPort } from '../../domain/ports/kuma-status-reader.port';
@@ -61,12 +57,10 @@ export class KumaStatusReaderAdapter implements KumaStatusReaderPort {
 
   private getConfigValue(
     key: string,
-    defaultValue: string,
     errorMessage: string,
     action: string,
   ): string {
-    const value =
-      this.configService.get<string>(key) || process.env[key] || defaultValue;
+    const value = this.configService.get<string>(key) || process.env[key];
 
     if (!value || value.trim() === '') {
       this.logger.error(errorMessage, {
@@ -83,7 +77,6 @@ export class KumaStatusReaderAdapter implements KumaStatusReaderPort {
   private getKumaUrl(): string {
     return this.getConfigValue(
       'KUMA_URL',
-      DEFAULT_KUMA_URL,
       ERROR_MESSAGES.KUMA.URL_NOT_SET,
       'getKumaUrl',
     );
@@ -92,7 +85,6 @@ export class KumaStatusReaderAdapter implements KumaStatusReaderPort {
   private getStatusPageSlug(): string {
     return this.getConfigValue(
       'KUMA_STATUS_PAGE_SLUG',
-      DEFAULT_KUMA_STATUS_PAGE_SLUG,
       ERROR_MESSAGES.KUMA.STATUS_PAGE_SLUG_NOT_SET,
       'getStatusPageSlug',
     );

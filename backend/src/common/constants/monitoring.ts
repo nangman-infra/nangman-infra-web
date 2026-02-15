@@ -28,12 +28,6 @@ export const DECIMAL_PRECISION_MULTIPLIER = 10; // 소수점 반올림 정밀도
 export const DECIMAL_PRECISION_DIVISOR = 10; // 소수점 반올림 정밀도 (소수점 1자리)
 export const DEFAULT_IOWAIT_VALUE = 0.02; // 기본 ioWait 값
 
-// 기본값 관련
-export const DEFAULT_NUT_SERVER_URL = '192.168.10.3:3493'; // NUT 서버 기본 URL
-export const DEFAULT_NUT_UPS_NAME = 'ups'; // NUT UPS 이름 기본값
-export const DEFAULT_KUMA_URL = 'http://172.16.0.14:3001'; // Kuma URL 기본값
-export const DEFAULT_KUMA_STATUS_PAGE_SLUG = 'nangman'; // Kuma Status Page Slug 기본값
-
 // 네트워크 프로브 관련
 export const DNS_PROBE_HOSTNAME = 'nangman.cloud'; // DNS 조회 대상 호스트명
 export const BACKBONE_PING_TARGET = '8.8.8.8'; // 백본 핑 대상 (Google DNS)

@@ -304,6 +304,32 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             </motion.div>
           )}
 
+          {/* Achievements Section */}
+          {member.achievements && member.achievements.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+              className="space-y-3"
+            >
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+                주요 성과 ({member.achievements.length}개)
+              </h3>
+              <div className="space-y-2 sm:space-y-2.5">
+                {member.achievements.map((achievement, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground p-2.5 sm:p-3 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <span className="wrap-break-word">{achievement}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Certifications Section */}
           {member.certifications && member.certifications.length > 0 && (
             <motion.div
@@ -452,4 +478,3 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     </Dialog>
   );
 }
-

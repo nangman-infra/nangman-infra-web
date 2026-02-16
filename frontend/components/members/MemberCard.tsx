@@ -25,6 +25,11 @@ export function MemberCard({
   isSenior = false,
   onClick,
 }: MemberCardProps) {
+  const certificationCount = member.certifications?.length ?? 0;
+  const achievementCount = member.achievements?.length ?? 0;
+  const hasCertifications = certificationCount > 0;
+  const hasAchievements = achievementCount > 0;
+
   const handleClick = () => {
     if (onClick) {
       onClick(member);
@@ -113,34 +118,8 @@ export function MemberCard({
             </div>
           )}
 
-          {/* Achievements */}
-          {member.achievements && member.achievements.length > 0 && (
-            <div className="pt-2 border-t border-border/20">
-              <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
-                {member.achievements.slice(0, MAX_DISPLAY_ACHIEVEMENTS).map((achievement, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                  >
-                    <span
-                      className={`rounded-full bg-primary/60 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"
-                        }`}
-                    />
-                    <span>{achievement}</span>
-                  </div>
-                ))}
-                {member.achievements.length > MAX_DISPLAY_ACHIEVEMENTS && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
-                    <span className={`rounded-full bg-primary/40 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"}`} />
-                    <span>외 {member.achievements.length - MAX_DISPLAY_ACHIEVEMENTS}개</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Certifications - achievements가 없을 때 표시 */}
-          {!member.achievements && member.certifications && member.certifications.length > 0 && (
+          {/* Certifications - 기본 우선 표시 */}
+          {hasCertifications && member.certifications && (
             <div className="pt-2 border-t border-border/20">
               <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
                 {member.certifications.slice(0, MAX_DISPLAY_CERTIFICATIONS).map((cert, idx) => (
@@ -155,10 +134,36 @@ export function MemberCard({
                     <span>{cert.name}</span>
                   </div>
                 ))}
-                {member.certifications.length > MAX_DISPLAY_CERTIFICATIONS && (
+                {certificationCount > MAX_DISPLAY_CERTIFICATIONS && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
                     <span className={`rounded-full bg-primary/40 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"}`} />
-                    <span>외 {member.certifications.length - MAX_DISPLAY_CERTIFICATIONS}개</span>
+                    <span>외 {certificationCount - MAX_DISPLAY_CERTIFICATIONS}개</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Achievements - certifications가 없을 때 표시 */}
+          {!hasCertifications && hasAchievements && member.achievements && (
+            <div className="pt-2 border-t border-border/20">
+              <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
+                {member.achievements.slice(0, MAX_DISPLAY_ACHIEVEMENTS).map((achievement, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span
+                      className={`rounded-full bg-primary/60 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"
+                        }`}
+                    />
+                    <span>{achievement}</span>
+                  </div>
+                ))}
+                {achievementCount > MAX_DISPLAY_ACHIEVEMENTS && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                    <span className={`rounded-full bg-primary/40 shrink-0 ${isSenior ? "w-1.5 h-1.5" : "w-1 h-1"}`} />
+                    <span>외 {achievementCount - MAX_DISPLAY_ACHIEVEMENTS}개</span>
                   </div>
                 )}
               </div>
@@ -169,4 +174,3 @@ export function MemberCard({
     </motion.div>
   );
 }
-

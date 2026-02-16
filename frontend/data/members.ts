@@ -9,17 +9,6 @@ export const members: Member[] = [
     experience: "2025년 6월 ~ 재직중 • 5년+ 클라우드 및 인프라 경력",
     bio: "인프라를 좋아해서 집을 지어 IDC를 만드는 것이 꿈입니다. 정보통신공학과를 전공하고 모바일융합공학과에서 석사를 마친 후, 현재 AWS 클라우드 환경에서 제조업, 의료, 금융, 서비스, IoT 등 다양한 산업 분야의 고객들에게 AWS 인프라 환경을 구축하고 있습니다.",
     specialties: ["서버", "네트워크", "운영체제", "AWS 인프라", "클라우드 아키텍처"],
-    achievements: [
-      "AWS Certified Solutions Architect - Professional",
-      "AWS Certified DevOps Engineer - Professional",
-      "AWS Certified Security - Specialty",
-      "AWS Certified Advanced Networking - Specialty",
-      "AWS Certified Machine Learning - Specialty",
-      "AWS Certified Database - Specialty",
-      "AWS Certified Data Analytics - Specialty",
-      "AWS Certified Solutions Architect - Associate",
-      "AWS Certified SysOps Administrator - Associate",
-    ],
     profileImage: "/profiles/seongwon.png",
     education: [
       {
@@ -363,9 +352,25 @@ export const members: Member[] = [
     bio: "클라우드 인프라와 네트워크 기술에 깊은 관심을 가지고 있습니다. AWS 및 네이버 클라우드 실무 특강을 통해 클라우드 환경에 대한 이해를 쌓았으며, 네트워크 프로그래밍과 시스템 아키텍처 설계에 열정을 가지고 있습니다. 연합학습 연구 프로젝트에서 Jetson Nano, Raspberry Pi 등 엣지 디바이스를 활용한 분산 시스템 구축 경험이 있습니다.",
     specialties: ["클라우드", "네트워크", "AWS", "네이버클라우드", "Linux"],
     achievements: [
-      "AWS 클라우드 실무 특강 수료",
-      "네이버 클라우드 플랫폼 실무 특강 수료",
       "연합학습 연구 프로젝트 참여",
+    ],
+    certifications: [
+      {
+        name: "NAVER Cloud Platform Certified Associate",
+        issuer: "네이버 클라우드 플랫폼",
+      },
+      {
+        name: "NAVER Cloud Platform Certified Professional",
+        issuer: "네이버 클라우드 플랫폼",
+      },
+      {
+        name: "네이버 클라우드 플랫폼 실무 특강 수료",
+        issuer: "네이버 클라우드 플랫폼",
+      },
+      {
+        name: "AWS 클라우드 실무 특강 수료",
+        issuer: "Amazon Web Services",
+      },
     ],
     profileImage: "/profiles/taekjun.png",
     links: {
@@ -380,8 +385,13 @@ export const members: Member[] = [
     bio: "인프라의 매력을 찾아 모험을 떠나는 학부생입니다. 컴퓨터공학과에 재학중이며, 기초 CS 지식 습득을 위한 학업과 사이드 프로젝트를 진행중입니다. 안정적이고 효율적인 서버 인프라 환경을 구축해주는 엔지니어가 되고싶습니다.",
     specialties: ["AWS", "네트워크", "Linux"],
     achievements: [
-      "AWS Certified Cloud Practitioner 보유",
       "학점 4.3",
+    ],
+    certifications: [
+      {
+        name: "AWS Certified Cloud Practitioner",
+        issuer: "Amazon Web Services",
+      },
     ],
     profileImage: "/profiles/seongwoo.png",
     links: {
@@ -416,4 +426,3 @@ export const members: Member[] = [
     },
   },
 ];
-

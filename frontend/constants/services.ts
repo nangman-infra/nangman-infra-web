@@ -75,6 +75,14 @@ export const SERVICES: Service[] = [
     category: 'infrastructure',
   },
   {
+    id: 'directus',
+    name: 'Directus',
+    description: '헤드리스 CMS 및 콘텐츠 관리',
+    icon: 'directus',
+    url: 'https://directus.console.nangman.cloud',
+    category: 'infrastructure',
+  },
+  {
     id: 'jenkins',
     name: 'Jenkins',
     description: 'CI/CD 파이프라인',

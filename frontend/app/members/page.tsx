@@ -5,6 +5,7 @@ import { Briefcase, GraduationCap } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Member } from "@/types/member";
 import { members } from "@/data/members";
+import { getMembersUseCase } from "@/lib/application/use-cases/members/get-members";
 import { ProfileModal } from "@/components/members/ProfileModal";
 import { MemberCard } from "@/components/members/MemberCard";
 import { StatsSection } from "@/components/members/StatsSection";
@@ -18,13 +19,31 @@ import {
 export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [membersData, setMembersData] = useState<Member[]>(members);
 
   useEffect(() => {
     document.title = "함께하는 사람들 | Nangman Infra";
+
+    let isMounted = true;
+
+    const loadMembers = async () => {
+      const payload = await getMembersUseCase({ fallback: members });
+      if (!isMounted) {
+        return;
+      }
+
+      setMembersData(payload);
+    };
+
+    void loadMembers();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const seniors = members.filter((m) => m.category === "senior");
-  const students = members.filter((m) => m.category === "student");
+  const seniors = membersData.filter((m) => m.category === "senior");
+  const students = membersData.filter((m) => m.category === "student");
 
   const handleMemberClick = (member: Member) => {
     setSelectedMember(member);
@@ -57,7 +76,7 @@ export default function MembersPage() {
                 <Briefcase className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl md:text-3xl font-bold">멘토</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 md:auto-rows-fr gap-6 md:gap-8">
                 {seniors.map((member, index) => (
                   <MemberCard
                     key={member.name}
@@ -84,7 +103,7 @@ export default function MembersPage() {
                 <GraduationCap className="w-6 h-6 text-primary" />
                 <h2 className="text-2xl md:text-3xl font-bold">학생</h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:auto-rows-fr gap-6 md:gap-8">
                 {students.map((member, index) => (
                   <MemberCard
                     key={member.name}
@@ -101,7 +120,7 @@ export default function MembersPage() {
 
           {/* Stats Section */}
           <StatsSection
-            totalMembers={members.length}
+            totalMembers={membersData.length}
             seniorsCount={seniors.length}
             studentsCount={students.length}
           />

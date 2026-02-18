@@ -113,6 +113,8 @@ backend/.env.production
 # Local development
 .local/
 
+# Local CMS persistence (bind mounts)
+cms/
+
 # Project Info
 INFO/
-

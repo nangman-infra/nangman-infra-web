@@ -41,13 +41,14 @@ export function MemberCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: ANIMATION_DURATION_SHORT, delay: baseDelay + index * ANIMATION_DELAY_MEMBER_CARD_INCREMENT }}
+      className="h-full"
     >
       <div
         onClick={handleClick}
-        className="gpu-accelerated-blur group relative p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 cursor-pointer"
+        className="gpu-accelerated-blur group relative h-full p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 cursor-pointer flex flex-col"
       >
         <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="relative z-10 space-y-4">
+        <div className="relative z-10 flex h-full flex-col gap-4">
           {/* Profile Image & Basic Info */}
           <div className="flex items-start gap-4">
             <div
@@ -120,7 +121,7 @@ export function MemberCard({
 
           {/* Certifications - 기본 우선 표시 */}
           {hasCertifications && member.certifications && (
-            <div className="pt-2 border-t border-border/20">
+            <div className="pt-2 border-t border-border/20 mt-auto">
               <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
                 {member.certifications.slice(0, MAX_DISPLAY_CERTIFICATIONS).map((cert, idx) => (
                   <div
@@ -146,7 +147,7 @@ export function MemberCard({
 
           {/* Achievements - certifications가 없을 때 표시 */}
           {!hasCertifications && hasAchievements && member.achievements && (
-            <div className="pt-2 border-t border-border/20">
+            <div className="pt-2 border-t border-border/20 mt-auto">
               <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
                 {member.achievements.slice(0, MAX_DISPLAY_ACHIEVEMENTS).map((achievement, idx) => (
                   <div

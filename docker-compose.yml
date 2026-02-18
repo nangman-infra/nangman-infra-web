@@ -35,6 +35,10 @@ services:
       - NODE_ENV=production
       - PORT=3333
       - FRONTEND_URL=https://nangman.cloud
+      - DIRECTUS_URL=http://directus:8055
+      - DIRECTUS_TOKEN=directus-admin-token
+      - DIRECTUS_EMAIL=admin@nangman.cloud
+      - DIRECTUS_PASSWORD=change-me-now
       - KUMA_URL=http://172.16.0.14:3001
       - NUT_SERVER_URL=192.168.10.3:3493
       - NUT_UPS_NAME=ups
@@ -51,6 +55,49 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  directus:
+    image: directus/directus:latest
+    container_name: directus
+    ports:
+      - "8055:8055"
+    environment:
+      - KEY=replace-with-random-directus-key
+      - SECRET=replace-with-random-directus-secret
+      - PUBLIC_URL=https://nangman.cloud
+      - DB_CLIENT=pg
+      - DB_HOST=directus-db
+      - DB_PORT=5432
+      - DB_DATABASE=directus
+      - DB_USER=directus
+      - DB_PASSWORD=directus
+      - ADMIN_EMAIL=admin@nangman.cloud
+      - ADMIN_PASSWORD=change-me-now
+      - ADMIN_TOKEN=directus-admin-token
+    depends_on:
+      - directus-db
+    restart: unless-stopped
+    networks:
+      - nangman-network
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    volumes:
+      - ./cms/directus/uploads:/directus/uploads
+
+  directus-db:
+    image: postgres:16-alpine
+    container_name: directus-db
+    environment:
+      - POSTGRES_DB=directus
+      - POSTGRES_USER=directus
+      - POSTGRES_PASSWORD=directus
+    restart: unless-stopped
+    networks:
+      - nangman-network
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    volumes:
+      - ./cms/postgres/data:/var/lib/postgresql/data
 
   watchtower:
     image: containrrr/watchtower:latest
@@ -78,4 +125,3 @@ services:
 networks:
   nangman-network:
     driver: bridge
-

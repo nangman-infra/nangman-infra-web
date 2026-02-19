@@ -145,7 +145,7 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                         url: "https://nangman.cloud",
                         logo: "https://nangman.cloud/icon.png",
                         description:
-                            "현업 엔지니어와 학습자가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 팀",
+                            "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티",
                         address: {
                             "@type": "PostalAddress",
                             addressLocality: "대전광역시 유성구",
@@ -173,7 +173,7 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                         name: "Nangman Infra",
                         url: "https://nangman.cloud",
                         description:
-                            "현업 엔지니어와 학습자가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 팀",
+                            "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티",
                         inLanguage: "ko-KR",
                     }),
                 }}

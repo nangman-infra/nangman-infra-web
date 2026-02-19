@@ -1,4 +1,4 @@
-export type MemberCategory = 'senior' | 'student';
+export type MemberCategory = 'senior' | 'mentee';
 
 export interface MemberEducationPaper {
   title: string;

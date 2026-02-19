@@ -233,7 +233,7 @@ export const members: Member[] = [
     affiliation: "Equinix",
     category: "senior",
     experience: "2025년 1월 ~ 재직중 • 2년차 온프레미스 인프라 경력",
-    bio: "온프레미스 기반의 네트워크 인프라 구축·운영을 중심으로 경력을 쌓아온 엔지니어입니다. L2/L3 스위칭 및 라우팅, 장비 구성, 점검, 문제 해결에 강점을 보유하고 있으며, 현장 중심의 실무 경험을 기반으로 안정적인 고객 인프라 운영을 지원하고 있습니다. 문서화·표준화에도 관심이 많아 팀 내 기술 문서를 정리하거나 템플릿을 구성하는 등 지식 관리 체계를 개선하는 업무도 함께 수행하고 있습니다.",
+    bio: "온프레미스 기반의 네트워크 인프라 구축·운영을 중심으로 경력을 쌓아온 엔지니어입니다. L2/L3 스위칭 및 라우팅, 장비 구성, 점검, 문제 해결에 강점을 보유하고 있으며, 현장 중심의 실무 경험을 기반으로 안정적인 고객 인프라 운영을 지원하고 있습니다. 문서화·표준화에도 관심이 많아 조직 내 기술 문서를 정리하거나 템플릿을 구성하는 등 지식 관리 체계를 개선하는 업무도 함께 수행하고 있습니다.",
     specialties: [
       "네트워크 엔지니어링 (L2/L3)",
       "VLAN",
@@ -314,7 +314,7 @@ export const members: Member[] = [
     name: "임동건",
     role: "3학년 컴퓨터공학과",
     affiliation: "국립한밭대학교",
-    category: "student",
+    category: "mentee",
     bio: "클라우드 인프라와 DevOps에 관심을 가지고 있습니다. 학교에서 AWS, 네이버 클라우드, Docker, Kubernetes, CI/CD 등을 활용한 여러 프로젝트를 수행하며 클라우드 플랫폼 운영과 자동화 역량을 키워왔습니다. 앞으로 클라우드 엔지니어로서 효율적인 시스템 설계와 안정적인 서비스 운영에 기여하고 싶습니다.",
     specialties: ["클라우드", "Github", "AWS", "네이버클라우드", "Linux"],
     profileImage: "/profiles/donggeon.png",
@@ -348,7 +348,7 @@ export const members: Member[] = [
     name: "정택준",
     role: "3학년 컴퓨터공학과",
     affiliation: "국립한밭대학교",
-    category: "student",
+    category: "mentee",
     bio: "클라우드 인프라와 네트워크 기술에 깊은 관심을 가지고 있습니다. AWS 및 네이버 클라우드 실무 특강을 통해 클라우드 환경에 대한 이해를 쌓았으며, 네트워크 프로그래밍과 시스템 아키텍처 설계에 열정을 가지고 있습니다. 연합학습 연구 프로젝트에서 Jetson Nano, Raspberry Pi 등 엣지 디바이스를 활용한 분산 시스템 구축 경험이 있습니다.",
     specialties: ["클라우드", "네트워크", "AWS", "네이버클라우드", "Linux"],
     achievements: [
@@ -381,7 +381,7 @@ export const members: Member[] = [
     name: "태성우",
     role: "3학년 컴퓨터공학과",
     affiliation: "국립한밭대학교",
-    category: "student",
+    category: "mentee",
     bio: "인프라의 매력을 찾아 모험을 떠나는 학부생입니다. 컴퓨터공학과에 재학중이며, 기초 CS 지식 습득을 위한 학업과 사이드 프로젝트를 진행중입니다. 안정적이고 효율적인 서버 인프라 환경을 구축해주는 엔지니어가 되고싶습니다.",
     specialties: ["AWS", "네트워크", "Linux"],
     achievements: [
@@ -402,7 +402,7 @@ export const members: Member[] = [
     name: "김주형",
     role: "2학년 모바일융합공학과",
     affiliation: "국립한밭대학교",
-    category: "student",
+    category: "mentee",
     bio: "기업의 취약점 진단 관리자를 희망하고 있으며 더 나아가 인하우스 담당자까지 목표를 하고 있습니다. 리눅스와 c++언어 기반으로 공부하고 있고 구축된 서버의 외부접근, 내부 모니터링과 내부 패치 등을 직접 진행해 보면서 CERT 관리자로써의 역량을 키우는데 중점을 두고 있습니다.",
     specialties: ["리눅스", "C++", "CERT", "보안", "모니터링"],
     profileImage: "/profiles/juhyung.png",
@@ -414,7 +414,7 @@ export const members: Member[] = [
     name: "정희훈",
     role: "2학년 모바일융합공학과",
     affiliation: "국립한밭대학교",
-    category: "student",
+    category: "mentee",
     bio: "공공기관에서 온프렘과 클라우드 인프라를 모두 다룰 수 있는 엔지니어를 목표로 하고 있습니다. 리눅스 및 네트워크 기반 기술을 중심으로 공부하고 있고, 서버를 직접 구축해 보면서 인프라 구조를 논리적으로 이해하는 데 최선을 다하고 있습니다.",
     specialties: ["리눅스", "네트워크", "온프렘", "클라우드", "인프라"],
     achievements: [

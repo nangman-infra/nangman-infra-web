@@ -89,8 +89,7 @@ export default function ContactPage() {
           <div>
             <h3 className="text-lg font-bold mb-2 text-primary">Location</h3>
             <p className="text-muted-foreground">
-              대전광역시 유성구 동서대로 125<br />
-              국립한밭대학교 N5동
+              대전광역시 유성구 동서대로 125
             </p>
           </div>
           
@@ -202,4 +201,3 @@ export default function ContactPage() {
     </div>
   );
 }
-

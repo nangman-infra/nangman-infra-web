@@ -20,7 +20,7 @@ export default function AboutPage() {
     document.title = "About Us | Nangman Infra";
   }, []);
   const timeline = [
-    { year: "2025.11", title: "낭만 인프라 런칭", desc: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 런칭" },
+    { year: "2025.11", title: "낭만 인프라 런칭", desc: "인프라 엔지니어링 커뮤니티, 낭만 인프라 공식 런칭" },
   ];
 
   return (
@@ -203,7 +203,7 @@ export default function AboutPage() {
                       지속적인 학습과 성장
                     </p>
                     <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                      실무 경험과 이론 학습을 병행하며 끊임없이 성장합니다. 멘토와 학생이 함께 배우고 성장하는 환경을 만들어갑니다.
+                      실무 경험과 이론 학습을 병행하며 끊임없이 성장합니다. 멘토와 멘티가 함께 배우고 성장하는 환경을 만들어갑니다.
                     </p>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function AboutPage() {
                       협업과 지식 공유
                     </p>
                     <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                      개인의 성장보다 팀의 성장을 우선시합니다. 지식을 공유하고 함께 문제를 해결하며 더 나은 인프라를 만들어갑니다.
+                      개인의 성장보다 커뮤니티의 성장을 우선시합니다. 지식을 공유하고 함께 문제를 해결하며 더 나은 인프라를 만들어갑니다.
                     </p>
                   </div>
                 </div>

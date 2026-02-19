@@ -10,13 +10,13 @@ import {
 interface StatsSectionProps {
   totalMembers: number;
   seniorsCount: number;
-  studentsCount: number;
+  menteesCount: number;
 }
 
 export function StatsSection({
   totalMembers,
   seniorsCount,
-  studentsCount,
+  menteesCount,
 }: StatsSectionProps) {
   return (
     <motion.div
@@ -37,8 +37,8 @@ export function StatsSection({
       </div>
       <div className="gpu-accelerated-blur group relative p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center">
         <GraduationCap className="w-8 h-8 mx-auto mb-3 text-primary" />
-        <div className="text-3xl font-bold mb-1">{studentsCount}</div>
-        <div className="text-sm text-muted-foreground">학생</div>
+        <div className="text-3xl font-bold mb-1">{menteesCount}</div>
+        <div className="text-sm text-muted-foreground">멘티</div>
       </div>
     </motion.div>
   );

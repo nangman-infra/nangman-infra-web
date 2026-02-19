@@ -21,13 +21,13 @@ export const noticeSeeds: NoticeSeed[] = [
     id: 'ops-20260220-new-member',
     title: '신규 멤버 합류',
     content:
-      '새로운 팀원이 합류하여 멤버 소개가 업데이트되었습니다. 앞으로의 활동도 함께 지켜봐 주세요.',
+      '새로운 커뮤니티 멤버가 합류하여 멤버 소개가 업데이트되었습니다. 앞으로의 활동도 함께 지켜봐 주세요.',
     date: '2026. 2. 18',
     type: 'update',
   },
   {
     id: 'ops-20260220-team-ops',
-    title: '팀 운영 안내',
+    title: '커뮤니티 운영 안내',
     content:
       '프로필 및 활동 정보는 정기 점검 후 순차 반영됩니다. 문의 사항은 Contact 페이지로 접수해 주세요.',
     date: '2026. 2. 12',

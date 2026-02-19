@@ -30,7 +30,7 @@ export function AboutSection() {
               보이지 않는 곳에서 세상의 연결을 지탱하는 엔지니어들,
             </p>
             <p className="text-xl md:text-2xl text-foreground font-semibold leading-relaxed">
-              국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라입니다.
+              인프라 엔지니어링 커뮤니티, 낭만 인프라입니다.
             </p>
           </div>
 
@@ -45,4 +45,3 @@ export function AboutSection() {
     </section>
   );
 }
-

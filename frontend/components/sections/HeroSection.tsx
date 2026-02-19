@@ -90,7 +90,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             textShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2)',
           }}
         >
-          국립한밭대학교 인프라 엔지니어링 팀,{" "}
+          인프라 엔지니어링 커뮤니티,{" "}
           <span className="text-foreground font-semibold relative">
             <span className="relative z-10" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.4)' }}>
               낭만 인프라

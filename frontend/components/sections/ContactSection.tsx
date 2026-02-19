@@ -45,8 +45,7 @@ export function ContactSection() {
                     <h3 className="text-lg font-semibold">Location</h3>
                   </div>
                   <p className="text-base text-muted-foreground leading-relaxed">
-                    대전광역시 유성구 동서대로 125<br />
-                    국립한밭대학교 N5동
+                    대전광역시 유성구 동서대로 125
                   </p>
                 </div>
               </div>

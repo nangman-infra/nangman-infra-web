@@ -1,6 +1,6 @@
 // 애니메이션 딜레이 상수
 export const ANIMATION_DELAY_SENIORS_SECTION = 0.1;
-export const ANIMATION_DELAY_STUDENTS_SECTION = 0.3;
+export const ANIMATION_DELAY_MENTEES_SECTION = 0.3;
 export const ANIMATION_DELAY_STATS_SECTION = 0.6;
 export const ANIMATION_DELAY_MEMBER_CARD_BASE = 0.2;
 export const ANIMATION_DELAY_MEMBER_CARD_INCREMENT = 0.1;
@@ -24,7 +24,7 @@ export const PROFILE_IMAGE_SIZE_SENIOR = {
   mobile: 80,
   desktop: 96,
 };
-export const PROFILE_IMAGE_SIZE_STUDENT = {
+export const PROFILE_IMAGE_SIZE_MENTEE = {
   mobile: 64,
   desktop: 64,
 };
@@ -32,4 +32,3 @@ export const PROFILE_IMAGE_SIZE_STUDENT = {
 // 멤버 카드 표시 제한 상수
 export const MAX_DISPLAY_ACHIEVEMENTS = 3;
 export const MAX_DISPLAY_CERTIFICATIONS = 3;
-

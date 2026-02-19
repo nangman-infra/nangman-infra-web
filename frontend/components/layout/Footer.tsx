@@ -88,8 +88,6 @@ export function Footer() {
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
                   <span className="leading-relaxed">
                     대전광역시 유성구 동서대로 125
-                    <br />
-                    국립한밭대학교 N5동
                   </span>
                 </div>
               </div>

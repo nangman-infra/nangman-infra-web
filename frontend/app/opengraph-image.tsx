@@ -115,7 +115,7 @@ export default function OpenGraphImage() {
               lineHeight: 1.5,
             }}
           >
-            Infra Team for Real-World Growth
+            Infra Community for Real-World Growth
           </div>
         </div>
         

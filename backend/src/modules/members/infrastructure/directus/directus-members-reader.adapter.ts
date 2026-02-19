@@ -211,7 +211,16 @@ export class DirectusMembersReaderAdapter implements MemberReaderPort {
   }
 
   private toCategory(value: unknown): MemberCategory {
-    return value === 'senior' ? 'senior' : 'student';
+    if (value === 'senior') {
+      return 'senior';
+    }
+
+    // Backward compatibility: existing CMS rows may still keep legacy "student".
+    if (value === 'student' || value === 'mentee') {
+      return 'mentee';
+    }
+
+    return 'mentee';
   }
 
   private toOptionalString(value: unknown): string | null {

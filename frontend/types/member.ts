@@ -2,7 +2,7 @@ export interface Member {
   name: string;
   role: string;
   affiliation?: string;
-  category: "senior" | "student";
+  category: "senior" | "mentee";
   achievements?: string[];
   experience?: string;
   bio?: string;
@@ -55,4 +55,3 @@ export interface Member {
     resume?: string;
   };
 }
-

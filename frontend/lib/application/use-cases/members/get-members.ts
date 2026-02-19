@@ -5,6 +5,10 @@ interface MembersProxyResponse {
   data?: unknown;
 }
 
+interface RawMember extends Omit<Member, 'category'> {
+  category: Member['category'] | 'student';
+}
+
 function isString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -13,7 +17,7 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
-function isMember(value: unknown): value is Member {
+function isMember(value: unknown): value is RawMember {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -24,7 +28,11 @@ function isMember(value: unknown): value is Member {
     return false;
   }
 
-  if (candidate.category !== 'senior' && candidate.category !== 'student') {
+  if (
+    candidate.category !== 'senior' &&
+    candidate.category !== 'mentee' &&
+    candidate.category !== 'student'
+  ) {
     return false;
   }
 
@@ -49,7 +57,14 @@ function parseMembers(payload: unknown): Member[] {
     return [];
   }
 
-  return response.data.filter(isMember);
+  return response.data
+    .filter(isMember)
+    .map(
+      (member): Member => ({
+        ...member,
+        category: member.category === 'senior' ? 'senior' : 'mentee',
+      }),
+    );
 }
 
 interface GetMembersUseCaseInput {

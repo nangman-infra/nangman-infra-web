@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
   Users,
   ExternalLink,
   Download,
+  Loader2,
   Globe,
   BookOpen,
   X,
@@ -31,8 +33,214 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
+function hasAsciiIdentifier(value: string): boolean {
+  return /[a-z0-9]/i.test(value);
+}
+
+function extractDomainAlias(value?: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const [subdomain] = parsed.hostname.split(".");
+    if (!subdomain || subdomain === "www") {
+      return null;
+    }
+
+    return subdomain.trim();
+  } catch {
+    return null;
+  }
+}
+
+function extractResumeAlias(value?: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const fileName = value.split("/").pop()?.trim();
+  if (!fileName) {
+    return null;
+  }
+
+  const baseName = fileName.replace(/\.[^.]+$/, "");
+  if (!baseName) {
+    return null;
+  }
+
+  return baseName.replace(/-(resume|cv)$/i, "").trim();
+}
+
+function getPreferredMemberIdentifier(member: Member): string {
+  const primary = (member.slug?.trim() || member.name.trim()).trim();
+
+  if (hasAsciiIdentifier(primary)) {
+    return primary;
+  }
+
+  const homepageAlias = extractDomainAlias(member.links?.homepage);
+  if (homepageAlias && hasAsciiIdentifier(homepageAlias)) {
+    return homepageAlias;
+  }
+
+  const resumeAlias = extractResumeAlias(member.links?.resume);
+  if (resumeAlias && hasAsciiIdentifier(resumeAlias)) {
+    return resumeAlias;
+  }
+
+  return primary;
+}
+
+function toSafeFileName(value: string): string {
+  const safe = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\-_.]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return safe || "member";
+}
+
+function resolveFileNameFromDisposition(
+  contentDisposition: string | null,
+  fallback: string,
+): string {
+  if (!contentDisposition) {
+    return fallback;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1]).trim() || fallback;
+    } catch {
+      return utf8Match[1].trim() || fallback;
+    }
+  }
+
+  const asciiMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+  if (asciiMatch?.[1]) {
+    return asciiMatch[1].trim() || fallback;
+  }
+
+  return fallback;
+}
+
+async function resolveErrorMessage(response: Response): Promise<string> {
+  try {
+    const data = (await response.json()) as { message?: string };
+    if (typeof data.message === "string" && data.message.trim()) {
+      return data.message.trim();
+    }
+  } catch {
+    // ignore parse error and use fallback message
+  }
+
+  return "포트폴리오 PDF 다운로드에 실패했습니다.";
+}
+
 export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
+  const [isDownloadingPortfolio, setIsDownloadingPortfolio] = useState(false);
+  const [downloadStatusMessage, setDownloadStatusMessage] = useState<string | null>(null);
+  const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null);
+  const [showSlowGenerationHint, setShowSlowGenerationHint] = useState(false);
+  const slowHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const memberSlug = member?.slug ?? "";
+  const memberName = member?.name ?? "";
+
+  useEffect(() => {
+    setIsDownloadingPortfolio(false);
+    setShowSlowGenerationHint(false);
+    setDownloadStatusMessage(null);
+    setDownloadErrorMessage(null);
+
+    if (slowHintTimerRef.current) {
+      clearTimeout(slowHintTimerRef.current);
+      slowHintTimerRef.current = null;
+    }
+  }, [memberSlug, memberName, isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (slowHintTimerRef.current) {
+        clearTimeout(slowHintTimerRef.current);
+        slowHintTimerRef.current = null;
+      }
+    };
+  }, []);
+
   if (!member) return null;
+
+  const preferredIdentifier = getPreferredMemberIdentifier(member);
+  const memberIdentifier = encodeURIComponent(preferredIdentifier);
+  const portfolioDownloadUrl = `/api/members/${memberIdentifier}/portfolio/pdf`;
+  const portfolioFallbackFileName = `${toSafeFileName(preferredIdentifier)}-portfolio.pdf`;
+  const canDownloadPortfolio = true;
+  const hasLinkSection = Boolean(
+    member.links?.homepage || member.links?.blog || member.links?.resume || canDownloadPortfolio,
+  );
+
+  const handlePortfolioDownload = async () => {
+    if (isDownloadingPortfolio) {
+      return;
+    }
+
+    setIsDownloadingPortfolio(true);
+    setDownloadErrorMessage(null);
+    setDownloadStatusMessage("포트폴리오 PDF를 생성하고 있습니다.");
+    setShowSlowGenerationHint(false);
+
+    slowHintTimerRef.current = setTimeout(() => {
+      setShowSlowGenerationHint(true);
+    }, 1500);
+
+    try {
+      const response = await fetch(portfolioDownloadUrl, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const message = await resolveErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const fileName = resolveFileNameFromDisposition(
+        response.headers.get("content-disposition"),
+        portfolioFallbackFileName,
+      );
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+
+      setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
+      setShowSlowGenerationHint(false);
+    } catch (error) {
+      setDownloadErrorMessage(
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+      );
+      setDownloadStatusMessage(null);
+      setShowSlowGenerationHint(false);
+    } finally {
+      if (slowHintTimerRef.current) {
+        clearTimeout(slowHintTimerRef.current);
+        slowHintTimerRef.current = null;
+      }
+      setIsDownloadingPortfolio(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -84,11 +292,11 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
               )}
 
               {/* Links Section */}
-              {member.links && (member.links.blog || member.links.homepage || member.links.resume) && (
+              {hasLinkSection && (
                 <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/20">
-                  {member.links.homepage && (
+                  {member.links?.homepage && (
                     <a
-                      href={member.links.homepage}
+                      href={member.links?.homepage}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-xs sm:text-sm text-primary hover:bg-primary/20 hover:border-primary/30 transition-all"
@@ -98,9 +306,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                     </a>
                   )}
-                  {member.links.blog && (
+                  {member.links?.blog && (
                     <a
-                      href={member.links.blog}
+                      href={member.links?.blog}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-xs sm:text-sm text-primary hover:bg-primary/20 hover:border-primary/30 transition-all"
@@ -110,20 +318,35 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                     </a>
                   )}
-                  {member.links.resume && (
-                    <div className="relative group">
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/50 text-primary-foreground/70 text-xs sm:text-sm cursor-not-allowed opacity-60 transition-all"
-                      >
-                        <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>이력서 다운로드</span>
-                      </button>
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-muted-foreground bg-background border border-border/30 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                        서비스 준비중입니다
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-background border-r border-b border-border/30 rotate-45"></div>
-                      </div>
-                    </div>
+                  <button
+                    type="button"
+                    onClick={handlePortfolioDownload}
+                    disabled={isDownloadingPortfolio}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm hover:opacity-90 transition-all disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isDownloadingPortfolio ? (
+                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-3 h-3 sm:w-4 sm:h-4" />
+                    )}
+                    <span>
+                      {isDownloadingPortfolio ? "PDF 생성 중..." : "포트폴리오 PDF"}
+                    </span>
+                  </button>
+                </div>
+              )}
+              {canDownloadPortfolio && (downloadStatusMessage || downloadErrorMessage || showSlowGenerationHint) && (
+                <div className="mt-2 space-y-1" aria-live="polite">
+                  {downloadStatusMessage && !downloadErrorMessage && (
+                    <p className="text-xs text-muted-foreground">{downloadStatusMessage}</p>
+                  )}
+                  {showSlowGenerationHint && isDownloadingPortfolio && (
+                    <p className="text-xs text-muted-foreground/80">
+                      문서를 준비하고 있습니다. 최대 5~10초 정도 소요될 수 있습니다.
+                    </p>
+                  )}
+                  {downloadErrorMessage && (
+                    <p className="text-xs text-red-500">{downloadErrorMessage}</p>
                   )}
                 </div>
               )}

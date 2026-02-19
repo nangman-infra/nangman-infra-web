@@ -28,6 +28,10 @@ function isMember(value: unknown): value is RawMember {
     return false;
   }
 
+  if (candidate.slug !== undefined && !isString(candidate.slug)) {
+    return false;
+  }
+
   if (
     candidate.category !== 'senior' &&
     candidate.category !== 'mentee' &&

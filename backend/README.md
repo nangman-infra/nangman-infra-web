@@ -76,6 +76,11 @@ pnpm start:prod
 - `GET /api/v1/contact/config` - 환경 변수 확인 (디버깅용)
 - `POST /api/v1/contact` - 문의 메시지를 Mattermost로 전송
 
+### Members
+
+- `GET /api/v1/members` - 멤버 목록 조회
+- `GET /api/v1/members/:slug/portfolio/pdf` - 멤버 포트폴리오 PDF 다운로드
+
 ## 프로젝트 구조
 
 ```

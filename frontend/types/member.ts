@@ -1,4 +1,5 @@
 export interface Member {
+  slug?: string;
   name: string;
   role: string;
   affiliation?: string;

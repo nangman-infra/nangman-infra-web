@@ -115,7 +115,7 @@ export default function OpenGraphImage() {
               lineHeight: 1.5,
             }}
           >
-            국립한밭대학교 인프라 엔지니어링 팀
+            Infra Team for Real-World Growth
           </div>
         </div>
         
@@ -137,4 +137,3 @@ export default function OpenGraphImage() {
     }
   )
 }
-

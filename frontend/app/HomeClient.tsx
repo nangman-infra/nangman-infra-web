@@ -144,7 +144,8 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                         alternateName: "낭만 인프라",
                         url: "https://nangman.cloud",
                         logo: "https://nangman.cloud/icon.png",
-                        description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
+                        description:
+                            "현업 엔지니어와 학습자가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 팀",
                         address: {
                             "@type": "PostalAddress",
                             addressLocality: "대전광역시 유성구",
@@ -171,16 +172,9 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                         "@type": "WebSite",
                         name: "Nangman Infra",
                         url: "https://nangman.cloud",
-                        description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
+                        description:
+                            "현업 엔지니어와 학습자가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 팀",
                         inLanguage: "ko-KR",
-                        potentialAction: {
-                            "@type": "SearchAction",
-                            target: {
-                                "@type": "EntryPoint",
-                                urlTemplate: "https://nangman.cloud/search?q={search_term_string}",
-                            },
-                            "query-input": "required name=search_term_string",
-                        },
                     }),
                 }}
             />

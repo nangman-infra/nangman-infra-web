@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Nangman Infra | We Build the Invisible",
     short_name: "Nangman Infra",
-    description: "국립한밭대학교 인프라 엔지니어링 팀, 낭만 인프라 공식 홈페이지",
+    description:
+      "현업 엔지니어와 학습자가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 팀",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",
@@ -18,4 +19,3 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
   };
 }
-

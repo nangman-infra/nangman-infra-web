@@ -90,14 +90,17 @@ docker compose up -d directus-db directus
 
 ### 3) 초기 마이그레이션
 
-기존 프론트 정적 데이터(`frontend/data/members.ts`)를 CMS로 이관합니다.
+기존 프론트 정적 데이터를 CMS로 이관합니다.
 
 ```bash
 cd backend
 pnpm migrate:members
+pnpm migrate:notices
 ```
 
-스크립트: `backend/scripts/migrate-members-to-directus.ts`
+스크립트:
+- `backend/scripts/migrate-members-to-directus.ts`
+- `backend/scripts/migrate-announcements-to-directus.ts`
 
 ### 4) 운영 원칙
 

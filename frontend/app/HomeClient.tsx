@@ -14,7 +14,8 @@ import {
     PARALLAX_Y_MAX,
 } from "@/constants/parallax";
 import { getLatestBlogPosts, type BlogPost } from "@/data/blogPosts";
-import { getLatestAnnouncements } from "@/data/announcements";
+import type { Announcement } from "@/lib/domain/announcement";
+import { getLatestAnnouncementsUseCase } from "@/lib/application/use-cases/announcements/get-latest-announcements";
 import { terminalCommands } from "@/data/terminalCommands";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { AboutSection } from "@/components/sections/AboutSection";
@@ -34,10 +35,8 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [blogPosts, setBlogPosts] = useState<BlogPost[]>(latestPosts);
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
-
-    // Get latest 3 announcements (static for now)
-    const latestAnnouncements = getLatestAnnouncements(3);
 
     // Dynamic page title update
     useEffect(() => {
@@ -54,7 +53,18 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
             }
         }
 
+        async function loadAnnouncements() {
+            const latest = await getLatestAnnouncementsUseCase({
+                count: 3,
+            });
+
+            if (isMounted) {
+                setAnnouncements(latest);
+            }
+        }
+
         void loadBlogPosts();
+        void loadAnnouncements();
 
         return () => {
             isMounted = false;
@@ -224,7 +234,7 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                 <BlogSection latestPosts={blogPosts} />
 
                 {/* Announcements Section */}
-                <AnnouncementsSection latestAnnouncements={latestAnnouncements} />
+                <AnnouncementsSection latestAnnouncements={announcements} />
 
                 {/* Contact Section */}
                 <ContactSection />

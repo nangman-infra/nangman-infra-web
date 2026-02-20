@@ -1,12 +1,11 @@
-import { NotFoundException } from '@nestjs/common';
 import { DownloadMemberPortfolioPdfUseCase } from './download-member-portfolio-pdf.use-case';
-import { MemberReaderPort } from '../../domain/ports/member-reader.port';
 import { MemberPortfolioRendererPort } from '../../domain/ports/member-portfolio-renderer.port';
+import { ResolveMemberPortfolioTargetUseCase } from './resolve-member-portfolio-target.use-case';
 
 describe('DownloadMemberPortfolioPdfUseCase', () => {
-  const mockMemberReader: MemberReaderPort = {
-    readAll: jest.fn(),
-  };
+  const mockResolveTargetUseCase = {
+    execute: jest.fn(),
+  } as unknown as ResolveMemberPortfolioTargetUseCase;
 
   const mockPortfolioRenderer: MemberPortfolioRendererPort = {
     render: jest.fn(),
@@ -16,114 +15,41 @@ describe('DownloadMemberPortfolioPdfUseCase', () => {
 
   beforeEach(() => {
     useCase = new DownloadMemberPortfolioPdfUseCase(
-      mockMemberReader,
+      mockResolveTargetUseCase,
       mockPortfolioRenderer,
     );
     jest.clearAllMocks();
   });
 
-  it('should return a PDF document for senior member', async () => {
-    (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
-      {
+  it('should render PDF with resolved target member and filename', async () => {
+    const mockPdfBuffer = Buffer.from('portfolio-pdf');
+    (mockResolveTargetUseCase.execute as jest.Mock).mockResolvedValue({
+      member: {
         slug: 'seongwon',
         name: '이성원',
         role: 'Mentor',
         category: 'senior',
-        links: {
-          homepage: 'https://seongwon.org',
-          resume: '/resumes/seongwon-resume.pdf',
-        },
       },
-    ]);
-    const mockPdfBuffer = Buffer.from('portfolio-pdf');
+      fileName: 'seongwon-portfolio.pdf',
+      cacheKey: 'seongwon:hash',
+    });
     (mockPortfolioRenderer.render as jest.Mock).mockResolvedValue(
       mockPdfBuffer,
     );
 
     const result = await useCase.execute('seongwon');
 
-    expect(mockPortfolioRenderer.render).toHaveBeenCalledTimes(1);
+    expect(mockResolveTargetUseCase.execute).toHaveBeenCalledWith('seongwon');
+    expect(mockPortfolioRenderer.render).toHaveBeenCalledWith({
+      slug: 'seongwon',
+      name: '이성원',
+      role: 'Mentor',
+      category: 'senior',
+    });
     expect(result).toEqual({
       fileName: 'seongwon-portfolio.pdf',
       contentType: 'application/pdf',
       content: mockPdfBuffer,
     });
-  });
-
-  it('should match senior member by homepage alias', async () => {
-    (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
-      {
-        slug: '이성원',
-        name: '이성원',
-        role: 'Mentor',
-        category: 'senior',
-        links: {
-          homepage: 'https://seongwon.org',
-          resume: '/resumes/seongwon-resume.pdf',
-        },
-      },
-    ]);
-    const mockPdfBuffer = Buffer.from('portfolio-pdf');
-    (mockPortfolioRenderer.render as jest.Mock).mockResolvedValue(
-      mockPdfBuffer,
-    );
-
-    const result = await useCase.execute('seongwon');
-
-    expect(mockPortfolioRenderer.render).toHaveBeenCalledTimes(1);
-    expect(result.fileName).toBe('seongwon-portfolio.pdf');
-  });
-
-  it('should generate ASCII-safe filename when identifier is Korean', async () => {
-    (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
-      {
-        slug: '이성원',
-        name: '이성원',
-        role: 'Mentor',
-        category: 'senior',
-        links: {
-          homepage: 'https://seongwon.org',
-          resume: '/resumes/seongwon-resume.pdf',
-        },
-      },
-    ]);
-    const mockPdfBuffer = Buffer.from('portfolio-pdf');
-    (mockPortfolioRenderer.render as jest.Mock).mockResolvedValue(
-      mockPdfBuffer,
-    );
-
-    const result = await useCase.execute('이성원');
-
-    expect(mockPortfolioRenderer.render).toHaveBeenCalledTimes(1);
-    expect(result.fileName).toBe('seongwon-portfolio.pdf');
-  });
-
-  it('should throw NotFoundException when member does not exist', async () => {
-    (mockMemberReader.readAll as jest.Mock).mockResolvedValue([]);
-
-    await expect(useCase.execute('missing-member')).rejects.toThrow(
-      NotFoundException,
-    );
-    expect(mockPortfolioRenderer.render).not.toHaveBeenCalled();
-  });
-
-  it('should return a PDF document for mentee member', async () => {
-    (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
-      {
-        slug: 'donggeon',
-        name: '임동건',
-        role: 'Mentee',
-        category: 'mentee',
-      },
-    ]);
-    const mockPdfBuffer = Buffer.from('portfolio-pdf');
-    (mockPortfolioRenderer.render as jest.Mock).mockResolvedValue(
-      mockPdfBuffer,
-    );
-
-    const result = await useCase.execute('donggeon');
-
-    expect(mockPortfolioRenderer.render).toHaveBeenCalledTimes(1);
-    expect(result.fileName).toBe('donggeon-portfolio.pdf');
   });
 });

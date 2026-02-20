@@ -34,66 +34,79 @@ interface ProfileModalProps {
 }
 
 const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
-const PORTFOLIO_SLOW_HINT_DELAY_MS = 10000;
+const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
+const PORTFOLIO_JOB_MAX_WAIT_MS = 10 * 60 * 1000;
 
-function hasAsciiIdentifier(value: string): boolean {
-  return /[a-z0-9]/i.test(value);
+type PortfolioJobStatus = "queued" | "running" | "completed" | "failed";
+
+interface PortfolioJobResponse {
+  jobId: string;
+  status: PortfolioJobStatus;
+  message: string;
+  errorMessage?: string;
 }
 
-function extractDomainAlias(value?: string): string | null {
-  if (!value) {
-    return null;
+function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
+  const source =
+    payload &&
+    typeof payload === "object" &&
+    "data" in payload &&
+    payload.data &&
+    typeof payload.data === "object"
+      ? payload.data
+      : payload;
+
+  if (!source || typeof source !== "object") {
+    throw new Error("포트폴리오 PDF 작업 응답 형식이 올바르지 않습니다.");
   }
 
-  try {
-    const parsed = new URL(value);
-    const [subdomain] = parsed.hostname.split(".");
-    if (!subdomain || subdomain === "www") {
-      return null;
-    }
+  const sourceRecord = source as Record<string, unknown>;
 
-    return subdomain.trim();
-  } catch {
-    return null;
+  const jobId = typeof sourceRecord.jobId === "string" ? sourceRecord.jobId : "";
+  const status =
+    typeof sourceRecord.status === "string"
+      ? (sourceRecord.status as PortfolioJobStatus)
+      : "queued";
+  const message = typeof sourceRecord.message === "string" ? sourceRecord.message : "";
+  const errorMessage =
+    typeof sourceRecord.errorMessage === "string"
+      ? sourceRecord.errorMessage
+      : undefined;
+
+  if (!jobId) {
+    throw new Error("포트폴리오 PDF 작업 식별자를 받지 못했습니다.");
   }
+
+  return {
+    jobId,
+    status,
+    message,
+    ...(errorMessage ? { errorMessage } : {}),
+  };
 }
 
-function extractResumeAlias(value?: string): string | null {
-  if (!value) {
-    return null;
+function getProgressHintMessage(elapsedMs: number): string {
+  if (elapsedMs < 10000) {
+    return "서버에서 작업을 준비하고 있어요.";
   }
-
-  const fileName = value.split("/").pop()?.trim();
-  if (!fileName) {
-    return null;
+  if (elapsedMs < 30000) {
+    return "프로필 정보를 수집하고 있어요.";
   }
-
-  const baseName = fileName.replace(/\.[^.]+$/, "");
-  if (!baseName) {
-    return null;
+  if (elapsedMs < 60000) {
+    return "문서를 생성하고 있어요.";
   }
-
-  return baseName.replace(/-(resume|cv)$/i, "").trim();
+  if (elapsedMs < 120000) {
+    return "레이아웃을 정리하고 있어요.";
+  }
+  return "데이터 양이 많아 시간이 더 필요해요. 계속 작업 중입니다.";
 }
 
-function getPreferredMemberIdentifier(member: Member): string {
-  const primary = (member.slug?.trim() || member.name.trim()).trim();
-
-  if (hasAsciiIdentifier(primary)) {
-    return primary;
+function composeProgressMessage(baseMessage: string | undefined, elapsedMs: number): string {
+  const progressHint = getProgressHintMessage(elapsedMs);
+  if (!baseMessage || !baseMessage.trim()) {
+    return progressHint;
   }
-
-  const homepageAlias = extractDomainAlias(member.links?.homepage);
-  if (homepageAlias && hasAsciiIdentifier(homepageAlias)) {
-    return homepageAlias;
-  }
-
-  const resumeAlias = extractResumeAlias(member.links?.resume);
-  if (resumeAlias && hasAsciiIdentifier(resumeAlias)) {
-    return resumeAlias;
-  }
-
-  return primary;
+  return `${baseMessage.trim()} ${progressHint}`.trim();
 }
 
 function toSafeFileName(value: string): string {
@@ -149,62 +162,161 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const [isDownloadingPortfolio, setIsDownloadingPortfolio] = useState(false);
   const [downloadStatusMessage, setDownloadStatusMessage] = useState<string | null>(null);
   const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null);
-  const [showSlowGenerationHint, setShowSlowGenerationHint] = useState(false);
-  const slowHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingCancelledRef = useRef(false);
+  const downloadStartedAtRef = useRef<number | null>(null);
   const memberSlug = member?.slug ?? "";
   const memberName = member?.name ?? "";
 
   useEffect(() => {
+    pollingCancelledRef.current = true;
+    downloadStartedAtRef.current = null;
     setIsDownloadingPortfolio(false);
-    setShowSlowGenerationHint(false);
     setDownloadStatusMessage(null);
     setDownloadErrorMessage(null);
 
-    if (slowHintTimerRef.current) {
-      clearTimeout(slowHintTimerRef.current);
-      slowHintTimerRef.current = null;
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
     }
   }, [memberSlug, memberName, isOpen]);
 
   useEffect(() => {
     return () => {
-      if (slowHintTimerRef.current) {
-        clearTimeout(slowHintTimerRef.current);
-        slowHintTimerRef.current = null;
+      pollingCancelledRef.current = true;
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+        pollingTimerRef.current = null;
       }
     };
   }, []);
 
   if (!member) return null;
 
-  const preferredIdentifier = getPreferredMemberIdentifier(member);
-  const memberIdentifier = encodeURIComponent(preferredIdentifier);
-  const portfolioDownloadUrl = `/api/members/${memberIdentifier}/portfolio/pdf`;
-  const portfolioFallbackFileName = `${toSafeFileName(preferredIdentifier)}-portfolio.pdf`;
+  const memberIdentifierSource = (member.slug?.trim() || member.name.trim()).trim();
+  const memberIdentifier = encodeURIComponent(memberIdentifierSource);
+  const startPortfolioJobUrl = `/api/members/${memberIdentifier}/portfolio/pdf/jobs`;
+  const portfolioFallbackFileName = `${toSafeFileName(memberIdentifierSource)}-portfolio.pdf`;
   const canDownloadPortfolio = true;
   const hasLinkSection = Boolean(
     member.links?.homepage || member.links?.blog || member.links?.resume || canDownloadPortfolio,
   );
+
+  const downloadPortfolioByJobId = async (jobId: string): Promise<void> => {
+    const response = await fetch(`/api/members/portfolio/pdf/jobs/${encodeURIComponent(jobId)}/download`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const message = await resolveErrorMessage(response);
+      throw new Error(message);
+    }
+
+    const blob = await response.blob();
+    const fileName = resolveFileNameFromDisposition(
+      response.headers.get("content-disposition"),
+      portfolioFallbackFileName,
+    );
+
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  };
+
+  const pollPortfolioJobStatus = async (jobId: string): Promise<void> => {
+    if (pollingCancelledRef.current) {
+      return;
+    }
+
+    const startedAt = downloadStartedAtRef.current ?? Date.now();
+    const elapsedMs = Date.now() - startedAt;
+    if (elapsedMs > PORTFOLIO_JOB_MAX_WAIT_MS) {
+      pollingCancelledRef.current = true;
+      setDownloadErrorMessage(
+        "포트폴리오 PDF 생성 시간이 길어지고 있습니다. 잠시 후 다시 시도해주세요.",
+      );
+      setDownloadStatusMessage(null);
+      setIsDownloadingPortfolio(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/members/portfolio/pdf/jobs/${encodeURIComponent(jobId)}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (pollingCancelledRef.current) {
+        return;
+      }
+
+      if (!response.ok) {
+        const message = await resolveErrorMessage(response);
+        throw new Error(message);
+      }
+
+      const data = normalizePortfolioJobResponse(await response.json());
+      if (pollingCancelledRef.current) {
+        return;
+      }
+      if (data.status === "completed") {
+        pollingCancelledRef.current = true;
+        setDownloadStatusMessage("포트폴리오 PDF가 준비되어 다운로드를 시작합니다.");
+        await downloadPortfolioByJobId(jobId);
+        setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
+        setDownloadErrorMessage(null);
+        setIsDownloadingPortfolio(false);
+        return;
+      }
+
+      if (data.status === "failed") {
+        pollingCancelledRef.current = true;
+        throw new Error(data.errorMessage || data.message || "포트폴리오 PDF 생성에 실패했습니다.");
+      }
+
+      setDownloadStatusMessage(composeProgressMessage(data.message, elapsedMs));
+      setDownloadErrorMessage(null);
+      pollingTimerRef.current = setTimeout(() => {
+        void pollPortfolioJobStatus(jobId);
+      }, PORTFOLIO_JOB_POLL_INTERVAL_MS);
+    } catch (error) {
+      pollingCancelledRef.current = true;
+      setDownloadErrorMessage(
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+      );
+      setDownloadStatusMessage(null);
+      setIsDownloadingPortfolio(false);
+    }
+  };
 
   const handlePortfolioDownload = async () => {
     if (isDownloadingPortfolio) {
       return;
     }
 
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+    pollingCancelledRef.current = false;
+    downloadStartedAtRef.current = Date.now();
     setIsDownloadingPortfolio(true);
     setDownloadErrorMessage(null);
     setDownloadStatusMessage(
-      `포트폴리오 PDF를 생성하고 있습니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
+      `포트폴리오 PDF 생성 작업을 시작합니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
     );
-    setShowSlowGenerationHint(false);
-
-    slowHintTimerRef.current = setTimeout(() => {
-      setShowSlowGenerationHint(true);
-    }, PORTFOLIO_SLOW_HINT_DELAY_MS);
 
     try {
-      const response = await fetch(portfolioDownloadUrl, {
-        method: "GET",
+      const response = await fetch(startPortfolioJobUrl, {
+        method: "POST",
         cache: "no-store",
       });
 
@@ -213,36 +325,19 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         throw new Error(message);
       }
 
-      const blob = await response.blob();
-      const fileName = resolveFileNameFromDisposition(
-        response.headers.get("content-disposition"),
-        portfolioFallbackFileName,
-      );
+      const payload = normalizePortfolioJobResponse(await response.json());
 
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-
-      setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
-      setShowSlowGenerationHint(false);
+      const elapsedMs = Date.now() - (downloadStartedAtRef.current ?? Date.now());
+      setDownloadStatusMessage(composeProgressMessage(payload.message, elapsedMs));
+      void pollPortfolioJobStatus(payload.jobId);
     } catch (error) {
+      pollingCancelledRef.current = true;
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
           : "포트폴리오 PDF 다운로드에 실패했습니다.",
       );
       setDownloadStatusMessage(null);
-      setShowSlowGenerationHint(false);
-    } finally {
-      if (slowHintTimerRef.current) {
-        clearTimeout(slowHintTimerRef.current);
-        slowHintTimerRef.current = null;
-      }
       setIsDownloadingPortfolio(false);
     }
   };
@@ -340,14 +435,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   </button>
                 </div>
               )}
-              {canDownloadPortfolio && (downloadStatusMessage || downloadErrorMessage || showSlowGenerationHint) && (
+              {canDownloadPortfolio && (downloadStatusMessage || downloadErrorMessage) && (
                 <div className="mt-2 space-y-1" aria-live="polite">
                   {downloadStatusMessage && !downloadErrorMessage && (
                     <p className="text-xs text-muted-foreground">{downloadStatusMessage}</p>
                   )}
-                  {showSlowGenerationHint && isDownloadingPortfolio && (
+                  {isDownloadingPortfolio && (
                     <p className="text-xs text-muted-foreground/80">
-                      문서를 준비하고 있습니다. 네트워크 상태에 따라 {PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.
+                      창을 닫아도 서버에서 작업은 계속 진행됩니다.
                     </p>
                   )}
                   {downloadErrorMessage && (

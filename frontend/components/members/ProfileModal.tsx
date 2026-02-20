@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,7 @@ interface ProfileModalProps {
 const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
 const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
 const PORTFOLIO_JOB_MAX_WAIT_MS = 10 * 60 * 1000;
+const PORTFOLIO_JOB_STORAGE_KEY = "members:portfolio-job-state:v1";
 
 type PortfolioJobStatus = "queued" | "running" | "completed" | "failed";
 
@@ -62,6 +63,93 @@ function createEmptyPortfolioJobUiState(): PortfolioJobUiState {
     statusMessage: null,
     errorMessage: null,
   };
+}
+
+function isPortfolioJobStatus(
+  value: unknown,
+): value is PortfolioJobStatus | "idle" {
+  return (
+    value === "idle" ||
+    value === "queued" ||
+    value === "running" ||
+    value === "completed" ||
+    value === "failed"
+  );
+}
+
+function normalizePortfolioJobUiState(value: unknown): PortfolioJobUiState | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const source = value as Record<string, unknown>;
+  const status = source.status;
+  if (!isPortfolioJobStatus(status)) {
+    return null;
+  }
+
+  const jobId = typeof source.jobId === "string" ? source.jobId.trim() || null : null;
+  const startedAt =
+    typeof source.startedAt === "number" && Number.isFinite(source.startedAt)
+      ? source.startedAt
+      : null;
+  const statusMessage =
+    typeof source.statusMessage === "string" ? source.statusMessage : null;
+  const errorMessage =
+    typeof source.errorMessage === "string" ? source.errorMessage : null;
+
+  return {
+    jobId,
+    status,
+    startedAt,
+    statusMessage,
+    errorMessage,
+  };
+}
+
+function readPortfolioJobStateMap(): Record<string, PortfolioJobUiState> {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PORTFOLIO_JOB_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+
+    const result: Record<string, PortfolioJobUiState> = {};
+    for (const [memberKey, memberState] of Object.entries(parsed)) {
+      if (!memberKey.trim()) {
+        continue;
+      }
+
+      const normalized = normalizePortfolioJobUiState(memberState);
+      if (!normalized) {
+        continue;
+      }
+
+      result[memberKey] = normalized;
+    }
+
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+function shouldPersistPortfolioJobState(state: PortfolioJobUiState): boolean {
+  return Boolean(
+    state.jobId ||
+      state.status !== "idle" ||
+      state.statusMessage ||
+      state.errorMessage,
+  );
 }
 
 function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
@@ -180,12 +268,12 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const [portfolioJobStatus, setPortfolioJobStatus] = useState<PortfolioJobStatus | "idle">(
     "idle",
   );
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [downloadStartedAt, setDownloadStartedAt] = useState<number | null>(null);
+  const [isJobStateLoaded, setIsJobStateLoaded] = useState(false);
   const [isDownloadingPortfolio, setIsDownloadingPortfolio] = useState(false);
   const [downloadStatusMessage, setDownloadStatusMessage] = useState<string | null>(null);
   const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null);
-  const portfolioJobStatusRef = useRef<PortfolioJobStatus | "idle">("idle");
-  const downloadStatusMessageRef = useRef<string | null>(null);
-  const downloadErrorMessageRef = useRef<string | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollingCancelledRef = useRef(false);
   const downloadStartedAtRef = useRef<number | null>(null);
@@ -203,16 +291,10 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   }, [isOpen]);
 
   useEffect(() => {
-    portfolioJobStatusRef.current = portfolioJobStatus;
-  }, [portfolioJobStatus]);
-
-  useEffect(() => {
-    downloadStatusMessageRef.current = downloadStatusMessage;
-  }, [downloadStatusMessage]);
-
-  useEffect(() => {
-    downloadErrorMessageRef.current = downloadErrorMessage;
-  }, [downloadErrorMessage]);
+    const restored = readPortfolioJobStateMap();
+    jobStateByMemberRef.current = restored;
+    setIsJobStateLoaded(true);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -224,9 +306,67 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     };
   }, []);
 
-  const applyMemberState = (state: PortfolioJobUiState): void => {
+  const persistJobStateMap = useCallback(
+    (stateMap: Record<string, PortfolioJobUiState>): void => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      try {
+        window.localStorage.setItem(
+          PORTFOLIO_JOB_STORAGE_KEY,
+          JSON.stringify(stateMap),
+        );
+      } catch {
+        // ignore storage write failure
+      }
+    },
+    [],
+  );
+
+  const snapshotCurrentMemberState = useCallback((): PortfolioJobUiState => {
+    return {
+      jobId: activeJobId,
+      status: portfolioJobStatus,
+      startedAt: downloadStartedAt,
+      statusMessage: downloadStatusMessage,
+      errorMessage: downloadErrorMessage,
+    };
+  }, [
+    activeJobId,
+    portfolioJobStatus,
+    downloadStartedAt,
+    downloadStatusMessage,
+    downloadErrorMessage,
+  ]);
+
+  const upsertMemberJobState = useCallback(
+    (memberKey: string, state: PortfolioJobUiState): void => {
+      if (!memberKey) {
+        return;
+      }
+
+      const nextMap = {
+        ...jobStateByMemberRef.current,
+      };
+
+      if (shouldPersistPortfolioJobState(state)) {
+        nextMap[memberKey] = state;
+      } else {
+        delete nextMap[memberKey];
+      }
+
+      jobStateByMemberRef.current = nextMap;
+      persistJobStateMap(nextMap);
+    },
+    [persistJobStateMap],
+  );
+
+  const applyMemberState = useCallback((state: PortfolioJobUiState): void => {
     activeJobIdRef.current = state.jobId;
+    setActiveJobId(state.jobId);
     downloadStartedAtRef.current = state.startedAt;
+    setDownloadStartedAt(state.startedAt);
     setPortfolioJobStatus(state.status);
     setDownloadStatusMessage(state.statusMessage);
     setDownloadErrorMessage(state.errorMessage);
@@ -235,18 +375,16 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         state.jobId && (state.status === "queued" || state.status === "running"),
       ),
     );
-  };
+  }, []);
 
   useEffect(() => {
+    if (!isJobStateLoaded) {
+      return;
+    }
+
     const previousMemberKey = currentMemberKeyRef.current;
     if (previousMemberKey) {
-      jobStateByMemberRef.current[previousMemberKey] = {
-        jobId: activeJobIdRef.current,
-        status: portfolioJobStatusRef.current,
-        startedAt: downloadStartedAtRef.current,
-        statusMessage: downloadStatusMessageRef.current,
-        errorMessage: downloadErrorMessageRef.current,
-      };
+      upsertMemberJobState(previousMemberKey, snapshotCurrentMemberState());
     }
 
     pollingCancelledRef.current = true;
@@ -272,11 +410,42 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     ) {
       pollingCancelledRef.current = false;
       if (!downloadStartedAtRef.current) {
-        downloadStartedAtRef.current = Date.now();
+        const now = Date.now();
+        downloadStartedAtRef.current = now;
+        setDownloadStartedAt(now);
       }
       void pollPortfolioJobStatusRef.current?.(savedState.jobId);
     }
-  }, [memberJobKey]);
+  }, [
+    isJobStateLoaded,
+    memberJobKey,
+    applyMemberState,
+    snapshotCurrentMemberState,
+    upsertMemberJobState,
+  ]);
+
+  useEffect(() => {
+    if (!isJobStateLoaded) {
+      return;
+    }
+
+    const currentMemberKey = currentMemberKeyRef.current;
+    if (!currentMemberKey) {
+      return;
+    }
+
+    upsertMemberJobState(currentMemberKey, snapshotCurrentMemberState());
+  }, [
+    isJobStateLoaded,
+    memberJobKey,
+    activeJobId,
+    portfolioJobStatus,
+    downloadStartedAt,
+    downloadStatusMessage,
+    downloadErrorMessage,
+    snapshotCurrentMemberState,
+    upsertMemberJobState,
+  ]);
 
   if (!member) return null;
 
@@ -373,7 +542,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
-    const startedAt = downloadStartedAtRef.current ?? Date.now();
+    const startedAt = downloadStartedAtRef.current ?? downloadStartedAt ?? Date.now();
     const elapsedMs = Date.now() - startedAt;
     if (elapsedMs > PORTFOLIO_JOB_MAX_WAIT_MS) {
       pollingCancelledRef.current = true;
@@ -443,8 +612,8 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
-    if (portfolioJobStatus === "completed" && activeJobIdRef.current) {
-      await handleCompletedPortfolioJob(activeJobIdRef.current, "manual");
+    if (portfolioJobStatus === "completed" && activeJobId) {
+      await handleCompletedPortfolioJob(activeJobId, "manual");
       return;
     }
 
@@ -453,8 +622,11 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       pollingTimerRef.current = null;
     }
     pollingCancelledRef.current = false;
-    downloadStartedAtRef.current = Date.now();
+    const startedAt = Date.now();
+    downloadStartedAtRef.current = startedAt;
+    setDownloadStartedAt(startedAt);
     activeJobIdRef.current = null;
+    setActiveJobId(null);
     setPortfolioJobStatus("queued");
     setIsDownloadingPortfolio(true);
     setDownloadErrorMessage(null);
@@ -475,6 +647,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
       const payload = normalizePortfolioJobResponse(await response.json());
       activeJobIdRef.current = payload.jobId;
+      setActiveJobId(payload.jobId);
       setPortfolioJobStatus(payload.status);
 
       const elapsedMs = Date.now() - (downloadStartedAtRef.current ?? Date.now());

@@ -46,6 +46,24 @@ interface PortfolioJobResponse {
   errorMessage?: string;
 }
 
+interface PortfolioJobUiState {
+  jobId: string | null;
+  status: PortfolioJobStatus | "idle";
+  startedAt: number | null;
+  statusMessage: string | null;
+  errorMessage: string | null;
+}
+
+function createEmptyPortfolioJobUiState(): PortfolioJobUiState {
+  return {
+    jobId: null,
+    status: "idle",
+    startedAt: null,
+    statusMessage: null,
+    errorMessage: null,
+  };
+}
+
 function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
   const source =
     payload &&
@@ -165,32 +183,36 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const [isDownloadingPortfolio, setIsDownloadingPortfolio] = useState(false);
   const [downloadStatusMessage, setDownloadStatusMessage] = useState<string | null>(null);
   const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null);
+  const portfolioJobStatusRef = useRef<PortfolioJobStatus | "idle">("idle");
+  const downloadStatusMessageRef = useRef<string | null>(null);
+  const downloadErrorMessageRef = useRef<string | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollingCancelledRef = useRef(false);
   const downloadStartedAtRef = useRef<number | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
+  const pollPortfolioJobStatusRef = useRef<
+    ((jobId: string) => Promise<void>) | null
+  >(null);
   const isOpenRef = useRef(isOpen);
-  const memberSlug = member?.slug ?? "";
-  const memberName = member?.name ?? "";
+  const jobStateByMemberRef = useRef<Record<string, PortfolioJobUiState>>({});
+  const currentMemberKeyRef = useRef<string>("");
+  const memberJobKey = (member?.slug?.trim() || member?.name?.trim() || "").trim();
 
   useEffect(() => {
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
   useEffect(() => {
-    pollingCancelledRef.current = true;
-    downloadStartedAtRef.current = null;
-    activeJobIdRef.current = null;
-    setPortfolioJobStatus("idle");
-    setIsDownloadingPortfolio(false);
-    setDownloadStatusMessage(null);
-    setDownloadErrorMessage(null);
+    portfolioJobStatusRef.current = portfolioJobStatus;
+  }, [portfolioJobStatus]);
 
-    if (pollingTimerRef.current) {
-      clearTimeout(pollingTimerRef.current);
-      pollingTimerRef.current = null;
-    }
-  }, [memberSlug, memberName]);
+  useEffect(() => {
+    downloadStatusMessageRef.current = downloadStatusMessage;
+  }, [downloadStatusMessage]);
+
+  useEffect(() => {
+    downloadErrorMessageRef.current = downloadErrorMessage;
+  }, [downloadErrorMessage]);
 
   useEffect(() => {
     return () => {
@@ -201,6 +223,60 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       }
     };
   }, []);
+
+  const applyMemberState = (state: PortfolioJobUiState): void => {
+    activeJobIdRef.current = state.jobId;
+    downloadStartedAtRef.current = state.startedAt;
+    setPortfolioJobStatus(state.status);
+    setDownloadStatusMessage(state.statusMessage);
+    setDownloadErrorMessage(state.errorMessage);
+    setIsDownloadingPortfolio(
+      Boolean(
+        state.jobId && (state.status === "queued" || state.status === "running"),
+      ),
+    );
+  };
+
+  useEffect(() => {
+    const previousMemberKey = currentMemberKeyRef.current;
+    if (previousMemberKey) {
+      jobStateByMemberRef.current[previousMemberKey] = {
+        jobId: activeJobIdRef.current,
+        status: portfolioJobStatusRef.current,
+        startedAt: downloadStartedAtRef.current,
+        statusMessage: downloadStatusMessageRef.current,
+        errorMessage: downloadErrorMessageRef.current,
+      };
+    }
+
+    pollingCancelledRef.current = true;
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+
+    currentMemberKeyRef.current = memberJobKey;
+    if (!memberJobKey) {
+      applyMemberState(createEmptyPortfolioJobUiState());
+      return;
+    }
+
+    const savedState =
+      jobStateByMemberRef.current[memberJobKey] ||
+      createEmptyPortfolioJobUiState();
+    applyMemberState(savedState);
+
+    if (
+      savedState.jobId &&
+      (savedState.status === "queued" || savedState.status === "running")
+    ) {
+      pollingCancelledRef.current = false;
+      if (!downloadStartedAtRef.current) {
+        downloadStartedAtRef.current = Date.now();
+      }
+      void pollPortfolioJobStatusRef.current?.(savedState.jobId);
+    }
+  }, [memberJobKey]);
 
   if (!member) return null;
 
@@ -250,10 +326,10 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     URL.revokeObjectURL(objectUrl);
   };
 
-  const handleCompletedPortfolioJob = async (
+  async function handleCompletedPortfolioJob(
     jobId: string,
     mode: "auto" | "manual",
-  ): Promise<void> => {
+  ): Promise<void> {
     pollingCancelledRef.current = true;
     setPortfolioJobStatus("completed");
 
@@ -290,9 +366,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     } finally {
       setIsDownloadingPortfolio(false);
     }
-  };
+  }
 
-  const pollPortfolioJobStatus = async (jobId: string): Promise<void> => {
+  async function pollPortfolioJobStatus(jobId: string): Promise<void> {
     if (pollingCancelledRef.current) {
       return;
     }
@@ -358,7 +434,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       setDownloadStatusMessage(null);
       setIsDownloadingPortfolio(false);
     }
-  };
+  }
+
+  pollPortfolioJobStatusRef.current = pollPortfolioJobStatus;
 
   const handlePortfolioDownload = async () => {
     if (isDownloadingPortfolio) {

@@ -159,18 +159,29 @@ async function resolveErrorMessage(response: Response): Promise<string> {
 }
 
 export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
+  const [portfolioJobStatus, setPortfolioJobStatus] = useState<PortfolioJobStatus | "idle">(
+    "idle",
+  );
   const [isDownloadingPortfolio, setIsDownloadingPortfolio] = useState(false);
   const [downloadStatusMessage, setDownloadStatusMessage] = useState<string | null>(null);
   const [downloadErrorMessage, setDownloadErrorMessage] = useState<string | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollingCancelledRef = useRef(false);
   const downloadStartedAtRef = useRef<number | null>(null);
+  const activeJobIdRef = useRef<string | null>(null);
+  const isOpenRef = useRef(isOpen);
   const memberSlug = member?.slug ?? "";
   const memberName = member?.name ?? "";
 
   useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  useEffect(() => {
     pollingCancelledRef.current = true;
     downloadStartedAtRef.current = null;
+    activeJobIdRef.current = null;
+    setPortfolioJobStatus("idle");
     setIsDownloadingPortfolio(false);
     setDownloadStatusMessage(null);
     setDownloadErrorMessage(null);
@@ -179,7 +190,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       clearTimeout(pollingTimerRef.current);
       pollingTimerRef.current = null;
     }
-  }, [memberSlug, memberName, isOpen]);
+  }, [memberSlug, memberName]);
 
   useEffect(() => {
     return () => {
@@ -201,6 +212,16 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const hasLinkSection = Boolean(
     member.links?.homepage || member.links?.blog || member.links?.resume || canDownloadPortfolio,
   );
+  const isPortfolioGenerating =
+    portfolioJobStatus === "queued" || portfolioJobStatus === "running";
+  const isPortfolioButtonDisabled = isPortfolioGenerating || isDownloadingPortfolio;
+  const portfolioButtonLabel = isDownloadingPortfolio
+    ? portfolioJobStatus === "completed"
+      ? "PDF 다운로드 중..."
+      : "PDF 생성 중..."
+    : portfolioJobStatus === "completed"
+      ? "포트폴리오 PDF 다운로드"
+      : "포트폴리오 PDF";
 
   const downloadPortfolioByJobId = async (jobId: string): Promise<void> => {
     const response = await fetch(`/api/members/portfolio/pdf/jobs/${encodeURIComponent(jobId)}/download`, {
@@ -229,6 +250,48 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     URL.revokeObjectURL(objectUrl);
   };
 
+  const handleCompletedPortfolioJob = async (
+    jobId: string,
+    mode: "auto" | "manual",
+  ): Promise<void> => {
+    pollingCancelledRef.current = true;
+    setPortfolioJobStatus("completed");
+
+    if (mode === "auto" && !isOpenRef.current) {
+      setDownloadStatusMessage(
+        "포트폴리오 PDF가 준비되었습니다. 모달에서 버튼을 눌러 다운로드하세요.",
+      );
+      setDownloadErrorMessage(null);
+      setIsDownloadingPortfolio(false);
+      return;
+    }
+
+    setIsDownloadingPortfolio(true);
+    setDownloadStatusMessage(
+      mode === "auto"
+        ? "포트폴리오 PDF가 준비되어 다운로드를 시작합니다."
+        : "준비된 포트폴리오 PDF를 다운로드합니다.",
+    );
+    setDownloadErrorMessage(null);
+
+    try {
+      await downloadPortfolioByJobId(jobId);
+      setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
+      setDownloadErrorMessage(null);
+    } catch (error) {
+      setDownloadErrorMessage(
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+      );
+      setDownloadStatusMessage(
+        "포트폴리오 PDF가 준비되었습니다. 버튼을 눌러 다시 다운로드하세요.",
+      );
+    } finally {
+      setIsDownloadingPortfolio(false);
+    }
+  };
+
   const pollPortfolioJobStatus = async (jobId: string): Promise<void> => {
     if (pollingCancelledRef.current) {
       return;
@@ -238,6 +301,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     const elapsedMs = Date.now() - startedAt;
     if (elapsedMs > PORTFOLIO_JOB_MAX_WAIT_MS) {
       pollingCancelledRef.current = true;
+      setPortfolioJobStatus("failed");
       setDownloadErrorMessage(
         "포트폴리오 PDF 생성 시간이 길어지고 있습니다. 잠시 후 다시 시도해주세요.",
       );
@@ -266,20 +330,18 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         return;
       }
       if (data.status === "completed") {
-        pollingCancelledRef.current = true;
-        setDownloadStatusMessage("포트폴리오 PDF가 준비되어 다운로드를 시작합니다.");
-        await downloadPortfolioByJobId(jobId);
-        setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
-        setDownloadErrorMessage(null);
-        setIsDownloadingPortfolio(false);
+        setPortfolioJobStatus("completed");
+        await handleCompletedPortfolioJob(jobId, "auto");
         return;
       }
 
       if (data.status === "failed") {
         pollingCancelledRef.current = true;
+        setPortfolioJobStatus("failed");
         throw new Error(data.errorMessage || data.message || "포트폴리오 PDF 생성에 실패했습니다.");
       }
 
+      setPortfolioJobStatus(data.status);
       setDownloadStatusMessage(composeProgressMessage(data.message, elapsedMs));
       setDownloadErrorMessage(null);
       pollingTimerRef.current = setTimeout(() => {
@@ -287,6 +349,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       }, PORTFOLIO_JOB_POLL_INTERVAL_MS);
     } catch (error) {
       pollingCancelledRef.current = true;
+      setPortfolioJobStatus("failed");
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
@@ -302,12 +365,19 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
+    if (portfolioJobStatus === "completed" && activeJobIdRef.current) {
+      await handleCompletedPortfolioJob(activeJobIdRef.current, "manual");
+      return;
+    }
+
     if (pollingTimerRef.current) {
       clearTimeout(pollingTimerRef.current);
       pollingTimerRef.current = null;
     }
     pollingCancelledRef.current = false;
     downloadStartedAtRef.current = Date.now();
+    activeJobIdRef.current = null;
+    setPortfolioJobStatus("queued");
     setIsDownloadingPortfolio(true);
     setDownloadErrorMessage(null);
     setDownloadStatusMessage(
@@ -326,12 +396,29 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       }
 
       const payload = normalizePortfolioJobResponse(await response.json());
+      activeJobIdRef.current = payload.jobId;
+      setPortfolioJobStatus(payload.status);
 
       const elapsedMs = Date.now() - (downloadStartedAtRef.current ?? Date.now());
       setDownloadStatusMessage(composeProgressMessage(payload.message, elapsedMs));
+      setDownloadErrorMessage(null);
+
+      if (payload.status === "failed") {
+        pollingCancelledRef.current = true;
+        setPortfolioJobStatus("failed");
+        setIsDownloadingPortfolio(false);
+        throw new Error(payload.errorMessage || payload.message || "포트폴리오 PDF 생성에 실패했습니다.");
+      }
+
+      if (payload.status === "completed") {
+        await handleCompletedPortfolioJob(payload.jobId, "auto");
+        return;
+      }
+
       void pollPortfolioJobStatus(payload.jobId);
     } catch (error) {
       pollingCancelledRef.current = true;
+      setPortfolioJobStatus("failed");
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
@@ -421,26 +508,24 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   <button
                     type="button"
                     onClick={handlePortfolioDownload}
-                    disabled={isDownloadingPortfolio}
+                    disabled={isPortfolioButtonDisabled}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs sm:text-sm hover:opacity-90 transition-all disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isDownloadingPortfolio ? (
+                    {isPortfolioButtonDisabled ? (
                       <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                     ) : (
                       <Download className="w-3 h-3 sm:w-4 sm:h-4" />
                     )}
-                    <span>
-                      {isDownloadingPortfolio ? "PDF 생성 중..." : "포트폴리오 PDF"}
-                    </span>
+                    <span>{portfolioButtonLabel}</span>
                   </button>
                 </div>
               )}
               {canDownloadPortfolio && (downloadStatusMessage || downloadErrorMessage) && (
-                <div className="mt-2 space-y-1" aria-live="polite">
+                <div className="mt-2 space-y-1" role="status" aria-live="polite" aria-atomic="true">
                   {downloadStatusMessage && !downloadErrorMessage && (
                     <p className="text-xs text-muted-foreground">{downloadStatusMessage}</p>
                   )}
-                  {isDownloadingPortfolio && (
+                  {isPortfolioGenerating && (
                     <p className="text-xs text-muted-foreground/80">
                       창을 닫아도 서버에서 작업은 계속 진행됩니다.
                     </p>

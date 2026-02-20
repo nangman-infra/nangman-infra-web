@@ -33,6 +33,9 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
+const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
+const PORTFOLIO_SLOW_HINT_DELAY_MS = 10000;
+
 function hasAsciiIdentifier(value: string): boolean {
   return /[a-z0-9]/i.test(value);
 }
@@ -190,12 +193,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
     setIsDownloadingPortfolio(true);
     setDownloadErrorMessage(null);
-    setDownloadStatusMessage("포트폴리오 PDF를 생성하고 있습니다.");
+    setDownloadStatusMessage(
+      `포트폴리오 PDF를 생성하고 있습니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
+    );
     setShowSlowGenerationHint(false);
 
     slowHintTimerRef.current = setTimeout(() => {
       setShowSlowGenerationHint(true);
-    }, 1500);
+    }, PORTFOLIO_SLOW_HINT_DELAY_MS);
 
     try {
       const response = await fetch(portfolioDownloadUrl, {
@@ -342,7 +347,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   )}
                   {showSlowGenerationHint && isDownloadingPortfolio && (
                     <p className="text-xs text-muted-foreground/80">
-                      문서를 준비하고 있습니다. 최대 5~10초 정도 소요될 수 있습니다.
+                      문서를 준비하고 있습니다. 네트워크 상태에 따라 {PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.
                     </p>
                   )}
                   {downloadErrorMessage && (

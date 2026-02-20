@@ -7,6 +7,8 @@ interface RouteContext {
   params: Promise<{ identifier: string }> | { identifier: string };
 }
 
+const PORTFOLIO_PDF_TIMEOUT_MS = 65_000;
+
 function resolveErrorMessage(data: unknown, fallback: string): string {
   if (
     data &&
@@ -75,7 +77,7 @@ export async function GET(
         },
         cache: 'no-store',
       },
-      20000,
+      PORTFOLIO_PDF_TIMEOUT_MS,
     );
 
     if (!response.ok) {
@@ -137,7 +139,8 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          message: '백엔드 응답 시간이 초과되었습니다.',
+          message:
+            '백엔드 응답 시간이 초과되었습니다. 포트폴리오 생성은 30초~1분 정도 소요될 수 있습니다.',
         },
         { status: 504 },
       );

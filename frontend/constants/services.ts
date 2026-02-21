@@ -59,6 +59,14 @@ export const SERVICES: Service[] = [
     category: 'communication',
   },
   {
+    id: 'mail',
+    name: 'Mail',
+    description: '웹 메일 서비스',
+    icon: 'mail.svg',
+    url: 'https://mail.console.nangman.cloud',
+    category: 'communication',
+  },
+  {
     id: 'grafana',
     name: 'Grafana',
     description: '시각화 및 모니터링 대시보드',

@@ -69,6 +69,19 @@ export default function MembersPage() {
     setIsModalOpen(true);
   };
 
+  const getMemberKey = (
+    member: Pick<Member, "slug" | "name">,
+    section: "senior" | "mentee",
+    index: number,
+  ) => {
+    const slug = member.slug?.trim();
+    if (slug) {
+      return `${section}-${slug}`;
+    }
+
+    return `${section}-${member.name}-${index}`;
+  };
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="relative max-w-7xl mx-auto">
@@ -130,7 +143,7 @@ export default function MembersPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 md:auto-rows-fr gap-6 md:gap-8">
                 {seniors.map((member, index) => (
                   <MemberCard
-                    key={member.name}
+                    key={getMemberKey(member, "senior", index)}
                     member={member}
                     index={index}
                     baseDelay={ANIMATION_DELAY_MEMBER_CARD_BASE}
@@ -157,7 +170,7 @@ export default function MembersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:auto-rows-fr gap-6 md:gap-8">
                     {mentees.map((member, index) => (
                       <MemberCard
-                        key={member.name}
+                        key={getMemberKey(member, "mentee", index)}
                         member={member}
                         index={index}
                         baseDelay={ANIMATION_DELAY_MEMBER_CARD_BASE + ANIMATION_DELAY_MENTEES_SECTION}

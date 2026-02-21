@@ -72,6 +72,11 @@ export async function getLatestBlogPostsUseCase(
   try {
     const payload = await fetchBlogPostsApi();
     const posts = parseBlogPosts(payload);
+
+    if (posts.length === 0) {
+      return fallback.slice(0, count);
+    }
+
     return posts.slice(0, count);
   } catch {
     return fallback.slice(0, count);

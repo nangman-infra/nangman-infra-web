@@ -5,16 +5,29 @@ interface MembersProxyResponse {
   data?: unknown;
 }
 
-interface RawMember extends Omit<Member, 'category'> {
+interface RawMember extends Omit<Member, 'category' | 'specialties' | 'achievements'> {
   category: Member['category'] | 'student';
+  specialties?: unknown;
+  achievements?: unknown;
 }
 
 function isString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+function isUnknownArray(value: unknown): value is unknown[] {
+  return Array.isArray(value);
+}
+
+function normalizeStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
 }
 
 function isMember(value: unknown): value is RawMember {
@@ -40,11 +53,11 @@ function isMember(value: unknown): value is RawMember {
     return false;
   }
 
-  if (candidate.specialties !== undefined && !isStringArray(candidate.specialties)) {
+  if (candidate.specialties !== undefined && !isUnknownArray(candidate.specialties)) {
     return false;
   }
 
-  if (candidate.achievements !== undefined && !isStringArray(candidate.achievements)) {
+  if (candidate.achievements !== undefined && !isUnknownArray(candidate.achievements)) {
     return false;
   }
 
@@ -63,12 +76,22 @@ function parseMembers(payload: unknown): Member[] {
 
   return response.data
     .filter(isMember)
-    .map(
-      (member): Member => ({
-        ...member,
-        category: member.category === 'senior' ? 'senior' : 'mentee',
-      }),
-    );
+    .map((member): Member => {
+      const { category, specialties, achievements, ...rest } = member;
+      const normalizedSpecialties = normalizeStringArray(specialties);
+      const normalizedAchievements = normalizeStringArray(achievements);
+
+      return {
+        ...rest,
+        category: category === 'senior' ? 'senior' : 'mentee',
+        ...(normalizedSpecialties !== undefined
+          ? { specialties: normalizedSpecialties }
+          : {}),
+        ...(normalizedAchievements !== undefined
+          ? { achievements: normalizedAchievements }
+          : {}),
+      };
+    });
 }
 
 interface GetMembersUseCaseInput {

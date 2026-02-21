@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import type { Member } from "@/types/member";
 import {
   ANIMATION_DURATION_SHORT,
@@ -9,6 +8,7 @@ import {
   MAX_DISPLAY_ACHIEVEMENTS,
   MAX_DISPLAY_CERTIFICATIONS,
 } from "@/constants/members";
+import { MemberAvatar } from "@/components/members/MemberAvatar";
 
 interface MemberCardProps {
   member: Member;
@@ -51,26 +51,13 @@ export function MemberCard({
         <div className="relative z-10 flex h-full flex-col gap-4">
           {/* Profile Image & Basic Info */}
           <div className="flex items-start gap-4">
-            <div
-              className={`relative shrink-0 ${isSenior
-                  ? "w-20 h-20 md:w-24 md:h-24"
-                  : "w-16 h-16"
-                }`}
-            >
-              {member.profileImage ? (
-                <Image
-                  src={member.profileImage}
-                  alt={member.name}
-                  fill
-                  sizes={isSenior ? "96px" : "64px"}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold group-hover:bg-primary/20 group-hover:border-primary/40 transition-colors text-lg md:text-xl lg:text-2xl">
-                  {member.name[0]}
-                </div>
-              )}
-            </div>
+            <MemberAvatar
+              name={member.name}
+              profileImage={member.profileImage}
+              sizeClassName={isSenior ? "w-20 h-20 md:w-24 md:h-24" : "w-16 h-16"}
+              sizes={isSenior ? "96px" : "64px"}
+              fallbackClassName="w-full h-full rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold group-hover:bg-primary/20 group-hover:border-primary/40 transition-colors text-lg md:text-xl lg:text-2xl"
+            />
             <div className={`flex-1 min-w-0 ${isSenior ? "pt-1" : ""}`}>
               <h3
                 className={`font-semibold mb-1 ${isSenior ? "text-xl md:text-2xl" : "text-lg"

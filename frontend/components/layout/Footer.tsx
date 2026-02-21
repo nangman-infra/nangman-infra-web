@@ -78,11 +78,11 @@ export function Footer() {
               <h3 className="text-sm font-semibold text-foreground">Contact</h3>
               <div className="flex flex-col gap-3 text-sm text-muted-foreground">
               <a
-                href="mailto:judo0179@gmail.com"
+                href="mailto:admin@nangman.cloud"
                   className="flex items-center gap-2 hover:text-primary transition-colors w-fit"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>judo0179@gmail.com</span>
+                  <span>admin@nangman.cloud</span>
                 </a>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5" />

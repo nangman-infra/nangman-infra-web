@@ -69,10 +69,10 @@ export function ContactSection() {
                     <h3 className="text-lg font-semibold">Email</h3>
                   </div>
                   <a
-                    href="mailto:judo0179@gmail.com"
+                    href="mailto:admin@nangman.cloud"
                     className="text-base text-primary hover:text-primary/80 transition-colors font-mono break-all"
                   >
-                    judo0179@gmail.com
+                    admin@nangman.cloud
                   </a>
                 </div>
               </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
@@ -26,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import type { Member } from "@/types/member";
+import { MemberAvatar } from "@/components/members/MemberAvatar";
 
 interface ProfileModalProps {
   member: Member | null;
@@ -697,21 +697,13 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         <div className="overflow-y-auto flex-1 px-4 pt-6 pb-6 sm:px-6 lg:px-8 space-y-6 md:space-y-8">
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-border/30">
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 shrink-0">
-              {member.profileImage ? (
-                <Image
-                  src={member.profileImage}
-                  alt={member.name}
-                  fill
-                  sizes="128px"
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-4xl">
-                  {member.name[0]}
-                </div>
-              )}
-            </div>
+            <MemberAvatar
+              name={member.name}
+              profileImage={member.profileImage}
+              sizeClassName="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32"
+              sizes="128px"
+              fallbackClassName="w-full h-full rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-4xl"
+            />
             <div className="flex-1 min-w-0">
               <h2 className="text-2xl sm:text-3xl font-bold mb-2">{member.name}</h2>
               <p className="text-base sm:text-lg text-muted-foreground font-mono mb-2">

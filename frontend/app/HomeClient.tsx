@@ -155,7 +155,7 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                         },
                         contactPoint: {
                             "@type": "ContactPoint",
-                            email: "judo0179@gmail.com",
+                            email: "admin@nangman.cloud",
                             contactType: "문의",
                         },
                         sameAs: [

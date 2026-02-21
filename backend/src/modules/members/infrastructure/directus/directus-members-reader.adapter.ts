@@ -149,7 +149,7 @@ export class DirectusMembersReaderAdapter implements MemberReaderPort {
     const affiliation = this.toOptionalString(item.affiliation);
     const experience = this.toOptionalString(item.experience);
     const bio = this.toOptionalString(item.bio);
-    const profileImage = this.toOptionalString(item.profileImage);
+    const profileImage = this.normalizeProfileImage(item.profileImage);
 
     const member: MemberProfile = {
       slug,
@@ -208,6 +208,38 @@ export class DirectusMembersReaderAdapter implements MemberReaderPort {
     }
 
     return member;
+  }
+
+  private normalizeProfileImage(value: unknown): string | null {
+    const normalized = this.toOptionalString(value);
+    if (!normalized) {
+      return null;
+    }
+
+    const normalizedRelativePath = normalized
+      .replace(/^\/?profile\//, '/profiles/')
+      .replace(/^profiles\//, '/profiles/');
+
+    if (normalizedRelativePath.startsWith('/profiles/')) {
+      return normalizedRelativePath;
+    }
+
+    if (/^https?:\/\//i.test(normalized)) {
+      try {
+        const imageUrl = new URL(normalized);
+        imageUrl.pathname = imageUrl.pathname
+          .replace(/^\/profile\//, '/profiles/')
+          .replace(/^\/profiles\//, '/profiles/');
+
+        if (imageUrl.pathname.startsWith('/profiles/')) {
+          return `${imageUrl.pathname}${imageUrl.search}`;
+        }
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
   }
 
   private toCategory(value: unknown): MemberCategory {

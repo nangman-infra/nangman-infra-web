@@ -170,7 +170,7 @@ export const SERVICES: Service[] = [
     name: 'SonarQube',
     description: '코드 품질 분석',
     icon: 'sonarqube',
-    url: 'https://sonarqube.console.nangman.cloud',
+    url: 'https://sonarqube.nangman.cloud',
     category: 'automation',
   },
 ] as const;

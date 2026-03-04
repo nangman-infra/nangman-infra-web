@@ -342,7 +342,7 @@ pipeline {
                         curl -X POST ${MATTERMOST_WEBHOOK} \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "### ✅ 배포 성공\\n\\n**Build:** #${BUILD_NUMBER}\\n**Duration:** ${currentBuild.durationString}\\n\\n**Images:**\\n- Frontend: \`${FRONTEND_IMAGE}\`\\n- Backend: \`${BACKEND_IMAGE}\`\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
+                            "text": "### ✅ 배포 성공\\n\\n**Build:** #${BUILD_NUMBER}\\n**Duration:** ${currentBuild.durationString}\\n\\n**Images:**\\n- Frontend: ${FRONTEND_IMAGE}\\n- Backend: ${BACKEND_IMAGE}\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
                         }'
                     """
                 }

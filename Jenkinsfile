@@ -104,7 +104,7 @@ pipeline {
                     // Mattermost로 버튼 달린 메시지 전송
                     def payload = """
 {
-  "text": "### 🚀 배포 승인 요청\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
+  "text": "🚀 **배포 승인 요청**\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
   "attachments": [
     {
       "color": "#FFA500",
@@ -172,7 +172,7 @@ pipeline {
                         curl -X POST ${MATTERMOST_WEBHOOK} \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "### ❌ 배포 취소\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 사용자가 배포를 취소했습니다."
+                            "text": "❌ **배포 취소**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 사용자가 배포를 취소했습니다."
                         }'
                     """
                     
@@ -199,7 +199,7 @@ pipeline {
                                 curl -X POST ${MATTERMOST_WEBHOOK} \
                                 -H 'Content-Type: application/json' \
                                 -d '{
-                                    "text": "### ✅ 배포 시작\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 빌드를 시작합니다..."
+                                    "text": "✅ **배포 시작**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 빌드를 시작합니다..."
                                 }'
                             """
                         }
@@ -342,7 +342,7 @@ pipeline {
                         curl -X POST ${MATTERMOST_WEBHOOK} \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "### ✅ 배포 성공\\n\\n**Build:** #${BUILD_NUMBER}\\n**Duration:** ${currentBuild.durationString}\\n\\n**Images:**\\n- Frontend: ${FRONTEND_IMAGE}\\n- Backend: ${BACKEND_IMAGE}\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
+                            "text": "✅ **배포 성공**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Duration:** ${currentBuild.durationString}\\n\\n**Images:**\\n- Frontend: ${FRONTEND_IMAGE}\\n- Backend: ${BACKEND_IMAGE}\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
                         }'
                     """
                 }
@@ -356,7 +356,7 @@ pipeline {
                     curl -X POST ${MATTERMOST_WEBHOOK} \
                     -H 'Content-Type: application/json' \
                     -d '{
-                        "text": "### ❌ 배포 실패\\n\\n**Build:** #${BUILD_NUMBER}\\n**Stage:** ${env.STAGE_NAME}\\n**Error:** 빌드 중 오류가 발생했습니다.\\n\\n[로그 확인하기](${BUILD_URL})"
+                        "text": "❌ **배포 실패**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Stage:** ${env.STAGE_NAME}\\n**Error:** 빌드 중 오류가 발생했습니다.\\n\\n[로그 확인하기](${BUILD_URL})"
                     }'
                 """
             }

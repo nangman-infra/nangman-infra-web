@@ -1,7 +1,16 @@
 import { MetadataRoute } from "next";
+import { incidentReports } from "@/data/incidentReports";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://nangman.cloud";
+  const incidentEntries: MetadataRoute.Sitemap = incidentReports.map(
+    (report) => ({
+      url: `${baseUrl}/incidents/${report.slug}`,
+      lastModified: new Date(report.resolvedAtIso),
+      changeFrequency: "yearly",
+      priority: 0.6,
+    }),
+  );
 
   return [
     {
@@ -26,6 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/monitoring`,
       lastModified: new Date(),
       changeFrequency: "hourly",
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/incidents`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
       priority: 0.8,
     },
     {
@@ -58,5 +73,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    ...incidentEntries,
   ];
 }

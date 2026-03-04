@@ -6,6 +6,7 @@ import { Github, Mail, MapPin } from "lucide-react";
 
 const navItems = [
   { name: "About", href: "/about" },
+  { name: "Incidents", href: "/incidents" },
   { name: "Members", href: "/members" },
   { name: "Projects", href: "/projects" },
   { name: "Blog", href: "/blog" },

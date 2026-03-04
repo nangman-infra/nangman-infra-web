@@ -13,6 +13,7 @@ const navItems = [
   { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
   { name: "Monitoring", href: "/monitoring" },
+  { name: "Incidents", href: "/incidents" },
   { name: "Members", href: "/members" },
   { name: "Projects", href: "/projects" },
   { name: "Blog", href: "/blog" },
@@ -42,6 +43,23 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <header className={cn(
       "fixed top-0 left-0 right-0 z-50 transition-all duration-300 gpu-accelerated-blur",
@@ -52,16 +70,16 @@ export function Header() {
       {/* Only subtle bottom border for separation */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-white/5 to-transparent pointer-events-none"></div>
       
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between relative" style={{ background: 'transparent' }}>
+      <div className="container mx-auto flex h-16 items-center gap-3 px-4 relative" style={{ background: "transparent" }}>
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-orange-600 font-bold tracking-tight text-lg">
+        <Link href="/" className="group flex shrink-0 items-center gap-2">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-orange-600 font-bold tracking-tight text-lg whitespace-nowrap">
             Nangman Infra
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden xl:flex min-w-0 flex-1 items-center justify-center gap-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -69,7 +87,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "relative px-4 py-2 text-sm font-medium transition-colors hover:text-primary",
+                  "relative whitespace-nowrap px-3 xl:px-4 py-2 text-sm font-medium transition-colors hover:text-primary",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -87,21 +105,23 @@ export function Header() {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <Link href="https://github.com/nangman-infra" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
             <Github className="w-5 h-5" />
           </Link>
           <Link href="/contact">
-            <Button variant="outline" className="hidden md:flex border-primary/20 hover:bg-primary/10 text-primary">
+            <Button variant="outline" className="hidden xl:flex border-primary/20 hover:bg-primary/10 text-primary">
               Contact
             </Button>
           </Link>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="md:hidden"
+            className="xl:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="메뉴 열기"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -114,10 +134,10 @@ export function Header() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="md:hidden absolute top-16 left-0 right-0"
+          className="xl:hidden absolute top-16 left-0 right-0"
         >
-          <div className="gpu-accelerated-blur bg-background/95 backdrop-blur-md border-b border-border/50">
-            <nav className="flex flex-col py-4">
+          <div className="gpu-accelerated-blur max-h-[calc(100vh-4rem)] overflow-y-auto bg-background/95 backdrop-blur-md border-b border-border/50">
+            <nav id="mobile-navigation" className="flex flex-col py-4">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -136,6 +156,15 @@ export function Header() {
                   </Link>
                 );
               })}
+              <div className="px-4 py-3">
+                <Link
+                  href="/contact"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex h-10 items-center rounded-md border border-primary/20 px-3 text-primary transition-colors hover:bg-primary/10"
+                >
+                  Contact
+                </Link>
+              </div>
               <div className="px-4 py-3 border-t border-border/50 mt-2">
                 <Link
                   href="https://github.com/nangman-infra"

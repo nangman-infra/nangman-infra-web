@@ -175,12 +175,8 @@ pipeline {
                             "text": "### ❌ 배포 취소\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 사용자가 배포를 취소했습니다."
                         }'
                     """
-                        }'
-                    """
                     
-                    // 2. 빌드 상태를 'ABORTED(취소됨)'가 아니라 'SUCCESS'로 끝내거나
-                    // 굳이 빨간불/회색불 보기 싫으면 아래 줄을 지우셔도 됩니다.
-                    // 다만 "취소됨"을 명확히 하려면 ABORTED가 낫습니다.
+                    // 2. 빌드 상태를 'ABORTED(취소됨)'로 설정
                     currentBuild.result = 'ABORTED'
                     currentBuild.description = "사용자에 의해 취소됨"
                 }

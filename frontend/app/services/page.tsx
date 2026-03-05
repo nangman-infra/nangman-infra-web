@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import {
@@ -20,10 +20,6 @@ import {
  * 가이드라인: 서비스에 대한 통합 접근 페이지
  */
 export default function ServicesPage() {
-  useEffect(() => {
-    document.title = "서비스 | Nangman Infra";
-  }, []);
-
   // 카테고리별 그룹화된 서비스
   const groupedServices = useMemo(() => {
     const grouped: Record<Service["category"], Service[]> = {} as Record<

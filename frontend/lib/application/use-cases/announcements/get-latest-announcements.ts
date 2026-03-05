@@ -42,15 +42,16 @@ function parseAnnouncements(payload: unknown): Announcement[] {
 
 interface GetLatestAnnouncementsUseCaseInput {
   count?: number;
+  fetcher?: () => Promise<unknown>;
 }
 
 export async function getLatestAnnouncementsUseCase(
   input: GetLatestAnnouncementsUseCaseInput,
 ): Promise<Announcement[]> {
-  const { count } = input;
+  const { count, fetcher = fetchAnnouncementsApi } = input;
 
   try {
-    const payload = await fetchAnnouncementsApi();
+    const payload = await fetcher();
     const announcements = parseAnnouncements(payload);
     return typeof count === 'number' ? announcements.slice(0, count) : announcements;
   } catch {

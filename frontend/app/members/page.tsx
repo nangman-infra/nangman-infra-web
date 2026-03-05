@@ -23,8 +23,6 @@ export default function MembersPage() {
   const [isUsingFallbackData, setIsUsingFallbackData] = useState(false);
 
   useEffect(() => {
-    document.title = "함께하는 사람들 | Nangman Infra";
-
     let isMounted = true;
 
     const loadMembers = async () => {

@@ -62,15 +62,16 @@ function parseBlogPosts(payload: unknown): BlogPost[] {
 interface GetLatestBlogPostsUseCaseInput {
   count: number;
   fallback: BlogPost[];
+  fetcher?: () => Promise<unknown>;
 }
 
 export async function getLatestBlogPostsUseCase(
   input: GetLatestBlogPostsUseCaseInput,
 ): Promise<BlogPost[]> {
-  const { count, fallback } = input;
+  const { count, fallback, fetcher = fetchBlogPostsApi } = input;
 
   try {
-    const payload = await fetchBlogPostsApi();
+    const payload = await fetcher();
     const posts = parseBlogPosts(payload);
 
     if (posts.length === 0) {

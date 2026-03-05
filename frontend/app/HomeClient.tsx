@@ -13,9 +13,8 @@ import {
     PARALLAX_Y_MIN,
     PARALLAX_Y_MAX,
 } from "@/constants/parallax";
-import { getLatestBlogPosts, type BlogPost } from "@/data/blogPosts";
+import type { BlogPost } from "@/data/blogPosts";
 import type { Announcement } from "@/lib/domain/announcement";
-import { getLatestAnnouncementsUseCase } from "@/lib/application/use-cases/announcements/get-latest-announcements";
 import { terminalCommands } from "@/data/terminalCommands";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { AboutSection } from "@/components/sections/AboutSection";
@@ -29,83 +28,56 @@ import { ContactSection } from "@/components/sections/ContactSection";
 
 interface HomeClientProps {
     latestPosts: BlogPost[];
+    latestAnnouncements: Announcement[];
 }
 
-export default function HomeClient({ latestPosts }: HomeClientProps) {
+export default function HomeClient({
+    latestPosts,
+    latestAnnouncements,
+}: HomeClientProps) {
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(latestPosts);
-    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
-
-    // Dynamic page title update
-    useEffect(() => {
-        document.title = "Nangman Infra | We Build the Invisible";
-    }, []);
-
-    useEffect(() => {
-        let isMounted = true;
-
-        async function loadBlogPosts() {
-            const posts = await getLatestBlogPosts(4);
-            if (isMounted) {
-                setBlogPosts(posts);
-            }
-        }
-
-        async function loadAnnouncements() {
-            const latest = await getLatestAnnouncementsUseCase({
-                count: 3,
-            });
-
-            if (isMounted) {
-                setAnnouncements(latest);
-            }
-        }
-
-        void loadBlogPosts();
-        void loadAnnouncements();
-
-        return () => {
-            isMounted = false;
-        };
-    }, []);
+    const mouseX = useMotionValue(0.5);
+    const mouseY = useMotionValue(0.5);
 
     // Mouse tracking for parallax effect (desktop only)
     useEffect(() => {
         let rafId: number | null = null;
+        let nextX = 0.5;
+        let nextY = 0.5;
+
+        if (window.matchMedia("(pointer: coarse)").matches) {
+            return;
+        }
+
+        const applyMousePosition = () => {
+            mouseX.set(nextX);
+            mouseY.set(nextY);
+            rafId = null;
+        };
 
         const handleMouseMove = (e: MouseEvent) => {
-            // Skip parallax on touch devices
-            if (window.matchMedia("(pointer: coarse)").matches) {
+            if (!containerRef.current) {
                 return;
             }
 
-            // Cancel previous animation frame if exists
-            if (rafId !== null) {
-                cancelAnimationFrame(rafId);
-            }
+            const rect = containerRef.current.getBoundingClientRect();
+            nextX = (e.clientX - rect.left) / rect.width;
+            nextY = (e.clientY - rect.top) / rect.height;
 
-            // Schedule update for next animation frame
-            rafId = requestAnimationFrame(() => {
-                if (containerRef.current) {
-                    const rect = containerRef.current.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / rect.width;
-                    const y = (e.clientY - rect.top) / rect.height;
-                    setMousePosition({ x, y });
-                }
-                rafId = null;
-            });
+            if (rafId === null) {
+                rafId = requestAnimationFrame(applyMousePosition);
+            }
         };
 
-        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mousemove", handleMouseMove, { passive: true });
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             if (rafId !== null) {
                 cancelAnimationFrame(rafId);
             }
         };
-    }, []);
+    }, [mouseX, mouseY]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -120,16 +92,9 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
     }, []);
 
     // Parallax values
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
     const springConfig = { damping: SPRING_DAMPING, stiffness: SPRING_STIFFNESS };
     const x = useSpring(useTransform(mouseX, [0, 1], [PARALLAX_X_MIN, PARALLAX_X_MAX]), springConfig);
     const y = useSpring(useTransform(mouseY, [0, 1], [PARALLAX_Y_MIN, PARALLAX_Y_MAX]), springConfig);
-
-    useEffect(() => {
-        mouseX.set(mousePosition.x);
-        mouseY.set(mousePosition.y);
-    }, [mousePosition, mouseX, mouseY]);
 
     return (
         <>
@@ -225,10 +190,10 @@ export default function HomeClient({ latestPosts }: HomeClientProps) {
                 <CurriculumSection />
 
                 {/* Blog Section */}
-                <BlogSection latestPosts={blogPosts} />
+                <BlogSection latestPosts={latestPosts} />
 
                 {/* Announcements Section */}
-                <AnnouncementsSection latestAnnouncements={announcements} />
+                <AnnouncementsSection latestAnnouncements={latestAnnouncements} />
 
                 {/* Contact Section */}
                 <ContactSection />

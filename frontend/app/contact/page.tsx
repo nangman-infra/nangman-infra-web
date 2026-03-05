@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { sendContactMessage, type ContactFormData } from "@/lib/api";
 
 export default function ContactPage() {
@@ -18,10 +18,6 @@ export default function ContactPage() {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-
-  useEffect(() => {
-    document.title = "Contact Us | Nangman Infra";
-  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

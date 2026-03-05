@@ -22,6 +22,48 @@ import {
 } from "@/constants/monitoring";
 import type { MonitorStatus } from "@/lib/api";
 
+interface LastUpdateTickerProps {
+  lastUpdate: Date | null;
+}
+
+function formatLastUpdateText(lastUpdate: Date | null, nowMs: number): string {
+  if (!lastUpdate) {
+    return "Never";
+  }
+
+  const diff = Math.floor((nowMs - lastUpdate.getTime()) / 1000);
+  if (diff < SECONDS_PER_MINUTE) {
+    return `${diff}s ago`;
+  }
+  if (diff < SECONDS_PER_HOUR) {
+    return `${Math.floor(diff / SECONDS_PER_MINUTE)}m ago`;
+  }
+  return lastUpdate.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function LastUpdateTicker({ lastUpdate }: LastUpdateTickerProps) {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!lastUpdate) return;
+    const interval = setInterval(
+      () => setNowMs(Date.now()),
+      LAST_UPDATE_TEXT_REFRESH_INTERVAL_MS,
+    );
+    return () => clearInterval(interval);
+  }, [lastUpdate]);
+
+  const lastUpdateText = useMemo(
+    () => formatLastUpdateText(lastUpdate, nowMs),
+    [lastUpdate, nowMs],
+  );
+
+  return <span>Last update: {lastUpdateText}</span>;
+}
+
 /**
  * 모니터링 섹션 컴포넌트
  * 가이드라인: 컴포넌트 분리 및 커스텀 훅 사용으로 가독성 향상
@@ -65,42 +107,6 @@ export function MonitoringSection() {
       monitorsWithUptime.length
     );
   }, [monitors]);
-
-  // 마지막 업데이트 시간 포맷 (1초마다 업데이트)
-  const [lastUpdateText, setLastUpdateText] = useState("Never");
-
-  useEffect(() => {
-    if (!lastUpdate) {
-      return;
-    }
-
-    const updateText = () => {
-      if (!lastUpdate) return;
-      const now = new Date();
-      const diff = Math.floor(
-        (now.getTime() - lastUpdate.getTime()) / 1000,
-      );
-      if (diff < SECONDS_PER_MINUTE) {
-        setLastUpdateText(`${diff}s ago`);
-      } else if (diff < SECONDS_PER_HOUR) {
-        setLastUpdateText(`${Math.floor(diff / SECONDS_PER_MINUTE)}m ago`);
-      } else {
-        setLastUpdateText(
-          lastUpdate.toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        );
-      }
-    };
-
-    updateText();
-    const interval = setInterval(
-      updateText,
-      LAST_UPDATE_TEXT_REFRESH_INTERVAL_MS,
-    );
-    return () => clearInterval(interval);
-  }, [lastUpdate]);
 
   return (
     <section className="relative z-10 w-full px-4 py-8 bg-[#020203]">
@@ -198,7 +204,7 @@ export function MonitoringSection() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0d0d0f] border border-white/10 rounded-xl p-4">
             <div className="flex items-center gap-2 text-white/60 font-mono text-xs">
               <Clock className="w-4 h-4" />
-              <span>Last update: {lastUpdateText}</span>
+              <LastUpdateTicker lastUpdate={lastUpdate} />
             </div>
             <div className="flex items-center gap-2 text-white/40 font-mono text-xs">
               <motion.div

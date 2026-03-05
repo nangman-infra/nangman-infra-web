@@ -12,8 +12,11 @@ export default function IncidentsPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="relative max-w-7xl mx-auto">
-        <div className="space-y-10">
-          <div className="text-center">
+        <div className="space-y-10 animate-in fade-in duration-500">
+          <div
+            className="text-center animate-in fade-in slide-in-from-bottom-2 duration-500"
+            style={{ animationDelay: "80ms", animationFillMode: "both" }}
+          >
             <div className="inline-flex items-center gap-2 text-primary mb-3">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-xs font-mono tracking-[0.2em] uppercase opacity-70">
@@ -29,10 +32,14 @@ export default function IncidentsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5">
-            {reports.map((report) => (
+            {reports.map((report, index) => (
               <article
                 key={report.id}
-                className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6"
+                className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 animate-in fade-in slide-in-from-bottom-2 duration-500"
+                style={{
+                  animationDelay: `${160 + index * 70}ms`,
+                  animationFillMode: "both",
+                }}
               >
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className="inline-flex items-center rounded-full border border-border/40 bg-card/40 px-2.5 py-0.5 text-xs font-mono text-foreground/80">

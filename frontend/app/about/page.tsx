@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect } from "react";
 import { Heart, TrendingUp, Users, Target, Users2, Calendar } from "lucide-react";
 import {
   ANIMATION_DURATION_SHORT,
@@ -16,9 +15,6 @@ import {
 } from "@/constants/members";
 
 export default function AboutPage() {
-  useEffect(() => {
-    document.title = "About Us | Nangman Infra";
-  }, []);
   const timeline = [
     { year: "2025.11", title: "낭만 인프라 런칭", desc: "인프라 엔지니어링 커뮤니티, 낭만 인프라 공식 런칭" },
   ];

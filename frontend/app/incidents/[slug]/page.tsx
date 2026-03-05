@@ -33,10 +33,20 @@ export default async function IncidentDetailPage({
     notFound();
   }
 
+  const revealClassName =
+    "animate-in fade-in slide-in-from-bottom-2 duration-500";
+  const getRevealStyle = (order: number) => ({
+    animationDelay: `${order * 70}ms`,
+    animationFillMode: "both" as const,
+  });
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
-      <div className="relative max-w-5xl mx-auto space-y-8">
-        <header className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+      <div className="relative max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <header
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(1)}
+        >
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="inline-flex items-center rounded-full border border-border/40 bg-card/40 px-2.5 py-0.5 text-xs font-mono text-foreground/80">
               {report.id}
@@ -84,14 +94,20 @@ export default async function IncidentDetailPage({
           </div>
         </header>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(2)}
+        >
           <h2 className="text-lg font-semibold mb-3">기술 임팩트</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {report.technicalImpact}
           </p>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(3)}
+        >
           <h2 className="text-lg font-semibold mb-3">서비스 토폴로지</h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
             {report.topology.map((line) => (
@@ -100,14 +116,20 @@ export default async function IncidentDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(4)}
+        >
           <h2 className="text-lg font-semibold mb-3">Root Cause</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {report.rootCause}
           </p>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(5)}
+        >
           <h2 className="text-lg font-semibold mb-3">Contributing Factors</h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
             {report.contributingFactors.map((factor) => (
@@ -116,7 +138,10 @@ export default async function IncidentDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(6)}
+        >
           <h2 className="text-lg font-semibold mb-3">Evidence</h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
             {report.evidence.map((item) => (
@@ -125,7 +150,10 @@ export default async function IncidentDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(7)}
+        >
           <h2 className="text-lg font-semibold mb-3">Timeline</h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
             {report.timeline.map((entry) => (
@@ -137,7 +165,10 @@ export default async function IncidentDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(8)}
+        >
           <h2 className="text-lg font-semibold mb-3">Resolution</h2>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
             {report.resolution.map((item) => (
@@ -146,7 +177,10 @@ export default async function IncidentDetailPage({
           </ul>
         </section>
 
-        <section className="rounded-xl border border-primary/20 bg-primary/5 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-primary/20 bg-primary/5 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(9)}
+        >
           <div className="flex items-center gap-2 mb-2">
             <ClipboardList className="w-4 h-4 text-primary" />
             <h2 className="text-lg font-semibold">{report.followUp.title}</h2>
@@ -164,7 +198,10 @@ export default async function IncidentDetailPage({
           </p>
         </section>
 
-        <section className="rounded-xl border border-border/30 bg-card/20 p-5 md:p-6">
+        <section
+          className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+          style={getRevealStyle(10)}
+        >
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-primary" />
             <h2 className="text-lg font-semibold">Tags</h2>

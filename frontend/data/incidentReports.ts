@@ -47,7 +47,7 @@ export const incidentReports: IncidentReport[] = [
     resolvedAtIso: "2026-03-02T13:59:00+09:00",
     startedAt: "2026-03-01 18:42:38 KST",
     resolvedAt: "2026-03-02 13:59 KST",
-    owner: "이성원",
+    owner: "리포터: 이성원 / 작업자: 이성원",
     impactedService: "https://auth.nangman.cloud",
     summary:
       "OPNsense 재부팅 이후 외부 도메인 기반 인증 경로가 실패했습니다. 내부 직접 주소(172.16.0.14:9443)는 정상으로 확인되어 애플리케이션 장애가 아닌 NPM-Auth 간 WireGuard 경로 단절 이슈로 판단했습니다.",

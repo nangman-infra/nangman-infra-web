@@ -3,6 +3,14 @@
  * 가이드라인: Magic Number를 상수로 정의하여 유지보수성 향상
  */
 
+export type ServiceCategory =
+  | 'monitoring'
+  | 'automation'
+  | 'security'
+  | 'infrastructure'
+  | 'communication'
+  | 'storage';
+
 export interface Service {
   id: string;
   name: string;
@@ -10,7 +18,7 @@ export interface Service {
   icon?: string; // Simple Icons 아이콘 이름 (옵셔널)
   url?: string; // 단일 URL 또는 다중 URL 선택 시 첫 번째 URL
   urls?: Array<{ label: string; url: string }>; // 다중 URL 선택 시 사용
-  category: 'monitoring' | 'automation' | 'security' | 'infrastructure' | 'communication' | 'storage';
+  category: ServiceCategory;
 }
 
 /**
@@ -40,6 +48,14 @@ export const SERVICES: Service[] = [
     description: '문서 관리 및 협업',
     icon: 'docmost.png',
     url: 'https://docmost.console.nangman.cloud',
+    category: 'communication',
+  },
+  {
+    id: 'transnote',
+    name: 'Transnote',
+    description: 'AI 회의 기록 및 노트 워크스페이스',
+    icon: 'transnote.svg',
+    url: 'https://transnote.nangman.cloud/',
     category: 'communication',
   },
   {
@@ -186,7 +202,7 @@ export const SERVICE_CATEGORIES = [
 ] as const;
 
 // 카테고리 라벨 매핑
-export const CATEGORY_LABELS: Record<Service['category'], string> = {
+export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   monitoring: '모니터링',
   automation: '자동화',
   security: '보안',

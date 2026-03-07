@@ -45,6 +45,7 @@ export default function ServicesPage() {
             if (!categoryServices || categoryServices.length === 0) {
               return null;
             }
+
             return (
               <motion.section
                 key={category}

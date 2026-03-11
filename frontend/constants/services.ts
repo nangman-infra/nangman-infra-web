@@ -35,6 +35,14 @@ export const SERVICES: Service[] = [
     category: 'automation',
   },
   {
+    id: 'aws',
+    name: 'AWS',
+    description: '클라우드 서비스 및 계정 접근',
+    icon: 'amazonaws',
+    url: 'https://d-9b6755b1ab.awsapps.com/start',
+    category: 'infrastructure',
+  },
+  {
     id: 'authentik',
     name: 'Authentik',
     description: '인증 및 권한 관리',

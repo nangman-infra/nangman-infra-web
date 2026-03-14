@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   AlertTriangle,
@@ -23,6 +24,36 @@ export function generateStaticParams() {
   }));
 }
 
+export async function generateMetadata({
+  params,
+}: IncidentDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const report = getIncidentReportBySlug(slug);
+
+  if (!report) {
+    return {
+      title: "Incident Report",
+      alternates: {
+        canonical: "/incidents",
+      },
+    };
+  }
+
+  return {
+    title: report.title,
+    description: report.summary,
+    alternates: {
+      canonical: `/incidents/${report.slug}`,
+    },
+    openGraph: {
+      title: `${report.title} | Nangman Infra`,
+      description: report.summary,
+      url: `https://nangman.cloud/incidents/${report.slug}`,
+      type: "article",
+    },
+  };
+}
+
 export default async function IncidentDetailPage({
   params,
 }: IncidentDetailPageProps) {
@@ -39,10 +70,39 @@ export default async function IncidentDetailPage({
     animationDelay: `${order * 70}ms`,
     animationFillMode: "both" as const,
   });
+  const incidentSchema = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: report.title,
+    description: report.summary,
+    url: `https://nangman.cloud/incidents/${report.slug}`,
+    datePublished: report.startedAtIso,
+    dateModified: report.resolvedAtIso,
+    inLanguage: "ko-KR",
+    articleSection: "Incident Reports",
+    keywords: report.tags.join(", "),
+    author: {
+      "@type": "Organization",
+      name: "Nangman Infra",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Nangman Infra",
+      url: "https://nangman.cloud",
+    },
+    mainEntityOfPage: `https://nangman.cloud/incidents/${report.slug}`,
+  };
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4">
-      <div className="relative max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(incidentSchema),
+        }}
+      />
+      <div className="min-h-screen pt-24 pb-16 px-4">
+        <div className="relative max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
         <header
           className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
           style={getRevealStyle(1)}
@@ -218,6 +278,7 @@ export default async function IncidentDetailPage({
           </div>
         </section>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

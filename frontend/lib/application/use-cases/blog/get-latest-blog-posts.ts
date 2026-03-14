@@ -1,4 +1,5 @@
 import { BlogPlatform, BlogPost } from '@/lib/domain/blog';
+import { getBlogPostInternalSlug, getBlogPostSourceUrl } from '@/lib/blog';
 import { fetchBlogPostsApi } from '@/lib/infrastructure/http/blog-api-client';
 
 interface BlogProxyResponse {
@@ -38,11 +39,14 @@ function isBlogPost(value: unknown): value is BlogPost {
 }
 
 function withLegacyFields(post: BlogPost): BlogPost {
+  const sourceUrl = getBlogPostSourceUrl(post);
+  const internalSlug = getBlogPostInternalSlug(post);
+
   return {
     ...post,
-    url: post.link,
-    id: post.link,
-    slug: post.link,
+    url: sourceUrl,
+    id: internalSlug,
+    slug: internalSlug,
   };
 }
 
@@ -75,11 +79,11 @@ export async function getLatestBlogPostsUseCase(
     const posts = parseBlogPosts(payload);
 
     if (posts.length === 0) {
-      return fallback.slice(0, count);
+      return fallback.slice(0, count).map(withLegacyFields);
     }
 
     return posts.slice(0, count);
   } catch {
-    return fallback.slice(0, count);
+    return fallback.slice(0, count).map(withLegacyFields);
   }
 }

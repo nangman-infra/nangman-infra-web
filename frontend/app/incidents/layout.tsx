@@ -4,6 +4,9 @@ export const metadata: Metadata = {
   title: "Incident Reports",
   description:
     "운영 중 발생한 장애 이력과 포스트모텀 보고서를 확인합니다.",
+  alternates: {
+    canonical: "/incidents",
+  },
   openGraph: {
     title: "Incident Reports | Nangman Infra",
     description:

@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { Search, SlidersHorizontal, CalendarDays } from "lucide-react";
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { BlogPost } from "@/data/blogPosts";
+import { getBlogPostInternalHref, getBlogPostSourceUrl } from "@/lib/blog";
 
 interface BlogListClientProps {
   posts: BlogPost[];
@@ -148,23 +150,23 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
       <div className="space-y-4">
         {visiblePosts.length > 0 ? (
           visiblePosts.map((post, index) => {
-            const href = post.link || post.url || "#";
-            const isExternal = Boolean(post.link || post.url);
+            const detailHref = getBlogPostInternalHref(post);
+            const sourceUrl = getBlogPostSourceUrl(post);
 
             return (
               <motion.article
-                key={post.id || href || `${post.author}-${index}`}
+                key={post.id || detailHref || `${post.author}-${index}`}
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index * 0.04, 0.24) }}
-                className="group rounded-2xl border border-border/50 bg-card/35 hover:bg-card/55 transition-colors"
+                className="group relative rounded-2xl border border-border/50 bg-card/35 hover:bg-card/55 transition-colors"
               >
-                <a
-                  href={href}
-                  target={isExternal ? "_blank" : undefined}
-                  rel={isExternal ? "noopener noreferrer" : undefined}
-                  className="block p-5 md:p-6"
-                >
+                <Link
+                  href={detailHref}
+                  aria-label={`${post.title} 상세 보기`}
+                  className="absolute inset-0 rounded-2xl"
+                />
+                <div className="relative z-10 pointer-events-none p-5 md:p-6">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <h2 className="text-xl md:text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
                       {post.title}
@@ -205,7 +207,18 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
                       </>
                     )}
                   </div>
-                </a>
+
+                  <div className="mt-5 flex flex-wrap items-center gap-3 pointer-events-auto">
+                    <a
+                      href={sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-md border border-border/60 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-card/60 transition-colors"
+                    >
+                      원문 보기
+                    </a>
+                  </div>
+                </div>
               </motion.article>
             );
           })

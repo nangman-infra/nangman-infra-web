@@ -1,5 +1,4 @@
 import { BlogPlatform, BlogPost } from '@/lib/domain/blog';
-import { getBlogPostInternalSlug, getBlogPostSourceUrl } from '@/lib/blog';
 import { fetchBlogPostsApi } from '@/lib/infrastructure/http/blog-api-client';
 
 interface BlogProxyResponse {
@@ -38,18 +37,6 @@ function isBlogPost(value: unknown): value is BlogPost {
   );
 }
 
-function withLegacyFields(post: BlogPost): BlogPost {
-  const sourceUrl = getBlogPostSourceUrl(post);
-  const internalSlug = getBlogPostInternalSlug(post);
-
-  return {
-    ...post,
-    url: sourceUrl,
-    id: internalSlug,
-    slug: internalSlug,
-  };
-}
-
 function parseBlogPosts(payload: unknown): BlogPost[] {
   if (!payload || typeof payload !== 'object') {
     return [];
@@ -60,7 +47,7 @@ function parseBlogPosts(payload: unknown): BlogPost[] {
     return [];
   }
 
-  return response.data.filter(isBlogPost).map(withLegacyFields);
+  return response.data.filter(isBlogPost);
 }
 
 interface GetLatestBlogPostsUseCaseInput {
@@ -79,11 +66,11 @@ export async function getLatestBlogPostsUseCase(
     const posts = parseBlogPosts(payload);
 
     if (posts.length === 0) {
-      return fallback.slice(0, count).map(withLegacyFields);
+      return fallback.slice(0, count);
     }
 
     return posts.slice(0, count);
   } catch {
-    return fallback.slice(0, count).map(withLegacyFields);
+    return fallback.slice(0, count);
   }
 }

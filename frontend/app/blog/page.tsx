@@ -1,4 +1,4 @@
-import { getBlogPostInternalHref, getBlogPostSourceUrl } from "@/lib/blog";
+import { getBlogPostSourceUrl } from "@/lib/blog";
 import { getPublicBlogPosts } from "@/lib/application/use-cases/blog/get-public-blog-posts";
 import BlogListClient from "./BlogListClient";
 
@@ -18,9 +18,8 @@ export default async function BlogPage() {
       itemListElement: posts.map((post, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        url: `https://nangman.cloud${getBlogPostInternalHref(post)}`,
+        url: getBlogPostSourceUrl(post),
         name: post.title,
-        sameAs: getBlogPostSourceUrl(post),
       })),
     },
   };

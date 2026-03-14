@@ -64,9 +64,6 @@ describe('getLatestBlogPostsUseCase', () => {
     expect(result[0]).toMatchObject({
       title: 'post',
       link: 'https://example.com/post',
-      id: 'https://example.com/post',
-      slug: 'https://example.com/post',
-      url: 'https://example.com/post',
     });
   });
 });

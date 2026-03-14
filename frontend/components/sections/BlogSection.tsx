@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BookOpen, ArrowRight, CalendarDays } from "lucide-react";
 import type { BlogPost } from "@/data/blogPosts";
-import { getBlogPostInternalHref, getBlogPostSourceUrl } from "@/lib/blog";
+import { getBlogPostSourceUrl } from "@/lib/blog";
 
 interface BlogSectionProps {
   latestPosts: BlogPost[];
@@ -68,9 +68,11 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                 transition={{ duration: 0.5 }}
                 className="group relative rounded-2xl border border-primary/30 bg-card/30 p-6 md:p-8 backdrop-blur-sm overflow-hidden"
               >
-                <Link
-                  href={getBlogPostInternalHref(featuredPost)}
-                  aria-label={`${featuredPost.title} 상세 보기`}
+                <a
+                  href={getBlogPostSourceUrl(featuredPost)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${featuredPost.title} 원문 보기`}
                   className="absolute inset-0 rounded-2xl"
                 />
                 <div className="absolute inset-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent opacity-80 pointer-events-none" />
@@ -129,9 +131,11 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                 <div className="space-y-2">
                   {recentList.length > 0 ? (
                     recentList.map((post, index) => (
-                      <Link
+                      <a
                         key={post.id ?? post.link ?? `${post.author}-${index}`}
-                        href={getBlogPostInternalHref(post)}
+                        href={getBlogPostSourceUrl(post)}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block rounded-xl border border-border/40 bg-background/30 px-4 py-3 hover:border-primary/30 hover:bg-background/50 transition-colors"
                       >
                         <p className="text-sm font-medium line-clamp-1 mb-1 group-hover:text-primary">
@@ -145,7 +149,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                         <div className="mt-2 text-xs text-primary">
                           원문: {getSourceHostname(post)}
                         </div>
-                      </Link>
+                      </a>
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground">

@@ -1,12 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Search, SlidersHorizontal, CalendarDays } from "lucide-react";
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { BlogPost } from "@/data/blogPosts";
-import { getBlogPostInternalHref, getBlogPostSourceUrl } from "@/lib/blog";
+import { getBlogPostSourceUrl } from "@/lib/blog";
 
 interface BlogListClientProps {
   posts: BlogPost[];
@@ -150,20 +149,21 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
       <div className="space-y-4">
         {visiblePosts.length > 0 ? (
           visiblePosts.map((post, index) => {
-            const detailHref = getBlogPostInternalHref(post);
             const sourceUrl = getBlogPostSourceUrl(post);
 
             return (
               <motion.article
-                key={post.id || detailHref || `${post.author}-${index}`}
+                key={post.id || sourceUrl || `${post.author}-${index}`}
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index * 0.04, 0.24) }}
                 className="group relative rounded-2xl border border-border/50 bg-card/35 hover:bg-card/55 transition-colors"
               >
-                <Link
-                  href={detailHref}
-                  aria-label={`${post.title} 상세 보기`}
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${post.title} 원문 보기`}
                   className="absolute inset-0 rounded-2xl"
                 />
                 <div className="relative z-10 pointer-events-none p-5 md:p-6">

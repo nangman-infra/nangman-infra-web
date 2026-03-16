@@ -34,7 +34,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.0.18",
-    "baseline-browser-mapping": "^2.10.0",
+    "baseline-browser-mapping": "^2.10.8",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "ignore-loader": "^0.1.2",

@@ -119,7 +119,7 @@ export const SERVICES: Service[] = [
     name: 'Jenkins',
     description: 'CI/CD 파이프라인',
     icon: 'jenkins',
-    url: 'https://jenkins.console.nangman.cloud',
+    url: 'https://jenkins.nangman.cloud/',
     category: 'automation',
   },
   {

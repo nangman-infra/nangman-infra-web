@@ -107,8 +107,44 @@ export class GetAllBlogPostsUseCase {
     if (typeof value !== 'string') {
       return null;
     }
-    const trimmed = value.trim();
+    const trimmed = this.decodeHtmlEntities(value).trim();
     return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private decodeHtmlEntities(value: string): string {
+    return value.replace(
+      /&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g,
+      (entity, token: string) => {
+        if (token[0] === '#') {
+          const isHex = token[1]?.toLowerCase() === 'x';
+          const numericPart = isHex ? token.slice(2) : token.slice(1);
+          const codePoint = Number.parseInt(numericPart, isHex ? 16 : 10);
+
+          if (!Number.isNaN(codePoint)) {
+            return String.fromCodePoint(codePoint);
+          }
+
+          return entity;
+        }
+
+        switch (token.toLowerCase()) {
+          case 'amp':
+            return '&';
+          case 'lt':
+            return '<';
+          case 'gt':
+            return '>';
+          case 'quot':
+            return '"';
+          case 'apos':
+            return "'";
+          case 'nbsp':
+            return ' ';
+          default:
+            return entity;
+        }
+      },
+    );
   }
 
   private toIsoDate(value: unknown): string {

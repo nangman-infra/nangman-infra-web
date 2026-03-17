@@ -19,20 +19,21 @@ COPY . .
 RUN pnpm build
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:22-bookworm-slim AS production
 
 WORKDIR /app
 
-# Install pnpm and system dependencies (iputils for ping, nut for UPS monitoring, chromium for PDF rendering)
-RUN apk add --no-cache \
-    iputils \
-    nut \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont && \
+# Install pnpm and system dependencies.
+# Use Debian Chromium in production because Alpine Chromium crashes during
+# headless PDF rendering inside Docker.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates \
+      chromium \
+      fonts-freefont-ttf \
+      iputils-ping \
+      nut-client && \
+    rm -rf /var/lib/apt/lists/* && \
     corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 # Copy package files

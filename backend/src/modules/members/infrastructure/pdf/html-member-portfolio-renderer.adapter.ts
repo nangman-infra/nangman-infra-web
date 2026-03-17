@@ -146,10 +146,13 @@ export class HtmlMemberPortfolioRendererAdapter
         .launch({
           executablePath,
           headless: true,
+          ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
           args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-features=Vulkan',
           ],
         })
         .then((browser) => {

@@ -45,6 +45,10 @@ pipeline {
         FRONTEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:latest"
         BACKEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:latest"
         
+        // 빌드 캐시 이미지 (레지스트리 캐시 사용)
+        FRONTEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:buildcache"
+        BACKEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:buildcache"
+        
         // Watchtower 설정
         WATCHTOWER_URL = 'http://172.16.0.25:8080'
         WATCHTOWER_TOKEN = credentials('2eb5ae85-6341-4cae-834e-20a5382e1f34')
@@ -248,6 +252,8 @@ pipeline {
                                             docker buildx build \
                                                 --platform $PLATFORMS \
                                                 --tag $FRONTEND_IMAGE \
+                                                --cache-from type=registry,ref=$FRONTEND_CACHE \
+                                                --cache-to type=registry,ref=$FRONTEND_CACHE,mode=max \
                                                 --push \
                                                 --progress=plain \
                                                 ./frontend
@@ -272,6 +278,8 @@ pipeline {
                                             docker buildx build \
                                                 --platform $PLATFORMS \
                                                 --tag $BACKEND_IMAGE \
+                                                --cache-from type=registry,ref=$BACKEND_CACHE \
+                                                --cache-to type=registry,ref=$BACKEND_CACHE,mode=max \
                                                 --push \
                                                 --progress=plain \
                                                 ./backend
@@ -369,10 +377,10 @@ pipeline {
             script {
                 // 배포 파이프라인이 실행된 경우에만 정리
                 if (env.IS_DEPLOY_REQUEST == 'true') {
-                    echo "🧹 Cleaning up Docker resources"
+                    echo "🧹 Cleaning up Docker resources (keeping cache)"
                     sh '''
-                        docker buildx prune -f || true
-                        docker system prune -f || true
+                        # 빌드 캐시는 유지하고 불필요한 리소스만 정리
+                        docker buildx prune -f --filter until=24h || true
                     '''
                 }
             }

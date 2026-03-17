@@ -5,7 +5,7 @@ import { GetAllMembersUseCase } from './application/use-cases/get-all-members.us
 import { MEMBER_READER } from './domain/ports/member-reader.port';
 import { DirectusMembersReaderAdapter } from './infrastructure/directus/directus-members-reader.adapter';
 import { DownloadMemberPortfolioPdfUseCase } from './application/use-cases/download-member-portfolio-pdf.use-case';
-import { PdfMemberPortfolioRendererAdapter } from './infrastructure/pdf/pdf-member-portfolio-renderer.adapter';
+import { HtmlMemberPortfolioRendererAdapter } from './infrastructure/pdf/html-member-portfolio-renderer.adapter';
 import { MEMBER_PORTFOLIO_RENDERER } from './domain/ports/member-portfolio-renderer.port';
 import { ResolveMemberPortfolioTargetUseCase } from './application/use-cases/resolve-member-portfolio-target.use-case';
 import { StartMemberPortfolioPdfJobUseCase } from './application/use-cases/start-member-portfolio-pdf-job.use-case';
@@ -25,7 +25,7 @@ import { WorkerThreadMemberPortfolioJobManagerAdapter } from './infrastructure/p
     GetMemberPortfolioPdfJobStatusUseCase,
     DownloadMemberPortfolioPdfByJobUseCase,
     DirectusMembersReaderAdapter,
-    PdfMemberPortfolioRendererAdapter,
+    HtmlMemberPortfolioRendererAdapter,
     WorkerThreadMemberPortfolioJobManagerAdapter,
     {
       provide: MEMBER_READER,
@@ -33,7 +33,7 @@ import { WorkerThreadMemberPortfolioJobManagerAdapter } from './infrastructure/p
     },
     {
       provide: MEMBER_PORTFOLIO_RENDERER,
-      useExisting: PdfMemberPortfolioRendererAdapter,
+      useExisting: HtmlMemberPortfolioRendererAdapter,
     },
     {
       provide: MEMBER_PORTFOLIO_JOB_MANAGER,

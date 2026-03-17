@@ -26,16 +26,34 @@ interface WorkerSuccessMessage {
   content: Uint8Array;
 }
 
+interface WorkerShutdownMessage {
+  ok: true;
+  type: 'shutdown';
+}
+
 interface WorkerErrorMessage {
   ok: false;
   error: string;
 }
 
-type WorkerMessage = WorkerSuccessMessage | WorkerErrorMessage;
+type WorkerMessage =
+  | WorkerSuccessMessage
+  | WorkerShutdownMessage
+  | WorkerErrorMessage;
+
+interface RenderWorkerPayload {
+  type: 'render';
+  member: MemberProfile;
+}
+
+interface ShutdownWorkerPayload {
+  type: 'shutdown';
+}
 
 const DEFAULT_JOB_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_WORKER_TIMEOUT_MS = 5 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 60 * 1000;
+const WORKER_SHUTDOWN_TIMEOUT_MS = 1000;
 const RESERVED_MAIN_THREAD_CORES = 1;
 const MAX_AUTO_WORKERS = 6;
 
@@ -59,7 +77,8 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
   private readonly workerCount: number;
   private readonly jobTtlMs: number;
   private readonly workerTimeoutMs: number;
-  private activeWorkers = 0;
+  private readonly allWorkers = new Set<Worker>();
+  private readonly idleWorkers: Worker[] = [];
 
   constructor(private readonly configService: ConfigService) {
     this.workerCount = this.resolveWorkerCount();
@@ -163,15 +182,18 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
     clearInterval(this.cleanupInterval);
 
     await Promise.all(
-      Array.from(this.activeWorkersByJobId.values()).map((worker) =>
-        worker.terminate().catch(() => 0),
-      ),
+      Array.from(this.allWorkers).map((worker) => this.shutdownWorker(worker)),
     );
     this.activeWorkersByJobId.clear();
+    this.idleWorkers.length = 0;
+    this.allWorkers.clear();
   }
 
   private processQueue(): void {
-    while (this.activeWorkers < this.workerCount && this.queue.length > 0) {
+    while (
+      this.activeWorkersByJobId.size < this.workerCount &&
+      this.queue.length > 0
+    ) {
       const jobId = this.queue.shift();
       if (!jobId) {
         continue;
@@ -182,23 +204,29 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
         continue;
       }
 
-      void this.runJob(jobId, job);
+      const worker = this.acquireWorker();
+      if (!worker) {
+        this.queue.unshift(jobId);
+        return;
+      }
+
+      this.activeWorkersByJobId.set(jobId, worker);
+      void this.runJob(jobId, job, worker);
     }
   }
 
-  private async runJob(jobId: string, job: InternalJob): Promise<void> {
-    this.activeWorkers += 1;
+  private async runJob(
+    jobId: string,
+    job: InternalJob,
+    worker: Worker,
+  ): Promise<void> {
     this.updateSnapshot(
       job,
       'running',
       '서버에서 포트폴리오 PDF를 생성하고 있습니다.',
     );
 
-    let worker: Worker | null = null;
-
     try {
-      worker = new Worker(this.workerScriptPath);
-      this.activeWorkersByJobId.set(jobId, worker);
       const content = await this.renderInWorker(worker, job.member);
       this.documentsByJobId.set(jobId, content);
       this.updateSnapshot(
@@ -224,12 +252,12 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
         jobId,
         error: errorMessage,
       });
+      await this.retireWorker(worker);
     } finally {
-      if (worker) {
-        await worker.terminate().catch(() => 0);
-        this.activeWorkersByJobId.delete(jobId);
+      this.activeWorkersByJobId.delete(jobId);
+      if (this.allWorkers.has(worker) && !this.idleWorkers.includes(worker)) {
+        this.idleWorkers.push(worker);
       }
-      this.activeWorkers -= 1;
       this.processQueue();
     }
   }
@@ -269,6 +297,16 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
           return;
         }
 
+        if ('type' in message && message.type === 'shutdown') {
+          reject(new Error('포트폴리오 워커가 예기치 않게 종료 응답을 반환했습니다.'));
+          return;
+        }
+
+        if (!('content' in message)) {
+          reject(new Error('포트폴리오 워커 응답에 PDF 데이터가 없습니다.'));
+          return;
+        }
+
         resolve(Buffer.from(message.content));
       });
 
@@ -287,8 +325,80 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
         );
       });
 
-      worker.postMessage({ member });
+      const payload: RenderWorkerPayload = {
+        type: 'render',
+        member,
+      };
+      worker.postMessage(payload);
     });
+  }
+
+  private acquireWorker(): Worker | null {
+    const idleWorker = this.idleWorkers.pop();
+    if (idleWorker) {
+      return idleWorker;
+    }
+
+    if (this.allWorkers.size >= this.workerCount) {
+      return null;
+    }
+
+    const worker = new Worker(this.workerScriptPath);
+    this.allWorkers.add(worker);
+    return worker;
+  }
+
+  private async retireWorker(worker: Worker): Promise<void> {
+    this.removeIdleWorker(worker);
+    this.allWorkers.delete(worker);
+    await worker.terminate().catch(() => 0);
+  }
+
+  private async shutdownWorker(worker: Worker): Promise<void> {
+    this.removeIdleWorker(worker);
+
+    await new Promise<void>((resolve) => {
+      const finalize = (): void => {
+        cleanup();
+        resolve();
+      };
+
+      const cleanup = (): void => {
+        clearTimeout(timeoutId);
+        worker.removeListener('exit', handleExit);
+        worker.removeListener('error', handleError);
+      };
+
+      const handleExit = (): void => {
+        finalize();
+      };
+
+      const handleError = (): void => {
+        finalize();
+      };
+
+      const timeoutId = setTimeout(() => {
+        void worker.terminate().catch(() => 0).finally(finalize);
+      }, WORKER_SHUTDOWN_TIMEOUT_MS);
+
+      worker.once('exit', handleExit);
+      worker.once('error', handleError);
+
+      try {
+        const payload: ShutdownWorkerPayload = { type: 'shutdown' };
+        worker.postMessage(payload);
+      } catch {
+        clearTimeout(timeoutId);
+        void worker.terminate().catch(() => 0).finally(finalize);
+      }
+    });
+  }
+
+  private removeIdleWorker(worker: Worker): void {
+    const index = this.idleWorkers.indexOf(worker);
+    if (index >= 0) {
+      this.idleWorkers.splice(index, 1);
+    }
   }
 
   private updateSnapshot(

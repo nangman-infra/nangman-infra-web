@@ -104,7 +104,7 @@ pipeline {
                     def buildUrl = env.BUILD_URL
                     
                     withCredentials([
-                        string(credentialsId: 'smee-webhook-url', variable: 'SMEE_URL'),
+                        string(credentialsId: 'smee-url-id', variable: 'SMEE_URL'),
                         string(credentialsId: 'jenkins-webhook-token', variable: 'WEBHOOK_TOKEN')
                     ]) {
                         // Mattermost로 버튼 달린 메시지 전송

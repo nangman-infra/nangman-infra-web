@@ -1,3 +1,5 @@
+import groovy.json.JsonOutput
+
 pipeline {
     agent any
     
@@ -20,8 +22,8 @@ pipeline {
                 // 2. Mattermost 버튼이 오면 'is_deploy' 값이 들어옴
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
-            // 👇 [핵심] 토큰을 하나로 통일
-            token: 'nangman-trigger',
+            // 👇 [핵심] 토큰을 크레덴셜로 관리
+            tokenCredentialId: 'jenkins-webhook-token',
             causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
 
             // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
@@ -101,49 +103,50 @@ pipeline {
                     def buildNumber = env.BUILD_NUMBER
                     def buildUrl = env.BUILD_URL
                     
-                    // Mattermost로 버튼 달린 메시지 전송
-                    def payload = """
-{
-  "text": "🚀 **배포 승인 요청**\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
-  "attachments": [
-    {
-      "color": "#FFA500",
-      "actions": [
-        {
-          "name": "🚀 배포 시작",
-          "integration": {
-            "url": "https://smee.io/ern85Drga3u3CCEP?token=nangman-trigger",
-            "context": {
-              "is_deploy": "true",
-              "job_name": "${jobName}",
-              "build_number": "${buildNumber}",
-              "branch": "${branch}"
-            }
-          }
-        },
-        {
-          "name": "❌ 배포 취소",
-          "integration": {
-            "url": "https://smee.io/ern85Drga3u3CCEP?token=nangman-trigger",
-            "context": {
-              "is_deploy": "false",
-              "job_name": "${jobName}",
-              "build_number": "${buildNumber}",
-              "branch": "${branch}"
-            }
-          }
-        }
-      ]
-    }
-  ]
-}
-"""
-                    
-                    sh """
-                        curl -X POST ${MATTERMOST_WEBHOOK} \
-                        -H 'Content-Type: application/json' \
-                        -d '${payload}'
-                    """
+                    withCredentials([
+                        string(credentialsId: 'smee-webhook-url', variable: 'SMEE_URL'),
+                        string(credentialsId: 'jenkins-webhook-token', variable: 'WEBHOOK_TOKEN')
+                    ]) {
+                        // Mattermost로 버튼 달린 메시지 전송
+                        def payload = JsonOutput.toJson([
+                            text: "🚀 **배포 승인 요청**\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
+                            attachments: [[
+                                color: "#FFA500",
+                                actions: [
+                                    [
+                                        name: "🚀 배포 시작",
+                                        integration: [
+                                            url: "${SMEE_URL}?token=${WEBHOOK_TOKEN}",
+                                            context: [
+                                                is_deploy: "true",
+                                                job_name: "${jobName}",
+                                                build_number: "${buildNumber}",
+                                                branch: "${branch}"
+                                            ]
+                                        ]
+                                    ],
+                                    [
+                                        name: "❌ 배포 취소",
+                                        integration: [
+                                            url: "${SMEE_URL}?token=${WEBHOOK_TOKEN}",
+                                            context: [
+                                                is_deploy: "false",
+                                                job_name: "${jobName}",
+                                                build_number: "${buildNumber}",
+                                                branch: "${branch}"
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]]
+                        ])
+                        
+                        sh """
+                            curl -X POST \$MATTERMOST_WEBHOOK \
+                            -H 'Content-Type: application/json' \
+                            -d '${payload}'
+                        """
+                    }
                     
                     echo "✅ Mattermost 알림 전송 완료. 버튼 클릭 대기 중..."
                     currentBuild.result = 'SUCCESS'
@@ -168,13 +171,13 @@ pipeline {
                     echo "❌ 사용자가 배포를 취소했습니다."
                     
                     // 1. 매터모스트 메시지 수정 (버튼 없애기 위해)
-                    sh """
-                        curl -X POST ${MATTERMOST_WEBHOOK} \
+                    sh '''
+                        curl -X POST $MATTERMOST_WEBHOOK \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "❌ **배포 취소**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 사용자가 배포를 취소했습니다."
+                            "text": "❌ **배포 취소**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Status:** 사용자가 배포를 취소했습니다."
                         }'
-                    """
+                    '''
                     
                     // 2. 빌드 상태를 'ABORTED(취소됨)'로 설정
                     currentBuild.result = 'ABORTED'
@@ -195,13 +198,13 @@ pipeline {
                     steps {
                         script {
                             echo "🚀 배포 버튼 클릭됨! 배포 시작."
-                            sh """
-                                curl -X POST ${MATTERMOST_WEBHOOK} \
+                            sh '''
+                                curl -X POST $MATTERMOST_WEBHOOK \
                                 -H 'Content-Type: application/json' \
                                 -d '{
-                                    "text": "✅ **배포 시작**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Status:** 빌드를 시작합니다..."
+                                    "text": "✅ **배포 시작**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Status:** 빌드를 시작합니다..."
                                 }'
-                            """
+                            '''
                         }
                     }
                 }
@@ -240,11 +243,11 @@ pipeline {
                                         passwordVariable: 'HARBOR_PASSWORD'
                                     )]) {
                                         sh '''
-                                            echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
                                             
                                             docker buildx build \
-                                                --platform ${PLATFORMS} \
-                                                --tag ${FRONTEND_IMAGE} \
+                                                --platform $PLATFORMS \
+                                                --tag $FRONTEND_IMAGE \
                                                 --push \
                                                 --progress=plain \
                                                 ./frontend
@@ -264,11 +267,11 @@ pipeline {
                                         passwordVariable: 'HARBOR_PASSWORD'
                                     )]) {
                                         sh '''
-                                            echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
                                             
                                             docker buildx build \
-                                                --platform ${PLATFORMS} \
-                                                --tag ${BACKEND_IMAGE} \
+                                                --platform $PLATFORMS \
+                                                --tag $BACKEND_IMAGE \
                                                 --push \
                                                 --progress=plain \
                                                 ./backend
@@ -290,13 +293,13 @@ pipeline {
                                 passwordVariable: 'HARBOR_PASSWORD'
                             )]) {
                                 sh '''
-                                    echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+                                    echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
                                     
                                     echo "Frontend manifest:"
-                                    docker manifest inspect ${FRONTEND_IMAGE} | grep -A 3 '"platform"'
+                                    docker manifest inspect $FRONTEND_IMAGE | grep -A 3 '"platform"'
                                     
                                     echo "Backend manifest:"
-                                    docker manifest inspect ${BACKEND_IMAGE} | grep -A 3 '"platform"'
+                                    docker manifest inspect $BACKEND_IMAGE | grep -A 3 '"platform"'
                                 '''
                             }
                         }
@@ -309,8 +312,8 @@ pipeline {
                             echo "🚀 Triggering Watchtower to update containers"
                             sh '''
                                 response=$(curl -s -w "\\n%{http_code}" \
-                                    -H "Authorization: Bearer ${WATCHTOWER_TOKEN}" \
-                                    ${WATCHTOWER_URL}/v1/update)
+                                    -H "Authorization: Bearer $WATCHTOWER_TOKEN" \
+                                    $WATCHTOWER_URL/v1/update)
                                 
                                 http_code=$(echo "$response" | tail -n1)
                                 body=$(echo "$response" | sed '$d')
@@ -338,13 +341,13 @@ pipeline {
                 echo "✅ Pipeline completed successfully"
                 // 배포 파이프라인이 실행된 경우에만 성공 알림
                 if (env.IS_DEPLOY_REQUEST == 'true') {
-                    sh """
-                        curl -X POST ${MATTERMOST_WEBHOOK} \
+                    sh '''
+                        curl -X POST $MATTERMOST_WEBHOOK \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "✅ **배포 성공**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Duration:** ${currentBuild.durationString}\\n\\n**Images:**\\n- Frontend: ${FRONTEND_IMAGE}\\n- Backend: ${BACKEND_IMAGE}\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
+                            "text": "✅ **배포 성공**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Duration:** N/A\\n\\n**Images:**\\n- Frontend: '$FRONTEND_IMAGE'\\n- Backend: '$BACKEND_IMAGE'\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
                         }'
-                    """
+                    '''
                 }
             }
         }
@@ -352,13 +355,13 @@ pipeline {
         failure {
             script {
                 echo "❌ Pipeline failed"
-                sh """
-                    curl -X POST ${MATTERMOST_WEBHOOK} \
+                sh '''
+                    curl -X POST $MATTERMOST_WEBHOOK \
                     -H 'Content-Type: application/json' \
                     -d '{
-                        "text": "❌ **배포 실패**\\n\\n**Build:** #${BUILD_NUMBER}\\n**Stage:** ${env.STAGE_NAME}\\n**Error:** 빌드 중 오류가 발생했습니다.\\n\\n[로그 확인하기](${BUILD_URL})"
+                        "text": "❌ **배포 실패**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Stage:** Unknown\\n**Error:** 빌드 중 오류가 발생했습니다.\\n\\n[로그 확인하기]('$BUILD_URL')"
                     }'
-                """
+                '''
             }
         }
         

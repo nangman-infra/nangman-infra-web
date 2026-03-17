@@ -11,8 +11,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json pnpm-lock.yaml* ./
 
-# Install dependencies with retry logic
-RUN pnpm install --frozen-lockfile --network-timeout 300000
+# Install dependencies with network timeout
+RUN pnpm install --prod=false
 
 # Stage 3: Build application
 FROM base AS builder

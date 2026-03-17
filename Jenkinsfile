@@ -23,7 +23,7 @@ pipeline {
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
             // 👇 [핵심] 토큰을 크레덴셜로 관리
-            tokenCredentialId: 'jenkins-webhook-token',
+            token: 'nangman-trigger-secret',
             causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
 
             // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!

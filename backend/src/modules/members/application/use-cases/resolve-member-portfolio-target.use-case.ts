@@ -28,11 +28,7 @@ export class ResolveMemberPortfolioTargetUseCase {
       throw new MemberNotFoundError();
     }
 
-    const preferredFileNameBase = this.getPreferredFileNameBase(
-      member,
-      normalizedIdentifier,
-    );
-    const safeFileNameBase = this.toSafeFileName(preferredFileNameBase);
+    const safeFileNameBase = this.toSafeFileName(member.slug);
     const memberFingerprint = this.createMemberFingerprint(member);
 
     return {
@@ -115,27 +111,6 @@ export class ResolveMemberPortfolioTargetUseCase {
       .replace(/[^a-z0-9\-가-힣]/g, '')
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
-  }
-
-  private getPreferredFileNameBase(
-    member: MemberProfile,
-    normalizedIdentifier: string,
-  ): string {
-    if (this.hasAsciiWord(normalizedIdentifier)) {
-      return normalizedIdentifier;
-    }
-
-    const aliases = Array.from(this.collectAliases(member));
-    const asciiAlias = aliases.find((alias) => this.hasAsciiWord(alias));
-    if (asciiAlias) {
-      return asciiAlias;
-    }
-
-    return 'member';
-  }
-
-  private hasAsciiWord(value: string): boolean {
-    return /[a-z0-9]/i.test(value);
   }
 
   private toSafeFileName(value: string): string {

@@ -9,6 +9,10 @@ interface DirectusItem {
   id: number | string;
   slug?: string | null;
   name?: string | null;
+  links?: {
+    homepage?: string | null;
+    resume?: string | null;
+  } | null;
 }
 
 interface DirectusItemsResponse {
@@ -56,6 +60,83 @@ function slugify(value: string): string {
 function normalizeSlug(value: string): string {
   const normalized = slugify(value);
   return normalized.length > 0 ? normalized : 'member';
+}
+
+function isAsciiSlug(value: string | null | undefined): boolean {
+  return Boolean(value && /^[a-z0-9-]+$/i.test(value.trim()));
+}
+
+function extractHomepageAlias(value: string | null | undefined): string | null {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    const [subdomain] = parsed.hostname.split('.');
+    if (!subdomain || subdomain === 'www' || subdomain === 'nangman') {
+      return null;
+    }
+
+    return normalizeSlug(subdomain);
+  } catch {
+    return null;
+  }
+}
+
+function extractResumeAlias(value: string | null | undefined): string | null {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  const fileName = value.split('/').pop()?.trim();
+  if (!fileName) {
+    return null;
+  }
+
+  const baseName = fileName.replace(/\.[^.]+$/, '');
+  if (!baseName) {
+    return null;
+  }
+
+  const alias = baseName.replace(/-(resume|cv)$/i, '');
+  return normalizeSlug(alias);
+}
+
+const MEMBER_NAME_ALIAS_MAP = new Map<string, string>([
+  ['강윤서', 'unseo'],
+  ['김주형', 'juhyung'],
+  ['손준호', 'juno'],
+  ['유정빈', 'jungbin'],
+  ['이성원', 'seongwon'],
+  ['임동건', 'donggeon'],
+  ['정택준', 'taekjun'],
+  ['정희훈', 'hooni'],
+  ['태성우', 'seongwoo'],
+]);
+
+function resolvePreferredBaseSlug(member: DirectusItem): string {
+  const currentSlug = member.slug?.trim();
+  if (isAsciiSlug(currentSlug)) {
+    return normalizeSlug(currentSlug ?? '');
+  }
+
+  const homepageAlias = extractHomepageAlias(member.links?.homepage);
+  if (homepageAlias) {
+    return homepageAlias;
+  }
+
+  const resumeAlias = extractResumeAlias(member.links?.resume);
+  if (resumeAlias) {
+    return resumeAlias;
+  }
+
+  const mappedAlias = MEMBER_NAME_ALIAS_MAP.get(member.name?.trim() ?? '');
+  if (mappedAlias) {
+    return normalizeSlug(mappedAlias);
+  }
+
+  return normalizeSlug(currentSlug && currentSlug.length > 0 ? currentSlug : member.name ?? String(member.id));
 }
 
 async function loginAndGetToken(baseUrl: string): Promise<string> {
@@ -109,7 +190,7 @@ async function readMembers(
       headers: { Authorization: `Bearer ${token}` },
       params: {
         limit: -1,
-        fields: 'id,slug,name',
+        fields: 'id,slug,name,links',
       },
       timeout: 8000,
     },
@@ -128,9 +209,7 @@ function resolveUniqueSlugs(members: DirectusItem[]): Map<number | string, strin
 
   for (const member of members) {
     const id = member.id;
-    const fromSlug = member.slug?.trim();
-    const fromName = member.name?.trim();
-    const base = normalizeSlug(fromSlug && fromSlug.length > 0 ? fromSlug : fromName ?? String(id));
+    const base = resolvePreferredBaseSlug(member) || normalizeSlug(String(id));
 
     let candidate = base;
     let suffix = 2;

@@ -36,7 +36,11 @@ interface ProfileModalProps {
 const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
 const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
 const PORTFOLIO_JOB_MAX_WAIT_MS = 10 * 60 * 1000;
-const PORTFOLIO_JOB_STORAGE_KEY = "members:portfolio-job-state:v1";
+const PORTFOLIO_JOB_STORAGE_KEY = "members:portfolio-job-state:v2";
+const PORTFOLIO_STALE_JOB_MESSAGE =
+  "기존 포트폴리오 PDF 작업이 만료되어 새 작업을 다시 시작합니다.";
+const PORTFOLIO_STALE_JOB_RETRY_MESSAGE =
+  "기존 포트폴리오 PDF 작업이 만료되었습니다. 버튼을 다시 눌러 새로 생성해주세요.";
 
 type PortfolioJobStatus = "queued" | "running" | "completed" | "failed";
 
@@ -53,6 +57,16 @@ interface PortfolioJobUiState {
   startedAt: number | null;
   statusMessage: string | null;
   errorMessage: string | null;
+}
+
+class PortfolioJobRequestError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "PortfolioJobRequestError";
+    this.status = status;
+  }
 }
 
 function createEmptyPortfolioJobUiState(): PortfolioJobUiState {
@@ -215,6 +229,14 @@ function composeProgressMessage(baseMessage: string | undefined, elapsedMs: numb
   return `${baseMessage.trim()} ${progressHint}`.trim();
 }
 
+function isPortfolioJobNotFoundError(error: unknown): boolean {
+  return (
+    error instanceof PortfolioJobRequestError &&
+    error.status === 404 &&
+    error.message.includes("포트폴리오 PDF 작업을 찾을 수 없습니다.")
+  );
+}
+
 function toSafeFileName(value: string): string {
   const safe = value
     .trim()
@@ -282,6 +304,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     ((jobId: string) => Promise<void>) | null
   >(null);
   const isOpenRef = useRef(isOpen);
+  const staleJobRecoveryAttemptedRef = useRef(false);
   const jobStateByMemberRef = useRef<Record<string, PortfolioJobUiState>>({});
   const currentMemberKeyRef = useRef<string>("");
   const memberJobKey = (member?.slug?.trim() || member?.name?.trim() || "").trim();
@@ -377,6 +400,34 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     );
   }, []);
 
+  const clearCurrentMemberJobState = useCallback(
+    (
+      options?: {
+        statusMessage?: string | null;
+        errorMessage?: string | null;
+        preserveRecoveryFlag?: boolean;
+      },
+    ): void => {
+      const nextState: PortfolioJobUiState = {
+        ...createEmptyPortfolioJobUiState(),
+        statusMessage: options?.statusMessage ?? null,
+        errorMessage: options?.errorMessage ?? null,
+      };
+
+      if (!options?.preserveRecoveryFlag) {
+        staleJobRecoveryAttemptedRef.current = false;
+      }
+
+      applyMemberState(nextState);
+
+      const currentMemberKey = currentMemberKeyRef.current;
+      if (currentMemberKey) {
+        upsertMemberJobState(currentMemberKey, nextState);
+      }
+    },
+    [applyMemberState, upsertMemberJobState],
+  );
+
   useEffect(() => {
     if (!isJobStateLoaded) {
       return;
@@ -388,6 +439,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     }
 
     pollingCancelledRef.current = true;
+    staleJobRecoveryAttemptedRef.current = false;
     if (pollingTimerRef.current) {
       clearTimeout(pollingTimerRef.current);
       pollingTimerRef.current = null;
@@ -476,7 +528,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
     if (!response.ok) {
       const message = await resolveErrorMessage(response);
-      throw new Error(message);
+      throw new PortfolioJobRequestError(message, response.status);
     }
 
     const blob = await response.blob();
@@ -494,6 +546,100 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     link.remove();
     URL.revokeObjectURL(objectUrl);
   };
+
+  async function startPortfolioJob(
+    mode: "manual" | "stale-recovery" = "manual",
+  ): Promise<void> {
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+    pollingCancelledRef.current = false;
+
+    if (mode === "manual") {
+      staleJobRecoveryAttemptedRef.current = false;
+    }
+
+    const startedAt = Date.now();
+    downloadStartedAtRef.current = startedAt;
+    setDownloadStartedAt(startedAt);
+    activeJobIdRef.current = null;
+    setActiveJobId(null);
+    setPortfolioJobStatus("queued");
+    setIsDownloadingPortfolio(true);
+    setDownloadErrorMessage(null);
+    setDownloadStatusMessage(
+      mode === "stale-recovery"
+        ? `${PORTFOLIO_STALE_JOB_MESSAGE} ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`
+        : `포트폴리오 PDF 생성 작업을 시작합니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
+    );
+
+    try {
+      const response = await fetch(startPortfolioJobUrl, {
+        method: "POST",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const message = await resolveErrorMessage(response);
+        throw new PortfolioJobRequestError(message, response.status);
+      }
+
+      const payload = normalizePortfolioJobResponse(await response.json());
+      activeJobIdRef.current = payload.jobId;
+      setActiveJobId(payload.jobId);
+      setPortfolioJobStatus(payload.status);
+
+      const elapsedMs = Date.now() - (downloadStartedAtRef.current ?? Date.now());
+      setDownloadStatusMessage(composeProgressMessage(payload.message, elapsedMs));
+      setDownloadErrorMessage(null);
+
+      if (payload.status === "failed") {
+        pollingCancelledRef.current = true;
+        staleJobRecoveryAttemptedRef.current = false;
+        setPortfolioJobStatus("failed");
+        setIsDownloadingPortfolio(false);
+        throw new Error(payload.errorMessage || payload.message || "포트폴리오 PDF 생성에 실패했습니다.");
+      }
+
+      if (payload.status === "completed") {
+        staleJobRecoveryAttemptedRef.current = false;
+        await handleCompletedPortfolioJob(payload.jobId, "auto");
+        return;
+      }
+
+      void pollPortfolioJobStatus(payload.jobId);
+    } catch (error) {
+      pollingCancelledRef.current = true;
+      staleJobRecoveryAttemptedRef.current = false;
+      setPortfolioJobStatus("failed");
+      setDownloadErrorMessage(
+        error instanceof Error && error.message.trim()
+          ? error.message
+          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+      );
+      setDownloadStatusMessage(null);
+      setIsDownloadingPortfolio(false);
+    }
+  }
+
+  async function recoverFromStalePortfolioJob(): Promise<void> {
+    if (staleJobRecoveryAttemptedRef.current) {
+      clearCurrentMemberJobState({
+        statusMessage: null,
+        errorMessage: PORTFOLIO_STALE_JOB_RETRY_MESSAGE,
+      });
+      return;
+    }
+
+    staleJobRecoveryAttemptedRef.current = true;
+    clearCurrentMemberJobState({
+      statusMessage: PORTFOLIO_STALE_JOB_MESSAGE,
+      errorMessage: null,
+      preserveRecoveryFlag: true,
+    });
+    await startPortfolioJob("stale-recovery");
+  }
 
   async function handleCompletedPortfolioJob(
     jobId: string,
@@ -521,9 +667,15 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
     try {
       await downloadPortfolioByJobId(jobId);
+      staleJobRecoveryAttemptedRef.current = false;
       setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
       setDownloadErrorMessage(null);
     } catch (error) {
+      if (isPortfolioJobNotFoundError(error)) {
+        await recoverFromStalePortfolioJob();
+        return;
+      }
+
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
@@ -567,7 +719,12 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
       if (!response.ok) {
         const message = await resolveErrorMessage(response);
-        throw new Error(message);
+        if (response.status === 404) {
+          await recoverFromStalePortfolioJob();
+          return;
+        }
+
+        throw new PortfolioJobRequestError(message, response.status);
       }
 
       const data = normalizePortfolioJobResponse(await response.json());
@@ -575,6 +732,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         return;
       }
       if (data.status === "completed") {
+        staleJobRecoveryAttemptedRef.current = false;
         setPortfolioJobStatus("completed");
         await handleCompletedPortfolioJob(jobId, "auto");
         return;
@@ -582,6 +740,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
       if (data.status === "failed") {
         pollingCancelledRef.current = true;
+        staleJobRecoveryAttemptedRef.current = false;
         setPortfolioJobStatus("failed");
         throw new Error(data.errorMessage || data.message || "포트폴리오 PDF 생성에 실패했습니다.");
       }
@@ -621,63 +780,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       clearTimeout(pollingTimerRef.current);
       pollingTimerRef.current = null;
     }
-    pollingCancelledRef.current = false;
-    const startedAt = Date.now();
-    downloadStartedAtRef.current = startedAt;
-    setDownloadStartedAt(startedAt);
-    activeJobIdRef.current = null;
-    setActiveJobId(null);
-    setPortfolioJobStatus("queued");
-    setIsDownloadingPortfolio(true);
-    setDownloadErrorMessage(null);
-    setDownloadStatusMessage(
-      `포트폴리오 PDF 생성 작업을 시작합니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
-    );
-
-    try {
-      const response = await fetch(startPortfolioJobUrl, {
-        method: "POST",
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        const message = await resolveErrorMessage(response);
-        throw new Error(message);
-      }
-
-      const payload = normalizePortfolioJobResponse(await response.json());
-      activeJobIdRef.current = payload.jobId;
-      setActiveJobId(payload.jobId);
-      setPortfolioJobStatus(payload.status);
-
-      const elapsedMs = Date.now() - (downloadStartedAtRef.current ?? Date.now());
-      setDownloadStatusMessage(composeProgressMessage(payload.message, elapsedMs));
-      setDownloadErrorMessage(null);
-
-      if (payload.status === "failed") {
-        pollingCancelledRef.current = true;
-        setPortfolioJobStatus("failed");
-        setIsDownloadingPortfolio(false);
-        throw new Error(payload.errorMessage || payload.message || "포트폴리오 PDF 생성에 실패했습니다.");
-      }
-
-      if (payload.status === "completed") {
-        await handleCompletedPortfolioJob(payload.jobId, "auto");
-        return;
-      }
-
-      void pollPortfolioJobStatus(payload.jobId);
-    } catch (error) {
-      pollingCancelledRef.current = true;
-      setPortfolioJobStatus("failed");
-      setDownloadErrorMessage(
-        error instanceof Error && error.message.trim()
-          ? error.message
-          : "포트폴리오 PDF 다운로드에 실패했습니다.",
-      );
-      setDownloadStatusMessage(null);
-      setIsDownloadingPortfolio(false);
-    }
+    await startPortfolioJob("manual");
   };
 
   return (

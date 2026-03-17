@@ -34,31 +34,31 @@ describe('ResolveMemberPortfolioTargetUseCase', () => {
   it('should resolve member by homepage alias', async () => {
     (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
       {
-        slug: '이성원',
+        slug: 'seongwon',
         name: '이성원',
         role: 'Mentor',
         category: 'senior',
         links: {
-          homepage: 'https://seongwon.org',
+          homepage: 'https://nangman.cloud',
           resume: '/resumes/seongwon-resume.pdf',
         },
       },
     ]);
 
-    const target = await useCase.execute('seongwon');
+    const target = await useCase.execute('nangman');
 
     expect(target.fileName).toBe('seongwon-portfolio.pdf');
   });
 
-  it('should fall back to ASCII alias when identifier is Korean', async () => {
+  it('should keep slug as file name even when identifier is Korean', async () => {
     (mockMemberReader.readAll as jest.Mock).mockResolvedValue([
       {
-        slug: '이성원',
+        slug: 'seongwon',
         name: '이성원',
         role: 'Mentor',
         category: 'senior',
         links: {
-          homepage: 'https://seongwon.org',
+          homepage: 'https://nangman.cloud',
         },
       },
     ]);

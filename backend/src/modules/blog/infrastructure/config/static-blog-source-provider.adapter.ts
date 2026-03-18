@@ -47,6 +47,12 @@ export class StaticBlogSourceProviderAdapter implements BlogSourceProviderPort {
       platform: 'tistory',
       profileImage: '/profiles/juhyung.png',
     },
+    {
+      name: 'Unseo',
+      rssUrl: 'https://v2.velog.io/rss/yxxunseo',
+      platform: 'velog',
+      profileImage: '/profiles/unseo.jpg',
+    },
   ];
 
   getSources(): MemberBlogConfig[] {

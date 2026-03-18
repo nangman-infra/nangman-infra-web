@@ -55,38 +55,49 @@ nangman-infra/
 │   │   └── config/              # 환경설정
 │   ├── scripts/                 # 운영 스크립트(예: members CMS 마이그레이션)
 │   └── test/                    # 테스트
-├── cms/                         # Directus/Postgres 영구 데이터(바인드 마운트)
-│   ├── directus/uploads
-│   └── postgres/data
-├── docker-compose.yml           # frontend/backend/directus/postgres/watchtower
+├── docker-compose.yml           # frontend/backend/watchtower 운영 compose
+├── .env.example                 # 운영 compose 환경변수 예시
 ├── Jenkinsfile                  # CI/CD 파이프라인
 └── INFO/                        # 프로젝트 문서
 ```
 
 ## CMS (Directus) 운영 가이드
 
-현재 멤버 프로필은 Directus(CMS)에서 관리합니다.
+현재 멤버 프로필과 공지사항은 외부 Directus(CMS)에서 관리합니다.
 
-- **CMS 서버**: `directus` 컨테이너 (`http://localhost:8055`)
-- **DB**: `directus-db` (PostgreSQL)
-- **데이터 저장 방식**: 프로젝트 폴더 바인드 마운트
-  - `./cms/directus/uploads:/directus/uploads`
-  - `./cms/postgres/data:/var/lib/postgresql/data`
+- **운영 CMS 서버**: 외부 Directus (예: NAS)
+- **현재 운영 기준 주소**: `http://192.168.10.3:8055`
+- **애플리케이션 서버 역할**: `frontend`, `backend`, `watchtower`만 실행
 
-### 1) 실행
+### 1) 운영 compose 환경 변수
 
 ```bash
-docker compose up -d directus-db directus
+cp .env.example .env
 ```
 
-### 2) 환경 변수
+루트 `.env`에 운영 값을 채운 뒤 compose를 실행합니다.
 
-멤버 API/CMS 연동에 필요한 주요 변수:
+주요 변수:
 
+- `FRONTEND_URL`
+- `MATTERMOST_WEBHOOK_URL`
 - `DIRECTUS_URL`
-- `DIRECTUS_TOKEN` (또는 `DIRECTUS_EMAIL` + `DIRECTUS_PASSWORD`)
+- `DIRECTUS_TOKEN`
+- `KUMA_URL`
+- `KUMA_STATUS_PAGE_SLUG`
+- `NUT_SERVER_URL`
+- `NUT_UPS_NAME`
+- `NUT_USERNAME`
+- `NUT_PASSWORD`
+- `WATCHTOWER_TOKEN`
 
-개발 환경은 `backend/.env.development`, 운영 환경은 `backend/.env.production`을 사용합니다.
+### 2) 실행
+
+```bash
+docker compose up -d backend frontend watchtower
+```
+
+개발/스크립트 실행용 백엔드 환경파일은 `backend/.env.development`, `backend/.env.production`을 유지합니다.
 
 ### 3) 초기 마이그레이션
 
@@ -104,9 +115,9 @@ pnpm migrate:notices
 
 ### 4) 운영 원칙
 
-- 초기 이관 후에는 **Directus UI에서 멤버 데이터를 수정/관리**합니다.
+- 초기 이관 후에는 **Directus UI에서 멤버/공지 데이터를 수정·관리**합니다.
 - 마이그레이션 스크립트는 삭제하지 않고, **재이관/복구용**으로 유지합니다.
-- `cms/` 디렉터리는 로컬 영구 데이터이므로 Git에 포함하지 않습니다.
+- 운영 compose에는 Directus/Postgres 컨테이너를 포함하지 않습니다.
 
 ## 커뮤니티 소개
 

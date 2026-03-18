@@ -2,6 +2,8 @@ import { getBlogPostSourceUrl } from "@/lib/blog";
 import { getPublicBlogPosts } from "@/lib/application/use-cases/blog/get-public-blog-posts";
 import BlogListClient from "./BlogListClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function BlogPage() {
   const posts = await getPublicBlogPosts(20);
 

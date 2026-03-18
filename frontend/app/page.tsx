@@ -4,6 +4,8 @@ import { getLatestAnnouncementsUseCase } from "@/lib/application/use-cases/annou
 import { fetchBackendJson } from "@/lib/application/server/fetch-backend-json";
 import HomeClient from "./HomeClient";
 
+export const dynamic = "force-dynamic";
+
 const HOME_FEED_REVALIDATE_SECONDS = 300;
 const BLOG_BACKEND_PATH = "/api/v1/blog/posts";
 const ANNOUNCEMENTS_BACKEND_PATH = "/api/v1/notices";

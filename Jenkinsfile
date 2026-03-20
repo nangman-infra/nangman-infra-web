@@ -351,13 +351,14 @@ pipeline {
                 echo "✅ Pipeline completed successfully"
                 // 배포 파이프라인이 실행된 경우에만 성공 알림
                 if (env.IS_DEPLOY_REQUEST == 'true') {
-                    sh '''
-                        curl -X POST $MATTERMOST_WEBHOOK \
+                    def duration = currentBuild.durationString.replace(' and counting', '')
+                    sh """
+                        curl -X POST \$MATTERMOST_WEBHOOK \
                         -H 'Content-Type: application/json' \
                         -d '{
-                            "text": "✅ **배포 성공**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Duration:** N/A\\n\\n**Images:**\\n- Frontend: '$FRONTEND_IMAGE'\\n- Backend: '$BACKEND_IMAGE'\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
+                            "text": "✅ **배포 성공**\\n\\n**Build:** #'\$BUILD_NUMBER'\\n**Duration:** ${duration}\\n\\n**Images:**\\n- Frontend: '\$FRONTEND_IMAGE'\\n- Backend: '\$BACKEND_IMAGE'\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
                         }'
-                    '''
+                    """
                 }
             }
         }

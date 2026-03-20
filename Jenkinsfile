@@ -108,9 +108,11 @@ pipeline {
                     def buildUrl = env.BUILD_URL
                     
                     withCredentials([
-                        string(credentialsId: 'smee-url-id', variable: 'SMEE_URL'),
                         string(credentialsId: 'jenkins-webhook-token', variable: 'WEBHOOK_TOKEN')
                     ]) {
+                        // Jenkins Generic Webhook Trigger URL
+                        def jenkinsWebhookUrl = "https://jenkins.nangman.cloud/generic-webhook-trigger/invoke?token=${WEBHOOK_TOKEN}"
+                        
                         // Mattermost로 버튼 달린 메시지 전송
                         def payload = JsonOutput.toJson([
                             text: "🚀 **배포 승인 요청**\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
@@ -120,7 +122,7 @@ pipeline {
                                     [
                                         name: "🚀 배포 시작",
                                         integration: [
-                                            url: "${SMEE_URL}?token=${WEBHOOK_TOKEN}",
+                                            url: jenkinsWebhookUrl,
                                             context: [
                                                 is_deploy: "true",
                                                 job_name: "${jobName}",
@@ -132,7 +134,7 @@ pipeline {
                                     [
                                         name: "❌ 배포 취소",
                                         integration: [
-                                            url: "${SMEE_URL}?token=${WEBHOOK_TOKEN}",
+                                            url: jenkinsWebhookUrl,
                                             context: [
                                                 is_deploy: "false",
                                                 job_name: "${jobName}",

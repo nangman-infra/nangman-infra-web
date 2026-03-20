@@ -115,7 +115,7 @@ pipeline {
                         
                         // Mattermost로 버튼 달린 메시지 전송
                         def payload = JsonOutput.toJson([
-                            text: "🚀 **배포 승인 요청**\\n\\n**Repository:** ${jobName}\\n**Branch:** ${branch}\\n**Build:** #${buildNumber}\\n**Trigger:** Push 감지\\n\\n배포를 진행하시겠습니까?",
+                            text: "🚀 **배포 승인 요청**\n\n**Repository:** ${jobName}\n**Branch:** ${branch}\n**Build:** #${buildNumber}\n**Trigger:** Push 감지\n\n배포를 진행하시겠습니까?",
                             attachments: [[
                                 color: "#FFA500",
                                 actions: [

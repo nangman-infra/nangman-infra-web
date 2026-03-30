@@ -1,6 +1,17 @@
 import { StaticBlogSourceProviderAdapter } from './static-blog-source-provider.adapter';
 
 describe('StaticBlogSourceProviderAdapter', () => {
+  it('includes Donggeon tistory RSS source', () => {
+    const adapter = new StaticBlogSourceProviderAdapter();
+
+    expect(adapter.getSources()).toContainEqual({
+      name: 'Donggeon',
+      rssUrl: 'https://exit0.tistory.com/rss',
+      platform: 'tistory',
+      profileImage: '/profiles/donggeon.png',
+    });
+  });
+
   it('includes Unseo velog RSS source', () => {
     const adapter = new StaticBlogSourceProviderAdapter();
 

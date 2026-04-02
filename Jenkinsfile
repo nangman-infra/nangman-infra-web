@@ -224,6 +224,24 @@ pipeline {
                     }
                 }
                 
+                stage('SonarQube Analysis') {
+                    steps {
+                        script {
+                            sh '''
+                                cd frontend && pnpm install --frozen-lockfile && pnpm test -- --coverage || true
+                                cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
+                                cd ..
+                            '''
+                            withSonarQubeEnv('sonarqube') {
+                                sh 'sonar-scanner'
+                            }
+                            timeout(time: 5, unit: 'MINUTES') {
+                                waitForQualityGate abortPipeline: true
+                            }
+                        }
+                    }
+                }
+
                 stage('Setup Buildx') {
                     steps {
                         script {

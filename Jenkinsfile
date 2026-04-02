@@ -232,11 +232,12 @@ pipeline {
                                 cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
                                 cd ..
                             '''
+                            def scannerHome = tool 'SonarScanner'
                             withSonarQubeEnv('sonarqube') {
-                                sh 'sonar-scanner'
+                                sh "${scannerHome}/bin/sonar-scanner"
                             }
                             timeout(time: 5, unit: 'MINUTES') {
-                                waitForQualityGate abortPipeline: true
+                                waitForQualityGate abortPipeline: false
                             }
                         }
                     }

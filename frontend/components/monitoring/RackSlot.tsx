@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { useState, memo } from "react";
 import { motion } from "framer-motion";
 import type { MonitorStatus } from "@/lib/api";
 import { getSmartName } from "@/components/monitoring/utils";
@@ -48,6 +48,7 @@ function getLedClassName(status: MonitorStatus["status"]): string {
  */
 export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
   const height = size * RACK_SLOT_HEIGHT_PER_U;
+  const [isHovered, setIsHovered] = useState(false);
 
   if (!monitor) {
     return (
@@ -72,15 +73,17 @@ export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
 
   const isUp = monitor.status === "up";
   const smartName = getSmartName(monitor.name);
-  const fullName = smartName === monitor.name ? null : monitor.name;
   const statusLabel = getStatusLabel(monitor.status);
   const availabilityClassName = isUp ? "text-green-400" : "text-white/40";
 
   return (
     <div
       style={{ height: `${height}px` }}
-      className={`flex flex-col justify-center px-6 border-b border-white/15 relative group transition-all duration-300 ${getSlotBackgroundClass(monitor.status)}`}
-      title={monitor.name}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`flex flex-col justify-center px-6 border-b border-white/15 relative group cursor-pointer transition-all duration-300 
+        ${monitor.status === "down" ? "bg-red-500/10" : "bg-[#121214] hover:bg-[#1a1a1c]"} 
+        ${monitor.status === "up" ? "shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]" : ""}`}
     >
       <div className="absolute inset-0 bg-linear-to-b from-white/2 to-transparent pointer-events-none" />
 
@@ -116,15 +119,25 @@ export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
               </span>
             </div>
 
-            <div className="overflow-hidden relative flex flex-col justify-center w-full min-w-0">
-              <h4 className="text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none block truncate">
-                {smartName}
-              </h4>
-              {fullName && (
-                <span className="text-[9px] text-white/35 font-mono truncate mt-1">
-                  {fullName}
-                </span>
-              )}
+            <div className="overflow-hidden whitespace-nowrap relative h-5 flex items-center w-full min-w-0">
+              <motion.h4
+                initial={false}
+                animate={isHovered ? { x: [0, -120, 0] } : { x: 0 }}
+                transition={
+                  isHovered
+                    ? {
+                        duration: 10,
+                        repeat: Infinity,
+                        ease: "linear",
+                        type: "tween",
+                      }
+                    : { duration: 0.2, ease: "easeInOut", type: "tween" }
+                }
+                style={{ willChange: "transform" }}
+                className="text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none block whitespace-nowrap"
+              >
+                {isHovered ? monitor.name : smartName}
+              </motion.h4>
             </div>
           </div>
         </div>

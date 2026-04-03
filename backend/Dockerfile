@@ -33,6 +33,8 @@ RUN apt-get update && \
       fonts-freefont-ttf \
       iputils-ping \
       nut-client && \
+    groupadd --system app && \
+    useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && corepack prepare pnpm@10.24.0 --activate
 
@@ -45,8 +47,12 @@ RUN pnpm install --prod --frozen-lockfile
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
+RUN chown -R app:app /app
+
 # Expose port
 EXPOSE 3333
+
+USER app
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

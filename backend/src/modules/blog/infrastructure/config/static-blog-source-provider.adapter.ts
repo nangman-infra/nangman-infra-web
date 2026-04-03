@@ -7,7 +7,7 @@ export class StaticBlogSourceProviderAdapter implements BlogSourceProviderPort {
   private readonly sources: MemberBlogConfig[] = [
     {
       name: 'Juno',
-      rssUrl: 'http://se-juno.tistory.com/rss',
+      rssUrl: 'https://se-juno.tistory.com/rss',
       platform: 'tistory',
       profileImage: '/profiles/junho.png',
     },

@@ -57,10 +57,13 @@ export class UpsStatusReaderAdapter implements UpsStatusReaderPort {
 
       const upsData: Record<string, string> = {};
       stdout.split('\n').forEach((line) => {
-        const match = line.match(/^([^:]+):\s*(.+)$/);
-        if (match) {
-          const [, key, value] = match;
-          upsData[key.trim()] = value.trim();
+        const separatorIndex = line.indexOf(':');
+        if (separatorIndex > 0) {
+          const key = line.slice(0, separatorIndex).trim();
+          const value = line.slice(separatorIndex + 1).trim();
+          if (key && value) {
+            upsData[key] = value;
+          }
         }
       });
 

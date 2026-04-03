@@ -228,7 +228,7 @@ pipeline {
                     steps {
                         script {
                             sh '''
-                                cd frontend && pnpm install --frozen-lockfile && pnpm test -- --coverage || true
+                                cd frontend && pnpm install --frozen-lockfile && pnpm test:cov || true
                                 cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
                                 cd ..
                             '''

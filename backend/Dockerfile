@@ -13,7 +13,8 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
-COPY . .
+COPY nest-cli.json tsconfig.json ./
+COPY src ./src
 
 # Build application
 RUN pnpm build

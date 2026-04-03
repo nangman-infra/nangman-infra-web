@@ -58,4 +58,46 @@ describe('getMembersUseCase', () => {
 
     expect(result).toEqual(fallbackMembers);
   });
+
+  it('drops rows with invalid optional fields and keeps valid rows', async () => {
+    mockedFetchMembersApi.mockResolvedValue({
+      data: [
+        {
+          slug: 'valid-member',
+          name: 'valid-member',
+          role: 'role-a',
+          category: 'senior',
+        },
+        {
+          slug: '   ',
+          name: 'invalid-slug',
+          role: 'role-b',
+          category: 'mentee',
+        },
+        {
+          name: 'invalid-specialties',
+          role: 'role-c',
+          category: 'mentee',
+          specialties: 'AWS',
+        },
+        {
+          name: 'invalid-achievements',
+          role: 'role-d',
+          category: 'student',
+          achievements: 'OPS',
+        },
+      ],
+    });
+
+    const result = await getMembersUseCase({ fallback: fallbackMembers });
+
+    expect(result).toEqual([
+      {
+        slug: 'valid-member',
+        name: 'valid-member',
+        role: 'role-a',
+        category: 'senior',
+      },
+    ]);
+  });
 });

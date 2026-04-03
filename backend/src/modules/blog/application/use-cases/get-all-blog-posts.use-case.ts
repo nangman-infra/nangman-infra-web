@@ -112,7 +112,7 @@ export class GetAllBlogPostsUseCase {
   }
 
   private decodeHtmlEntities(value: string): string {
-    return value.replace(
+    return value.replaceAll(
       /&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g,
       (entity, token: string) => {
         if (token.startsWith('#')) {

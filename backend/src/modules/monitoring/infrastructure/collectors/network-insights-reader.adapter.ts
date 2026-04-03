@@ -21,7 +21,7 @@ import {
 const execAsync = promisify(exec);
 const PING_TIME_PATTERN = /time=([\d.]+)\s*ms/;
 const TRACKED_INTERFACE_PATTERN =
-  /^(eth\d+|bond\d+|enp\d+s\d+|wlan\d+|br-[\w\d]+|docker\d+)$/;
+  /^(eth\d+|bond\d+|enp\d+s\d+|wlan\d+|br-\w+|docker\d+)$/;
 
 interface InterfaceCounters {
   rxBytes: number;

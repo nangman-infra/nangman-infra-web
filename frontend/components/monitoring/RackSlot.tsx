@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import type { MonitorStatus } from "@/lib/api";
 import { getSmartName } from "@/components/monitoring/utils";
@@ -48,7 +48,6 @@ function getLedClassName(status: MonitorStatus["status"]): string {
  */
 export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
   const height = size * RACK_SLOT_HEIGHT_PER_U;
-  const [isHovered, setIsHovered] = useState(false);
 
   if (!monitor) {
     return (
@@ -77,10 +76,11 @@ export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
   const availabilityClassName = isUp ? "text-green-400" : "text-white/40";
 
   return (
-    <div
+    <motion.div
+      initial={false}
+      animate="rest"
+      whileHover="hover"
       style={{ height: `${height}px` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className={`flex flex-col justify-center px-6 border-b border-white/15 relative group cursor-pointer transition-all duration-300 
         ${monitor.status === "down" ? "bg-red-500/10" : "bg-[#121214] hover:bg-[#1a1a1c]"} 
         ${monitor.status === "up" ? "shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]" : ""}`}
@@ -121,22 +121,35 @@ export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
 
             <div className="overflow-hidden whitespace-nowrap relative h-5 flex items-center w-full min-w-0">
               <motion.h4
-                initial={false}
-                animate={isHovered ? { x: [0, -120, 0] } : { x: 0 }}
-                transition={
-                  isHovered
-                    ? {
+                variants={{
+                  rest: { opacity: 1, x: 0 },
+                  hover: { opacity: 0, x: 0, transition: { duration: 0.15 } },
+                }}
+                className="absolute inset-y-0 left-0 flex items-center text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none whitespace-nowrap"
+              >
+                {smartName}
+              </motion.h4>
+              <motion.h4
+                variants={{
+                  rest: { opacity: 0, x: 0 },
+                  hover: {
+                    opacity: 1,
+                    x: [0, -120, 0],
+                    transition: {
+                      opacity: { duration: 0.15 },
+                      x: {
                         duration: 10,
                         repeat: Infinity,
                         ease: "linear",
                         type: "tween",
-                      }
-                    : { duration: 0.2, ease: "easeInOut", type: "tween" }
-                }
+                      },
+                    },
+                  },
+                }}
                 style={{ willChange: "transform" }}
-                className="text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none block whitespace-nowrap"
+                className="absolute inset-y-0 left-0 flex items-center text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none whitespace-nowrap"
               >
-                {isHovered ? monitor.name : smartName}
+                {monitor.name}
               </motion.h4>
             </div>
           </div>
@@ -160,7 +173,7 @@ export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
       <div className="absolute bottom-2 left-1.5 w-1.5 h-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner" />
       <div className="absolute top-2 right-1.5 w-1.5 h-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner" />
       <div className="absolute bottom-2 right-1.5 w-1.5 h-1.5 rounded-full bg-white/5 border border-white/10 shadow-inner" />
-    </div>
+    </motion.div>
   );
 }, (prevProps, nextProps) => {
   // 커스텀 비교 함수: monitor 객체의 id와 status, uptime만 비교

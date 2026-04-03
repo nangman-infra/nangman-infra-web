@@ -32,6 +32,22 @@ const RIBBON_COLORS: RibbonColor[] = [
 ];
 const RIBBON_COUNT = 5;
 const POINTS_PER_RIBBON = 50;
+const UINT32_MAX = 0xffffffff;
+
+function getRandomUnit(): number {
+  const cryptoObject = globalThis.crypto;
+  if (!cryptoObject?.getRandomValues) {
+    return 0.5;
+  }
+
+  const values = new Uint32Array(1);
+  cryptoObject.getRandomValues(values);
+  return values[0] / UINT32_MAX;
+}
+
+function getRandomInRange(min: number, max: number): number {
+  return min + getRandomUnit() * (max - min);
+}
 
 function detectSafariBrowser(): boolean {
   const userAgent = globalThis.navigator.userAgent.toLowerCase();
@@ -57,11 +73,11 @@ function createRibbons(width: number, height: number): WaveRibbon[] {
     return {
       points,
       color: RIBBON_COLORS[ribbonIndex % RIBBON_COLORS.length],
-      opacity: 0.25 + Math.random() * 0.15,
-      speed: 0.8 + Math.random() * 0.4,
-      phase: Math.random() * Math.PI * 2,
-      amplitude: 100 + Math.random() * 150,
-      frequency: 0.008 + Math.random() * 0.012,
+      opacity: getRandomInRange(0.25, 0.4),
+      speed: getRandomInRange(0.8, 1.2),
+      phase: getRandomInRange(0, Math.PI * 2),
+      amplitude: getRandomInRange(100, 250),
+      frequency: getRandomInRange(0.008, 0.02),
     };
   });
 }
@@ -147,7 +163,7 @@ export function Background() {
   const [isSafari, setIsSafari] = useState(false);
 
   useEffect(() => {
-    if (typeof globalThis.window === "undefined") {
+    if (globalThis.window === undefined) {
       return;
     }
 

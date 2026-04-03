@@ -108,9 +108,7 @@ export class HtmlMemberPortfolioRendererAdapter
   }
 
   private async loadFontDataUrls(): Promise<FontDataUrls> {
-    if (!this.fontDataUrlsPromise) {
-      this.fontDataUrlsPromise = this.buildFontDataUrls();
-    }
+    this.fontDataUrlsPromise ??= this.buildFontDataUrls();
 
     return this.fontDataUrlsPromise;
   }
@@ -145,31 +143,29 @@ export class HtmlMemberPortfolioRendererAdapter
   }
 
   private async getBrowser(executablePath: string): Promise<Browser> {
-    if (!this.browserPromise) {
-      this.browserPromise = chromium
-        .launch({
-          executablePath,
-          headless: true,
-          ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--disable-features=Vulkan',
-          ],
-        })
-        .then((browser) => {
-          browser.on('disconnected', () => {
-            this.browserPromise = null;
-          });
-          return browser;
-        })
-        .catch((error) => {
+    this.browserPromise ??= chromium
+      .launch({
+        executablePath,
+        headless: true,
+        ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-features=Vulkan',
+        ],
+      })
+      .then((browser) => {
+        browser.on('disconnected', () => {
           this.browserPromise = null;
-          throw error;
         });
-    }
+        return browser;
+      })
+      .catch((error) => {
+        this.browserPromise = null;
+        throw error;
+      });
 
     return this.browserPromise;
   }

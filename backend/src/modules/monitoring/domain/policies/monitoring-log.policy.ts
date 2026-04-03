@@ -50,14 +50,13 @@ export function generateMonitoringLogs(
   }
 
   // 4. 기본 정보 로그 (항상 표시되는 로그들)
-  logs.push({
-    timestamp: now.toISOString(),
-    level: 'INFO',
-    source: 'SYSTEM',
-    message: `Cluster Load Balanced (${monitors.length} Nodes Active)`,
-  });
-
   logs.push(
+    {
+      timestamp: now.toISOString(),
+      level: 'INFO',
+      source: 'SYSTEM',
+      message: `Cluster Load Balanced (${monitors.length} Nodes Active)`,
+    },
     {
       timestamp: now.toISOString(),
       level: 'PROBE',

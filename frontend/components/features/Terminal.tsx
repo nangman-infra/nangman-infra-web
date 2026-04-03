@@ -261,24 +261,21 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
 
         {/* Terminal Body - Linux Style with Wide Layout */}
         <div 
-          className="h-[70vh] max-h-[600px] min-h-[400px] p-4 md:p-6 overflow-y-auto font-mono text-xs md:text-sm"
+          className="relative h-[70vh] max-h-[600px] min-h-[400px] p-4 md:p-6 overflow-y-auto font-mono text-xs md:text-sm"
           style={{
             backgroundColor: TERMINAL_COLORS.BACKGROUND,
             color: TERMINAL_COLORS.TEXT,
           }}
           ref={scrollRef}
-          onClick={focusInput}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              focusInput();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          aria-label="터미널 입력창에 포커스"
         >
-          <div className="space-y-1.5">
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={focusInput}
+            aria-label="터미널 입력창에 포커스"
+            className="absolute inset-0 z-0 cursor-text bg-transparent border-0 p-0"
+          />
+          <div className="relative z-10 space-y-1.5 pointer-events-none">
             {logs.map((log) => (
               <div 
                 key={log.id}
@@ -294,28 +291,27 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
                 {log.content}
               </div>
             ))}
+            {/* Input Line - Linux Style */}
+            <form onSubmit={handleSubmit} className="mt-3 flex items-center pointer-events-auto">
+              <span className="mr-2 font-semibold" style={{ color: TERMINAL_COLORS.COMMAND }}>➜</span>
+              <span className="mr-1" style={{ color: TERMINAL_COLORS.TEXT }}>{currentTab?.path || '~'}</span>
+              <span className="mr-2" style={{ color: TERMINAL_COLORS.TEXT }}>$</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none focus:ring-0 p-0 font-mono placeholder:text-muted-foreground/60"
+                style={{
+                  color: TERMINAL_COLORS.TEXT,
+                  caretColor: TERMINAL_COLORS.COMMAND,
+                }}
+                placeholder="명령어를 입력하세요"
+                autoComplete="off"
+                autoFocus
+              />
+            </form>
           </div>
-          
-          {/* Input Line - Linux Style */}
-          <form onSubmit={handleSubmit} className="mt-3 flex items-center">
-            <span className="mr-2 font-semibold" style={{ color: TERMINAL_COLORS.COMMAND }}>➜</span>
-            <span className="mr-1" style={{ color: TERMINAL_COLORS.TEXT }}>{currentTab?.path || '~'}</span>
-            <span className="mr-2" style={{ color: TERMINAL_COLORS.TEXT }}>$</span>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none focus:ring-0 p-0 font-mono placeholder:text-muted-foreground/60"
-              style={{ 
-                color: TERMINAL_COLORS.TEXT,
-                caretColor: TERMINAL_COLORS.COMMAND,
-              }}
-              placeholder="명령어를 입력하세요"
-              autoComplete="off"
-              autoFocus
-            />
-          </form>
         </div>
       </DialogContent>
     </Dialog>

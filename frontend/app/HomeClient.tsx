@@ -65,9 +65,7 @@ export default function HomeClient({
             nextX = (e.clientX - rect.left) / rect.width;
             nextY = (e.clientY - rect.top) / rect.height;
 
-            if (rafId === null) {
-                rafId = requestAnimationFrame(applyMousePosition);
-            }
+            rafId ??= requestAnimationFrame(applyMousePosition);
         };
 
         globalThis.addEventListener("mousemove", handleMouseMove, { passive: true });

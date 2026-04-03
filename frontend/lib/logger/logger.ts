@@ -2,7 +2,7 @@ import pino from 'pino';
 import { loggerConfig } from './logger.config';
 
 function createLogger(): pino.Logger {
-  if (typeof globalThis.window === 'undefined') {
+  if (globalThis.window === undefined) {
     try {
       return pino(loggerConfig);
     } catch {

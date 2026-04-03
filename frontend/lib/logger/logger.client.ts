@@ -45,7 +45,7 @@ const createStructuredLog = (
 const formatLog = (log: LogEntry): string => {
   if (isDevelopment) {
     // 개발 환경: 읽기 쉬운 포맷
-    const timestamp = new Date(log.timestamp as string | number | Date).toLocaleTimeString();
+    const timestamp = new Date(log.timestamp).toLocaleTimeString();
     const level = (log.level || '').toUpperCase().padEnd(5);
     const context = log.context ? `[${log.context}]` : '';
     let output = `${timestamp} [${level}]${context} ${log.message || ''}`;
@@ -84,7 +84,7 @@ export const logger = {
     }
   },
 
-  error: (message: string, error?: Error | unknown, metadata?: LogMetadata) => {
+  error: (message: string, error?: unknown, metadata?: LogMetadata) => {
     // 운영 환경에서도 error 레벨 출력
     const err = error instanceof Error ? error : undefined;
     const log = createStructuredLog('error', message, metadata, err);

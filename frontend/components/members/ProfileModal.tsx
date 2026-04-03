@@ -122,7 +122,7 @@ function normalizePortfolioJobUiState(value: unknown): PortfolioJobUiState | nul
 }
 
 function readPortfolioJobStateMap(): Record<string, PortfolioJobUiState> {
-  if (typeof globalThis.window === "undefined") {
+  if (globalThis.window === undefined) {
     return {};
   }
 
@@ -331,7 +331,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
   const persistJobStateMap = useCallback(
     (stateMap: Record<string, PortfolioJobUiState>): void => {
-      if (typeof globalThis.window === "undefined") {
+      if (globalThis.window === undefined) {
         return;
       }
 

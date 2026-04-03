@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Github, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { GitHubIcon } from "@/components/icons/GitHubIcon";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -26,12 +27,12 @@ export function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const nextScrolled = window.scrollY > 50;
+      const nextScrolled = globalThis.scrollY > 50;
       setScrolled((prev) => (prev === nextScrolled ? prev : nextScrolled));
     };
     handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    globalThis.addEventListener("scroll", handleScroll, { passive: true });
+    return () => globalThis.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -56,9 +57,9 @@ export function Header() {
       }
     };
 
-    window.addEventListener("keydown", handleEscape);
+    globalThis.addEventListener("keydown", handleEscape);
     return () => {
-      window.removeEventListener("keydown", handleEscape);
+      globalThis.removeEventListener("keydown", handleEscape);
     };
   }, [mobileMenuOpen]);
 
@@ -109,7 +110,7 @@ export function Header() {
         {/* Right Actions */}
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <Link href="https://github.com/nangman-infra" target="_blank" className="text-muted-foreground hover:text-foreground transition-colors">
-            <Github className="w-5 h-5" />
+            <GitHubIcon className="w-5 h-5" />
           </Link>
           <Link href="/contact">
             <Button variant="outline" className="hidden xl:flex border-primary/20 hover:bg-primary/10 text-primary">
@@ -175,7 +176,7 @@ export function Header() {
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Github className="w-5 h-5" />
+                  <GitHubIcon className="w-5 h-5" />
                   <span>GitHub</span>
                 </Link>
               </div>

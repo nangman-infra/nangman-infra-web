@@ -43,10 +43,8 @@ export class EmailThrottlerGuard extends ThrottlerGuard {
    */
   protected async throwThrottlingException(
     context: ExecutionContext,
-    throttlerLimitDetail: ThrottlerLimitDetail,
+    _throttlerLimitDetail: ThrottlerLimitDetail,
   ): Promise<void> {
-    // throttlerLimitDetail은 부모 클래스 시그니처를 준수하기 위해 필요하지만 사용하지 않음
-    void throttlerLimitDetail;
     const request = context.switchToHttp().getRequest<Request>();
     const email = request.body?.email || '이메일';
 

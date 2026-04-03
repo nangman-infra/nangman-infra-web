@@ -23,9 +23,9 @@ function resolveErrorMessage(data: unknown, fallback: string): string {
 function buildFallbackFileName(jobId: string): string {
   const safe = jobId
     .toLowerCase()
-    .replace(/[^a-z0-9\-_.]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replaceAll(/[^a-z0-9\-_.]/g, '-')
+    .replaceAll(/-+/g, '-')
+    .replaceAll(/(^-)|(-$)/g, '');
 
   return `${safe || 'member'}-portfolio.pdf`;
 }

@@ -115,7 +115,7 @@ export class GetAllBlogPostsUseCase {
     return value.replace(
       /&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g,
       (entity, token: string) => {
-        if (token[0] === '#') {
+        if (token.startsWith('#')) {
           const isHex = token[1]?.toLowerCase() === 'x';
           const numericPart = isHex ? token.slice(2) : token.slice(1);
           const codePoint = Number.parseInt(numericPart, isHex ? 16 : 10);
@@ -162,7 +162,7 @@ export class GetAllBlogPostsUseCase {
   }
 
   private sanitizeDescription(description: string): string {
-    const plainText = description.replace(/<[^>]*>?/gm, '').trim();
+    const plainText = description.replaceAll(/<[^>]*>?/gm, '').trim();
     if (!plainText) {
       return 'No description available.';
     }

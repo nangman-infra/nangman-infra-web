@@ -14,9 +14,9 @@ import {
   getIncidentStatusLabel,
 } from "@/lib/incidents";
 
-interface IncidentDetailPageProps {
+type IncidentDetailPageProps = Readonly<{
   params: Promise<{ slug: string }>;
-}
+}>;
 
 export function generateStaticParams() {
   return getIncidentReports().map((report) => ({

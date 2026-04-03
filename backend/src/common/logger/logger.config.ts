@@ -13,7 +13,7 @@ export const loggerConfig: WinstonModuleOptions = {
             winston.format.printf(
               ({ timestamp, level, context, message, ...metadata }) => {
                 let log = `${timestamp} [${level}]`;
-                if (context) {
+                if (typeof context === 'string' && context.length > 0) {
                   log += ` [${context}]`;
                 }
                 log += ` ${message}`;

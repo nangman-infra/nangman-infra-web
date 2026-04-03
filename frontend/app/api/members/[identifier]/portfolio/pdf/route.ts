@@ -33,9 +33,9 @@ function decodeIdentifier(value: string): string {
 function buildFallbackFileName(identifier: string): string {
   const safe = identifier
     .toLowerCase()
-    .replace(/[^a-z0-9\-_.]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replaceAll(/[^a-z0-9\-_.]/g, '-')
+    .replaceAll(/-+/g, '-')
+    .replaceAll(/(^-)|(-$)/g, '');
 
   return `${safe || 'member'}-portfolio.pdf`;
 }

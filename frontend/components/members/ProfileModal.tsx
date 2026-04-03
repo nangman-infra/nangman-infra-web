@@ -27,11 +27,11 @@ import {
 import type { Member } from "@/types/member";
 import { MemberAvatar } from "@/components/members/MemberAvatar";
 
-interface ProfileModalProps {
+type ProfileModalProps = Readonly<{
   member: Member | null;
   isOpen: boolean;
   onClose: () => void;
-}
+}>;
 
 const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
 const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
@@ -122,12 +122,12 @@ function normalizePortfolioJobUiState(value: unknown): PortfolioJobUiState | nul
 }
 
 function readPortfolioJobStateMap(): Record<string, PortfolioJobUiState> {
-  if (typeof window === "undefined") {
+  if (typeof globalThis.window === "undefined") {
     return {};
   }
 
   try {
-    const raw = window.localStorage.getItem(PORTFOLIO_JOB_STORAGE_KEY);
+    const raw = globalThis.localStorage.getItem(PORTFOLIO_JOB_STORAGE_KEY);
     if (!raw) {
       return {};
     }
@@ -223,7 +223,7 @@ function getProgressHintMessage(elapsedMs: number): string {
 
 function composeProgressMessage(baseMessage: string | undefined, elapsedMs: number): string {
   const progressHint = getProgressHintMessage(elapsedMs);
-  if (!baseMessage || !baseMessage.trim()) {
+  if (!baseMessage?.trim()) {
     return progressHint;
   }
   return `${baseMessage.trim()} ${progressHint}`.trim();
@@ -241,9 +241,9 @@ function toSafeFileName(value: string): string {
   const safe = value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\-_.]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replaceAll(/[^a-z0-9\-_.]/g, "-")
+    .replaceAll(/-+/g, "-")
+    .replaceAll(/(^-)|(-$)/g, "");
 
   return safe || "member";
 }
@@ -256,7 +256,7 @@ function resolveFileNameFromDisposition(
     return fallback;
   }
 
-  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition);
   if (utf8Match?.[1]) {
     try {
       return decodeURIComponent(utf8Match[1]).trim() || fallback;
@@ -265,7 +265,7 @@ function resolveFileNameFromDisposition(
     }
   }
 
-  const asciiMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+  const asciiMatch = /filename="?([^"]+)"?/i.exec(contentDisposition);
   if (asciiMatch?.[1]) {
     return asciiMatch[1].trim() || fallback;
   }
@@ -331,12 +331,12 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
   const persistJobStateMap = useCallback(
     (stateMap: Record<string, PortfolioJobUiState>): void => {
-      if (typeof window === "undefined") {
+      if (typeof globalThis.window === "undefined") {
         return;
       }
 
       try {
-        window.localStorage.setItem(
+        globalThis.localStorage.setItem(
           PORTFOLIO_JOB_STORAGE_KEY,
           JSON.stringify(stateMap),
         );
@@ -466,7 +466,10 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         downloadStartedAtRef.current = now;
         setDownloadStartedAt(now);
       }
-      void pollPortfolioJobStatusRef.current?.(savedState.jobId);
+      const pollPortfolioJob = pollPortfolioJobStatusRef.current;
+      if (pollPortfolioJob) {
+        pollPortfolioJob(savedState.jobId).catch(() => undefined);
+      }
     }
   }, [
     isJobStateLoaded,
@@ -512,13 +515,15 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const isPortfolioGenerating =
     portfolioJobStatus === "queued" || portfolioJobStatus === "running";
   const isPortfolioButtonDisabled = isPortfolioGenerating || isDownloadingPortfolio;
-  const portfolioButtonLabel = isDownloadingPortfolio
-    ? portfolioJobStatus === "completed"
-      ? "PDF 다운로드 중..."
-      : "PDF 생성 중..."
-    : portfolioJobStatus === "completed"
-      ? "포트폴리오 PDF 다운로드"
-      : "포트폴리오 PDF";
+  let portfolioButtonLabel = "포트폴리오 PDF";
+  if (isDownloadingPortfolio) {
+    portfolioButtonLabel =
+      portfolioJobStatus === "completed"
+        ? "PDF 다운로드 중..."
+        : "PDF 생성 중...";
+  } else if (portfolioJobStatus === "completed") {
+    portfolioButtonLabel = "포트폴리오 PDF 다운로드";
+  }
 
   const downloadPortfolioByJobId = async (jobId: string): Promise<void> => {
     const response = await fetch(`/api/members/portfolio/pdf/jobs/${encodeURIComponent(jobId)}/download`, {
@@ -537,14 +542,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       portfolioFallbackFileName,
     );
 
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const objectUrl = globalThis.URL.createObjectURL(blob);
+    const link = globalThis.document.createElement("a");
     link.href = objectUrl;
     link.download = fileName;
-    document.body.appendChild(link);
+    globalThis.document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(objectUrl);
+    globalThis.URL.revokeObjectURL(objectUrl);
   };
 
   async function startPortfolioJob(
@@ -608,7 +613,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         return;
       }
 
-      void pollPortfolioJobStatus(payload.jobId);
+      pollPortfolioJobStatus(payload.jobId).catch(() => undefined);
     } catch (error) {
       pollingCancelledRef.current = true;
       staleJobRecoveryAttemptedRef.current = false;
@@ -749,7 +754,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       setDownloadStatusMessage(composeProgressMessage(data.message, elapsedMs));
       setDownloadErrorMessage(null);
       pollingTimerRef.current = setTimeout(() => {
-        void pollPortfolioJobStatus(jobId);
+        pollPortfolioJobStatus(jobId).catch(() => undefined);
       }, PORTFOLIO_JOB_POLL_INTERVAL_MS);
     } catch (error) {
       pollingCancelledRef.current = true;
@@ -867,19 +872,19 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 </div>
               )}
               {canDownloadPortfolio && (downloadStatusMessage || downloadErrorMessage) && (
-                <div className="mt-2 space-y-1" role="status" aria-live="polite" aria-atomic="true">
+                <output className="mt-2 flex flex-col gap-1" aria-live="polite" aria-atomic="true">
                   {downloadStatusMessage && !downloadErrorMessage && (
-                    <p className="text-xs text-muted-foreground">{downloadStatusMessage}</p>
+                    <span className="text-xs text-muted-foreground">{downloadStatusMessage}</span>
                   )}
                   {isPortfolioGenerating && (
-                    <p className="text-xs text-muted-foreground/80">
+                    <span className="text-xs text-muted-foreground/80">
                       창을 닫아도 서버에서 작업은 계속 진행됩니다.
-                    </p>
+                    </span>
                   )}
                   {downloadErrorMessage && (
-                    <p className="text-xs text-red-500">{downloadErrorMessage}</p>
+                    <span className="text-xs text-red-500">{downloadErrorMessage}</span>
                   )}
-                </div>
+                </output>
               )}
             </div>
           </div>
@@ -893,7 +898,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
               className="space-y-2"
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full shrink-0" />
+                <span className="w-1 h-5 sm:h-6 bg-primary rounded-full shrink-0" />{" "}
                 소개
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
@@ -915,9 +920,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 전문 분야
               </h3>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {member.specialties.map((specialty, idx) => (
+                {member.specialties.map((specialty) => (
                   <span
-                    key={idx}
+                    key={specialty}
                     className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-primary/10 border border-primary/20 text-xs sm:text-sm text-primary font-mono"
                   >
                     {specialty}
@@ -940,9 +945,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 학력
               </h3>
               <div className="space-y-4 sm:space-y-5">
-                {member.education.map((edu, idx) => (
+                {member.education.map((edu) => (
                   <div
-                    key={idx}
+                    key={`${edu.university}-${edu.degree}-${edu.major}-${edu.period ?? "unknown"}`}
                     className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
                     {/* University and Degree */}
@@ -987,8 +992,8 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       <div className="mt-3 pt-3 border-t border-border/10">
                         <p className="text-xs text-muted-foreground/70 mb-2">논문 및 연구 활동</p>
                         <div className="space-y-2">
-                          {edu.papers.map((paper, paperIdx) => (
-                            <div key={paperIdx} className="text-xs sm:text-sm">
+                          {edu.papers.map((paper) => (
+                            <div key={`${paper.title}-${paper.type}-${paper.date}`} className="text-xs sm:text-sm">
                               <p className="text-muted-foreground wrap-break-word">{paper.title}</p>
                               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 <span className="text-muted-foreground/70">{paper.type}</span>
@@ -1025,9 +1030,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 경력 사항
               </h3>
               <div className="space-y-3 sm:space-y-4">
-                {member.workExperience.map((exp, idx) => (
+                {member.workExperience.map((exp) => (
                   <div
-                    key={idx}
+                    key={`${exp.company}-${exp.position}-${exp.period}`}
                     className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-3">
@@ -1042,9 +1047,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       </span>
                     </div>
                     <ul className="space-y-1.5 sm:space-y-2">
-                      {exp.description.map((desc, descIdx) => (
+                      {exp.description.map((desc) => (
                         <li
-                          key={descIdx}
+                          key={`${exp.company}-${desc}`}
                           className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground"
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
@@ -1071,9 +1076,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 주요 성과 ({member.achievements.length}개)
               </h3>
               <div className="space-y-2 sm:space-y-2.5">
-                {member.achievements.map((achievement, idx) => (
+                {member.achievements.map((achievement) => (
                   <div
-                    key={idx}
+                    key={achievement}
                     className="flex items-start gap-2 text-xs sm:text-sm text-muted-foreground p-2.5 sm:p-3 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
@@ -1097,9 +1102,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 자격증 및 인증 ({member.certifications.length}개)
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
-                {member.certifications.map((cert, idx) => (
+                {member.certifications.map((cert) => (
                   <div
-                    key={idx}
+                    key={`${cert.name}-${cert.issuer}-${cert.date ?? "unknown"}`}
                     className="p-2.5 sm:p-3 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
                     <p className="font-medium text-xs sm:text-sm mb-1 wrap-break-word">{cert.name}</p>
@@ -1128,9 +1133,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 주요 프로젝트 ({member.projects.length}개)
               </h3>
               <div className="space-y-3 sm:space-y-4">
-                {member.projects.map((project, idx) => (
+                {member.projects.map((project) => (
                   <div
-                    key={idx}
+                    key={`${project.title}-${project.industry ?? "unknown"}`}
                     className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20 hover:bg-card/70 transition-colors"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
@@ -1147,9 +1152,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       {project.description}
                     </p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {project.technologies.map((tech, techIdx) => (
+                      {project.technologies.map((tech) => (
                         <span
-                          key={techIdx}
+                          key={`${project.title}-${tech}`}
                           className="px-2 py-0.5 sm:py-1 rounded-md bg-primary/10 border border-primary/20 text-xs text-primary font-mono"
                         >
                           {tech}
@@ -1176,16 +1181,16 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 기술 스택
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                {member.technicalSkills.map((skillGroup, idx) => (
+                {member.technicalSkills.map((skillGroup) => (
                   <div
-                    key={idx}
+                    key={skillGroup.category}
                     className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20"
                   >
                     <p className="font-semibold text-sm mb-2">{skillGroup.category}</p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {skillGroup.skills.map((skill, skillIdx) => (
+                      {skillGroup.skills.map((skill) => (
                         <span
-                          key={skillIdx}
+                          key={skill}
                           className="px-2 py-0.5 sm:py-1 rounded-md bg-primary/10 border border-primary/20 text-xs text-primary font-mono"
                         >
                           {skill}
@@ -1215,7 +1220,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 <p className="text-sm sm:text-base text-muted-foreground wrap-break-word">
                   <span className="font-semibold text-primary">
                     {member.mentoring.count}명
-                  </span>
+                  </span>{" "}
                   의 후배들을 멘토링하며 실무 경험과 기술 지식을 공유하고 있습니다.
                 </p>
                 {member.mentoring.description && (

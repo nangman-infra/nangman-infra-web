@@ -80,17 +80,20 @@ function parseMembers(payload: unknown): Member[] {
       const { category, specialties, achievements, ...rest } = member;
       const normalizedSpecialties = normalizeStringArray(specialties);
       const normalizedAchievements = normalizeStringArray(achievements);
-
-      return {
+      const nextMember: Member = {
         ...rest,
         category: category === 'senior' ? 'senior' : 'mentee',
-        ...(normalizedSpecialties !== undefined
-          ? { specialties: normalizedSpecialties }
-          : {}),
-        ...(normalizedAchievements !== undefined
-          ? { achievements: normalizedAchievements }
-          : {}),
       };
+
+      if (normalizedSpecialties !== undefined) {
+        nextMember.specialties = normalizedSpecialties;
+      }
+
+      if (normalizedAchievements !== undefined) {
+        nextMember.achievements = normalizedAchievements;
+      }
+
+      return nextMember;
     });
 }
 

@@ -118,7 +118,7 @@ export default function AboutPage() {
             <div className="grid md:grid-cols-1 gap-6 max-w-2xl mx-auto">
           {timeline.map((item, index) => (
             <motion.div 
-              key={index}
+              key={`${item.year}-${item.title}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: ANIMATION_DURATION_SHORT, delay: index * ANIMATION_DELAY_ABOUT_TIMELINE_INCREMENT }}

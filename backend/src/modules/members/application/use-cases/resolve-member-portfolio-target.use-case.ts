@@ -107,19 +107,19 @@ export class ResolveMemberPortfolioTargetUseCase {
     return value
       .trim()
       .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9\-가-힣]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replaceAll(/\s+/g, '-')
+      .replaceAll(/[^a-z0-9\-가-힣]/g, '')
+      .replaceAll(/-+/g, '-')
+      .replaceAll(/(^-)|(-$)/g, '');
   }
 
   private toSafeFileName(value: string): string {
     const safeName = value
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9\-_.]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replaceAll(/[^a-z0-9\-_.]/g, '-')
+      .replaceAll(/-+/g, '-')
+      .replaceAll(/(^-)|(-$)/g, '');
 
     return safeName || 'member';
   }

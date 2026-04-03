@@ -26,10 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-interface ServiceCardProps {
+type ServiceCardProps = Readonly<{
   service: Service;
   index: number;
-}
+}>;
 
 /**
  * 아이콘 URL 생성
@@ -178,13 +178,13 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            {service.urls.map((urlOption, idx) => (
+            {service.urls.map((urlOption) => (
               <Button
-                key={idx}
+                key={`${urlOption.label}-${urlOption.url}`}
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
-                  window.open(urlOption.url, '_blank', 'noopener,noreferrer');
+                  globalThis.open(urlOption.url, '_blank', 'noopener,noreferrer');
                   setDialogOpen(false);
                 }}
               >

@@ -51,10 +51,9 @@ const formatLog = (log: LogEntry): string => {
     let output = `${timestamp} [${level}]${context} ${log.message || ''}`;
     
     if (log.error) {
-      const error = log.error as { name?: string; message?: string; stack?: string };
-      output += `\n  Error: ${error.name || 'Unknown'}: ${error.message || 'Unknown error'}`;
-      if (error.stack) {
-        output += `\n  ${error.stack}`;
+      output += `\n  Error: ${log.error.name || 'Unknown'}: ${log.error.message || 'Unknown error'}`;
+      if (log.error.stack) {
+        output += `\n  ${log.error.stack}`;
       }
     }
     
@@ -106,4 +105,3 @@ export const logger = {
     }
   },
 };
-

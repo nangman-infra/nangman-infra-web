@@ -354,6 +354,18 @@ function renderCoverSheet(
   const sidebarHtml = [focusHtml, highlightsHtml].filter(Boolean).join('');
   const hasSidebar = Boolean(sidebarHtml);
   const coverBodyHtml = [summaryHtml, sidebarHtml].filter(Boolean).join('');
+  const pageGridClass = hasSidebar ? 'page-grid-summary' : 'page-grid-single';
+  const sidebarBlockHtml = hasSidebar
+    ? `<aside class="stack gap-lg">${sidebarHtml}</aside>`
+    : '';
+  const pageGridHtml = coverBodyHtml
+    ? `
+      <div class="page-grid ${pageGridClass}">
+        ${summaryHtml}
+        ${sidebarBlockHtml}
+      </div>
+    `
+    : '';
 
   return `
     <section class="sheet">
@@ -383,16 +395,7 @@ function renderCoverSheet(
           ${renderProfileImage(member, profileImageDataUrl)}
         </header>
 
-        ${
-          coverBodyHtml
-            ? `
-              <div class="page-grid ${hasSidebar ? 'page-grid-summary' : 'page-grid-single'}">
-                ${summaryHtml}
-                ${hasSidebar ? `<aside class="stack gap-lg">${sidebarHtml}</aside>` : ''}
-              </div>
-            `
-            : ''
-        }
+        ${pageGridHtml}
       </div>
 
       ${renderFooter(member)}
@@ -420,20 +423,24 @@ function buildCapabilitiesSheet(member: MemberProfile): string {
   const lowerSections = [certificationsHtml, educationHtml].filter(Boolean);
   const lowerSectionsClass =
     lowerSections.length <= 1 ? 'page-grid-single' : 'page-grid-columns';
-  const bodyParts = [
-    renderSectionHeading('Capabilities', 'Skills, Certifications & Education'),
-    technicalSkillsHtml
-      ? `<section class="section-block section-block-first">${technicalSkillsHtml}</section>`
-      : '',
+  const technicalSkillsSectionHtml = technicalSkillsHtml
+    ? `<section class="section-block section-block-first">${technicalSkillsHtml}</section>`
+    : '';
+  const lowerSectionsBlockClass = technicalSkillsHtml
+    ? 'section-block'
+    : 'section-block section-block-first';
+  const lowerSectionsHtml =
     lowerSections.length > 0
       ? `
-        <div class="${lowerSectionsClass} section-block${
-          technicalSkillsHtml ? '' : ' section-block-first'
-        }">
+        <div class="${lowerSectionsClass} ${lowerSectionsBlockClass}">
           ${lowerSections.join('')}
         </div>
       `
-      : '',
+      : '';
+  const bodyParts = [
+    renderSectionHeading('Capabilities', 'Skills, Certifications & Education'),
+    technicalSkillsSectionHtml,
+    lowerSectionsHtml,
   ].filter(Boolean);
 
   if (bodyParts.length === 1) {

@@ -133,7 +133,7 @@ export class GetMonitoringStatusUseCase {
   ): MonitorStatus {
     const monitorId = monitor.id.toString();
     const heartbeatList = heartbeatListByMonitor[monitorId] || [];
-    const latestHeartbeat = heartbeatList[heartbeatList.length - 1];
+    const latestHeartbeat = heartbeatList.at(-1);
 
     const status = this.determineMonitorStatus(latestHeartbeat);
     const uptime = this.calculateUptime(monitorId, uptimeListByWindow);

@@ -50,7 +50,7 @@ export default function MembersPage() {
       }
     };
 
-    void loadMembers();
+    loadMembers();
 
     return () => {
       isMounted = false;
@@ -104,9 +104,9 @@ export default function MembersPage() {
               <div className="space-y-6">
                 <div className="h-8 w-24 rounded bg-muted/30 animate-pulse" />
                 <div className="grid grid-cols-1 md:grid-cols-2 md:auto-rows-fr gap-6 md:gap-8">
-                  {Array.from({ length: 2 }).map((_, idx) => (
+                  {["senior-skeleton-1", "senior-skeleton-2"].map((key) => (
                     <div
-                      key={`senior-skeleton-${idx}`}
+                      key={key}
                       className="h-[280px] rounded-xl border border-border/30 bg-card/20 animate-pulse"
                     />
                   ))}
@@ -115,9 +115,13 @@ export default function MembersPage() {
               <div className="space-y-6">
                 <div className="h-8 w-24 rounded bg-muted/30 animate-pulse" />
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:auto-rows-fr gap-6 md:gap-8">
-                  {Array.from({ length: 3 }).map((_, idx) => (
+                  {[
+                    "mentee-skeleton-1",
+                    "mentee-skeleton-2",
+                    "mentee-skeleton-3",
+                  ].map((key) => (
                     <div
-                      key={`mentee-skeleton-${idx}`}
+                      key={key}
                       className="h-[260px] rounded-xl border border-border/30 bg-card/20 animate-pulse"
                     />
                   ))}

@@ -18,8 +18,7 @@ const ALIAS_MAP: Record<string, string> = {
 export function getSmartName(name: string): string {
   let smartName = name;
   Object.entries(ALIAS_MAP).forEach(([key, val]) => {
-    smartName = smartName.replace(new RegExp(key, "gi"), val);
+    smartName = smartName.replaceAll(new RegExp(key, "gi"), val);
   });
   return smartName;
 }
-

@@ -3,11 +3,11 @@
 import { motion, MotionValue } from "framer-motion";
 import { Terminal as TerminalIcon } from "lucide-react";
 
-interface HeroSectionProps {
+type HeroSectionProps = Readonly<{
   x: MotionValue<number>;
   y: MotionValue<number>;
   setIsTerminalOpen: (open: boolean) => void;
-}
+}>;
 
 export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
   return (
@@ -28,7 +28,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-          </span>
+          </span>{" "}
           System Operational
         </div>
       </motion.div>
@@ -101,7 +101,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             />
-          </span>
+          </span>{" "}
           입니다.
         </motion.p>
         <motion.p
@@ -125,7 +125,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
         className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center px-4"
       >
         <motion.button 
-          onClick={() => window.open('https://console.nangman.cloud/', '_blank', 'noopener,noreferrer')}
+          onClick={() => globalThis.open('https://console.nangman.cloud/', '_blank', 'noopener,noreferrer')}
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           className="group relative px-6 sm:px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold transition-all shadow-[0_0_20px_-5px_var(--primary)] hover:shadow-[0_0_40px_-5px_var(--primary)] overflow-hidden min-h-[44px] touch-manipulation"

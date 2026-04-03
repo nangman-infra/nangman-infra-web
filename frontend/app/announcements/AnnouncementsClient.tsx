@@ -30,9 +30,9 @@ function typeLabel(type: AnnouncementType): string {
   return "업데이트";
 }
 
-interface AnnouncementsClientProps {
+type AnnouncementsClientProps = Readonly<{
   announcements: Announcement[];
-}
+}>;
 
 export default function AnnouncementsClient({
   announcements,

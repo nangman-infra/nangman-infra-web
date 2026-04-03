@@ -24,7 +24,7 @@ export async function getApiJson<T>(
     method: 'GET',
     headers: {
       Accept: 'application/json',
-      ...(init.headers || {}),
+      ...init.headers,
     },
     ...init,
   });
@@ -47,7 +47,7 @@ export async function postApiJson<TResponse>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(init.headers || {}),
+      ...init.headers,
     },
     body: JSON.stringify(body),
     ...init,

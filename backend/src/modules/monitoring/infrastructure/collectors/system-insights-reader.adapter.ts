@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as fs from 'fs';
-import * as os from 'os';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
 import { SystemInsightsReaderPort } from '../../domain/ports/system-insights-reader.port';
 import { SystemInsights } from '../../domain/models/monitoring.model';
 import {
@@ -36,10 +36,10 @@ export class SystemInsightsReaderAdapter implements SystemInsightsReaderPort {
           // /proc/stat 형식: cpu user nice system idle iowait irq softirq
           // iowait는 parts[5]에 위치하며, 전체 CPU 시간 대비 비율로 계산해야 함
           if (parts.length >= 6) {
-            const iowaitTime = parseInt(parts[5], 10);
+            const iowaitTime = Number.parseInt(parts[5], 10);
             const totalCpuTime = parts
               .slice(1, 11)
-              .reduce((sum, val) => sum + parseInt(val, 10), 0);
+              .reduce((sum, val) => sum + Number.parseInt(val, 10), 0);
             if (totalCpuTime > 0) {
               ioWait =
                 Math.round(
@@ -74,7 +74,7 @@ export class SystemInsightsReaderAdapter implements SystemInsightsReaderPort {
           DECIMAL_PRECISION_DIVISOR,
       },
       ioWait,
-      stealTime: 0.0,
+      stealTime: 0,
     };
   }
 

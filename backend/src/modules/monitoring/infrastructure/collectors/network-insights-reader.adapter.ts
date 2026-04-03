@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as dns from 'dns';
-import * as fs from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import * as dns from 'node:dns';
+import * as fs from 'node:fs';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import { NetworkInsightsReaderPort } from '../../domain/ports/network-insights-reader.port';
 import { NetworkInsights } from '../../domain/models/monitoring.model';
 import {
@@ -19,23 +19,40 @@ import {
 } from '../../../../common/constants/monitoring';
 
 const execAsync = promisify(exec);
+const PING_TIME_PATTERN = /time=([\d.]+)\s*ms/;
+const TRACKED_INTERFACE_PATTERN =
+  /^(eth\d+|bond\d+|enp\d+s\d+|wlan\d+|br-[\w\d]+|docker\d+)$/;
+
+interface InterfaceCounters {
+  rxBytes: number;
+  txBytes: number;
+  rxPackets: number;
+  txPackets: number;
+  time: number;
+}
+
+interface ParsedInterfaceStats {
+  iface: string;
+  rxBytes: number;
+  txBytes: number;
+  rxPackets: number;
+  txPackets: number;
+}
+
+interface TrafficTotals {
+  inbound: number;
+  outbound: number;
+  inboundPps: number;
+  outboundPps: number;
+}
 
 @Injectable()
 export class NetworkInsightsReaderAdapter implements NetworkInsightsReaderPort {
   private readonly logger = new Logger(NetworkInsightsReaderAdapter.name);
 
-  private prevNetStats: Record<
-    string,
-    {
-      rxBytes: number;
-      txBytes: number;
-      rxPackets: number;
-      txPackets: number;
-      time: number;
-    }
-  > = {};
+  private prevNetStats: Record<string, InterfaceCounters> = {};
 
-  private trafficHistory: {
+  private readonly trafficHistory: {
     timestamp: string;
     inbound: number;
     outbound: number;
@@ -77,8 +94,8 @@ export class NetworkInsightsReaderAdapter implements NetworkInsightsReaderPort {
         throw new Error(`Invalid IP address format: ${BACKBONE_PING_TARGET}`);
       }
       const { stdout } = await execAsync(`ping -c 1 ${BACKBONE_PING_TARGET}`);
-      const match = stdout.match(/time=([\d.]+)\s*ms/);
-      backbonePing = match ? parseFloat(match[1]) : 0;
+      const match = PING_TIME_PATTERN.exec(stdout);
+      backbonePing = match ? Number.parseFloat(match[1]) : 0;
     } catch (error: unknown) {
       this.logger.warn('백본 핑 실패', {
         service: NetworkInsightsReaderAdapter.name,
@@ -110,54 +127,16 @@ export class NetworkInsightsReaderAdapter implements NetworkInsightsReaderPort {
     let activeConnections = 0;
 
     try {
-      const netDevPath = fs.existsSync('/host/proc/net/dev')
-        ? '/host/proc/net/dev'
-        : '/proc/net/dev';
-      const tcpPath = fs.existsSync('/host/proc/net/tcp')
-        ? '/host/proc/net/tcp'
-        : '/proc/net/tcp';
+      const { netDevPath, tcpPath } = this.resolveProcPaths();
 
       if (fs.existsSync(netDevPath)) {
         const netDev = fs.readFileSync(netDevPath, 'utf8');
         const now = Date.now();
-
-        const lines = netDev.split('\n');
-        for (const line of lines) {
-          const match = line.match(
-            /^\s*(eth\d+|bond\d+|enp\d+s\d+|wlan\d+|br-[\w\d]+|docker\d+):\s*(\d+)\s+(\d+)\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)\s+(\d+)/,
-          );
-          if (match) {
-            const iface = match[1];
-            const rxBytes = parseInt(match[2], 10);
-            const rxPackets = parseInt(match[3], 10);
-            const txBytes = parseInt(match[4], 10);
-            const txPackets = parseInt(match[5], 10);
-
-            if (this.prevNetStats[iface]) {
-              const prev = this.prevNetStats[iface];
-              const timeDiff = (now - prev.time) / MS_TO_SECONDS_DIVISOR;
-              if (timeDiff > 0) {
-                inbound +=
-                  ((rxBytes - prev.rxBytes) * BITS_PER_BYTE) /
-                  BYTES_TO_MBPS_DIVISOR /
-                  timeDiff;
-                outbound +=
-                  ((txBytes - prev.txBytes) * BITS_PER_BYTE) /
-                  BYTES_TO_MBPS_DIVISOR /
-                  timeDiff;
-                inboundPps += (rxPackets - prev.rxPackets) / timeDiff;
-                outboundPps += (txPackets - prev.txPackets) / timeDiff;
-              }
-            }
-            this.prevNetStats[iface] = {
-              rxBytes,
-              txBytes,
-              rxPackets,
-              txPackets,
-              time: now,
-            };
-          }
-        }
+        const trafficTotals = this.collectTrafficTotals(netDev, now);
+        inbound = trafficTotals.inbound;
+        outbound = trafficTotals.outbound;
+        inboundPps = trafficTotals.inboundPps;
+        outboundPps = trafficTotals.outboundPps;
 
         try {
           if (fs.existsSync(tcpPath)) {
@@ -214,5 +193,94 @@ export class NetworkInsightsReaderAdapter implements NetworkInsightsReaderPort {
 
   private roundToDecimalPlaces(value: number, multiplier: number): number {
     return Math.round(value * multiplier) / multiplier;
+  }
+
+  private resolveProcPaths(): { netDevPath: string; tcpPath: string } {
+    return {
+      netDevPath: fs.existsSync('/host/proc/net/dev')
+        ? '/host/proc/net/dev'
+        : '/proc/net/dev',
+      tcpPath: fs.existsSync('/host/proc/net/tcp')
+        ? '/host/proc/net/tcp'
+        : '/proc/net/tcp',
+    };
+  }
+
+  private collectTrafficTotals(netDev: string, now: number): TrafficTotals {
+    const totals: TrafficTotals = {
+      inbound: 0,
+      outbound: 0,
+      inboundPps: 0,
+      outboundPps: 0,
+    };
+
+    for (const line of netDev.split('\n')) {
+      const stats = this.parseInterfaceStats(line);
+      if (!stats) {
+        continue;
+      }
+
+      this.accumulateTrafficTotals(totals, stats, now);
+    }
+
+    return totals;
+  }
+
+  private parseInterfaceStats(line: string): ParsedInterfaceStats | null {
+    const [rawInterfaceName, rawCounters] = line.split(':');
+    if (!rawInterfaceName || !rawCounters) {
+      return null;
+    }
+
+    const iface = rawInterfaceName.trim();
+    if (!TRACKED_INTERFACE_PATTERN.test(iface)) {
+      return null;
+    }
+
+    const counters = rawCounters.trim().split(/\s+/);
+    if (counters.length < 10) {
+      return null;
+    }
+
+    return {
+      iface,
+      rxBytes: Number.parseInt(counters[0], 10),
+      rxPackets: Number.parseInt(counters[1], 10),
+      txBytes: Number.parseInt(counters[8], 10),
+      txPackets: Number.parseInt(counters[9], 10),
+    };
+  }
+
+  private accumulateTrafficTotals(
+    totals: TrafficTotals,
+    stats: ParsedInterfaceStats,
+    now: number,
+  ): void {
+    const previousStats = this.prevNetStats[stats.iface];
+    if (previousStats) {
+      const timeDiff = (now - previousStats.time) / MS_TO_SECONDS_DIVISOR;
+      if (timeDiff > 0) {
+        totals.inbound +=
+          ((stats.rxBytes - previousStats.rxBytes) * BITS_PER_BYTE) /
+          BYTES_TO_MBPS_DIVISOR /
+          timeDiff;
+        totals.outbound +=
+          ((stats.txBytes - previousStats.txBytes) * BITS_PER_BYTE) /
+          BYTES_TO_MBPS_DIVISOR /
+          timeDiff;
+        totals.inboundPps +=
+          (stats.rxPackets - previousStats.rxPackets) / timeDiff;
+        totals.outboundPps +=
+          (stats.txPackets - previousStats.txPackets) / timeDiff;
+      }
+    }
+
+    this.prevNetStats[stats.iface] = {
+      rxBytes: stats.rxBytes,
+      txBytes: stats.txBytes,
+      rxPackets: stats.rxPackets,
+      txPackets: stats.txPackets,
+      time: now,
+    };
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
 import { UpsInsights } from '../../domain/models/monitoring.model';
 import { UpsStatusReaderPort } from '../../domain/ports/ups-status-reader.port';
 import {
@@ -118,7 +118,7 @@ export class UpsStatusReaderAdapter implements UpsStatusReaderPort {
   }
 
   private validateUPSInput(value: string): string | null {
-    const sanitized = value.replace(/[^a-zA-Z0-9.\-:_]/g, '');
+    const sanitized = value.replaceAll(/[^a-zA-Z0-9.\-:_]/g, '');
     if (!sanitized || sanitized.length === 0) {
       return null;
     }
@@ -157,7 +157,7 @@ export class UpsStatusReaderAdapter implements UpsStatusReaderPort {
     if (!value) {
       return null;
     }
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? null : parsed;
+    const parsed = Number.parseFloat(value);
+    return Number.isNaN(parsed) ? null : parsed;
   }
 }

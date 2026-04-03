@@ -7,11 +7,11 @@ import {
   ANIMATION_DURATION_MEDIUM,
 } from "@/constants/members";
 
-interface StatsSectionProps {
+type StatsSectionProps = Readonly<{
   totalMembers: number;
   seniorsCount: number;
   menteesCount: number;
-}
+}>;
 
 export function StatsSection({
   totalMembers,

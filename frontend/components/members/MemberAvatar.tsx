@@ -4,14 +4,14 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface MemberAvatarProps {
+type MemberAvatarProps = Readonly<{
   name: string;
   profileImage?: string;
   sizeClassName: string;
   sizes: string;
   fallbackClassName: string;
   imageClassName?: string;
-}
+}>;
 
 function normalizeMemberProfileImage(profileImage?: string): string | null {
   if (!profileImage || typeof profileImage !== "string") {

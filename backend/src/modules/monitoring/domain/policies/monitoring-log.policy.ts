@@ -57,18 +57,18 @@ export function generateMonitoringLogs(
     message: `Cluster Load Balanced (${monitors.length} Nodes Active)`,
   });
 
-  logs.push({
-    timestamp: now.toISOString(),
-    level: 'PROBE',
-    source: 'NETWORK',
-    message: `Gateway Latency: ${insights.network.gatewayLatency}ms / DNS: ${insights.network.dnsLatency}ms`,
-  });
+  logs.push(
+    {
+      timestamp: now.toISOString(),
+      level: 'PROBE',
+      source: 'NETWORK',
+      message: `Gateway Latency: ${insights.network.gatewayLatency}ms / DNS: ${insights.network.dnsLatency}ms`,
+    },
+  );
 
   // 시간 역순 정렬 후 최대 개수만 유지
-  return logs
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-    )
-    .slice(0, MAX_LOG_DISPLAY_COUNT);
+  logs.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
+  return logs.slice(0, MAX_LOG_DISPLAY_COUNT);
 }

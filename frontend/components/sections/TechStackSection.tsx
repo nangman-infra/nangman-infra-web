@@ -146,9 +146,9 @@ export function TechStackSection() {
                   'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'RabbitMQ', 'Kafka', 'Elasticsearch',
                   'Python', 'Go', 'Bash', 'YAML', 'JSON', 'HCL', 'Docker Compose', 'Kustomize',
                   'Zabbix', 'Nagios', 'Splunk', 'Datadog', 'New Relic', 'CloudWatch', 'GCP', 'Azure'
-                ].map((tech, idx) => (
+                ].map((tech) => (
                   <span
-                    key={`tech-${idx}`}
+                    key={`tech-${tech}`}
                     className="text-muted-foreground/80 font-mono text-sm md:text-base whitespace-nowrap hover:text-primary transition-colors"
                   >
                     {tech}
@@ -162,9 +162,9 @@ export function TechStackSection() {
                   'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'RabbitMQ', 'Kafka', 'Elasticsearch',
                   'Python', 'Go', 'Bash', 'YAML', 'JSON', 'HCL', 'Docker Compose', 'Kustomize',
                   'Zabbix', 'Nagios', 'Splunk', 'Datadog', 'New Relic', 'CloudWatch', 'GCP', 'Azure'
-                ].map((tech, idx) => (
+                ].map((tech) => (
                   <span
-                    key={`tech-dup-${idx}`}
+                    key={`tech-dup-${tech}`}
                     className="text-muted-foreground/80 font-mono text-sm md:text-base whitespace-nowrap hover:text-primary transition-colors"
                   >
                     {tech}

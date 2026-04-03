@@ -162,7 +162,7 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
     this.cleanupExpiredJobs();
 
     const job = this.jobsById.get(jobId);
-    if (!job || job.snapshot.status !== 'completed') {
+    if (job?.snapshot.status !== 'completed') {
       return null;
     }
 
@@ -200,7 +200,7 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
       }
 
       const job = this.jobsById.get(jobId);
-      if (!job || job.snapshot.status !== 'queued') {
+      if (job?.snapshot.status !== 'queued') {
         continue;
       }
 

@@ -1,5 +1,7 @@
 # Nangman Infra
 
+[![Quality Gate Status](https://sonarqube.nangman.cloud/api/project_badges/measure?project=nangman-web&metric=alert_status&token=sqb_59d5855d6f9e99833620e899014888646c0cb2f5)](https://sonarqube.nangman.cloud/dashboard?id=nangman-web)
+
 > 보이지 않지만, 모든 것의 기반이 됩니다
 
 **낭만 인프라**의 공식 홈페이지 및 포트폴리오 허브입니다.

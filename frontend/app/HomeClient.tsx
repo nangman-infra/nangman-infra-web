@@ -26,10 +26,10 @@ import { BlogSection } from "@/components/sections/BlogSection";
 import { AnnouncementsSection } from "@/components/sections/AnnouncementsSection";
 import { ContactSection } from "@/components/sections/ContactSection";
 
-interface HomeClientProps {
+type HomeClientProps = Readonly<{
     latestPosts: BlogPost[];
     latestAnnouncements: Announcement[];
-}
+}>;
 
 export default function HomeClient({
     latestPosts,
@@ -46,7 +46,7 @@ export default function HomeClient({
         let nextX = 0.5;
         let nextY = 0.5;
 
-        if (window.matchMedia("(pointer: coarse)").matches) {
+        if (globalThis.matchMedia("(pointer: coarse)").matches) {
             return;
         }
 
@@ -70,9 +70,9 @@ export default function HomeClient({
             }
         };
 
-        window.addEventListener("mousemove", handleMouseMove, { passive: true });
+        globalThis.addEventListener("mousemove", handleMouseMove, { passive: true });
         return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
+            globalThis.removeEventListener("mousemove", handleMouseMove);
             if (rafId !== null) {
                 cancelAnimationFrame(rafId);
             }
@@ -87,8 +87,8 @@ export default function HomeClient({
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+        globalThis.addEventListener("keydown", handleKeyDown);
+        return () => globalThis.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     // Parallax values

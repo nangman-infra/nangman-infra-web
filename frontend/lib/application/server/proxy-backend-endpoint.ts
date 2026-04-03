@@ -46,7 +46,7 @@ export async function proxyBackendEndpoint(
     logInfo(`${context} 요청 수신`, {
       context,
       action,
-      ...(requestMetadata || {}),
+      ...requestMetadata,
     });
 
     const response = await fetchBackend(backendPath, {

@@ -13,19 +13,38 @@ interface TerminalProps {
 }
 
 interface LogEntry {
+  id: string;
   type: "command" | "output" | "error" | "system";
   content: React.ReactNode;
 }
 
-export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
+function createLogEntry(type: LogEntry["type"], content: React.ReactNode): LogEntry {
+  return {
+    id: globalThis.crypto.randomUUID(),
+    type,
+    content,
+  };
+}
+
+function getLogColor(type: LogEntry["type"]): string {
+  if (type === "error") {
+    return TERMINAL_COLORS.ERROR;
+  }
+  if (type === "system") {
+    return TERMINAL_COLORS.SYSTEM;
+  }
+  return TERMINAL_COLORS.TEXT;
+}
+
+export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
   const [input, setInput] = React.useState("");
   const [activeTab, setActiveTab] = React.useState(0);
   const [tabs] = React.useState([
     { id: 0, name: "Bash", path: "~" },
   ]);
   const [logs, setLogs] = React.useState<LogEntry[]>([
-    { type: "system", content: "Welcome to Nangman Infra v1.0.0" },
-    { type: "system", content: "Type 'help' to see available commands." },
+    createLogEntry("system", "Welcome to Nangman Infra v1.0.0"),
+    createLogEntry("system", "Type 'help' to see available commands."),
   ]);
   const [mounted, setMounted] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -52,13 +71,14 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
 
   const handleCommand = (cmd: string) => {
     const trimmedCmd = cmd.trim().toLowerCase();
-    const newLogs: LogEntry[] = [{ type: "command", content: cmd }];
+    const newLogs: LogEntry[] = [createLogEntry("command", cmd)];
 
     switch (trimmedCmd) {
       case "help":
-        newLogs.push({
-          type: "output",
-          content: (
+        newLogs.push(
+          createLogEntry(
+            "output",
+            (
             <div className="space-y-1">
               <p>Available commands:</p>
               <div className="grid grid-cols-[100px_1fr] gap-2">
@@ -75,25 +95,25 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
               </div>
             </div>
           ),
-        });
+          ),
+        );
         break;
       case "ls":
-        newLogs.push({
-          type: "output",
-          content: (
+        newLogs.push(
+          createLogEntry(
+            "output",
+            (
             <div className="grid grid-cols-3 gap-4" style={{ color: TERMINAL_COLORS.COMMAND }}>
               {TERMINAL_ROUTES.map((route) => (
                 <span key={route}>{route}/</span>
               ))}
             </div>
           ),
-        });
+          ),
+        );
         break;
       case "whoami":
-        newLogs.push({
-          type: "output",
-          content: "visitor@nangman-infra (Guest)",
-        });
+        newLogs.push(createLogEntry("output", "visitor@nangman-infra (Guest)"));
         break;
       case "clear":
         setLogs([]);
@@ -107,16 +127,18 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
         if (trimmedCmd.startsWith("cd ")) {
           const target = trimmedCmd.split(" ")[1];
           if (TERMINAL_ROUTES.includes(target as typeof TERMINAL_ROUTES[number])) {
-            newLogs.push({ type: "system", content: `Navigating to /${target}...` });
-            window.location.href = `/${target}`;
+            newLogs.push(createLogEntry("system", `Navigating to /${target}...`));
+            globalThis.location.href = `/${target}`;
           } else {
-            newLogs.push({ type: "error", content: `Directory not found: ${target}` });
+            newLogs.push(createLogEntry("error", `Directory not found: ${target}`));
           }
         } else {
-          newLogs.push({
-            type: "error",
-            content: `Command not found: ${trimmedCmd}. Type 'help' for help.`,
-          });
+          newLogs.push(
+            createLogEntry(
+              "error",
+              `Command not found: ${trimmedCmd}. Type 'help' for help.`,
+            ),
+          );
         }
     }
 
@@ -130,6 +152,7 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
   };
 
   const currentTab = tabs[activeTab] || tabs[0];
+  const focusInput = () => inputRef.current?.focus();
 
   if (!mounted) {
     return null;
@@ -244,19 +267,23 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
             color: TERMINAL_COLORS.TEXT,
           }}
           ref={scrollRef}
-          onClick={() => inputRef.current?.focus()}
+          onClick={focusInput}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              focusInput();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="터미널 입력창에 포커스"
         >
           <div className="space-y-1.5">
-            {logs.map((log, i) => (
+            {logs.map((log) => (
               <div 
-                key={i} 
+                key={log.id}
                 style={{
-                  color:
-                    log.type === "error"
-                      ? TERMINAL_COLORS.ERROR
-                      : log.type === "system"
-                        ? TERMINAL_COLORS.SYSTEM
-                        : TERMINAL_COLORS.TEXT,
+                  color: getLogColor(log.type),
                   opacity: log.type === "output" ? 0.9 : 1,
                 }}
                 className="leading-relaxed"
@@ -294,4 +321,3 @@ export function Terminal({ isOpen, setIsOpen }: TerminalProps) {
     </Dialog>
   );
 }
-

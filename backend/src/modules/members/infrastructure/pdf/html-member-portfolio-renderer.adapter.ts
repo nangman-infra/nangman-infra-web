@@ -109,19 +109,23 @@ export class HtmlMemberPortfolioRendererAdapter
 
   private async loadFontDataUrls(): Promise<FontDataUrls> {
     if (!this.fontDataUrlsPromise) {
-      this.fontDataUrlsPromise = (async () => ({
-        regularFontDataUrl: await this.readAssetAsDataUrl(
-          this.regularFontPath,
-          'font/woff',
-        ),
-        boldFontDataUrl: await this.readAssetAsDataUrl(
-          this.boldFontPath,
-          'font/woff',
-        ),
-      }))();
+      this.fontDataUrlsPromise = this.buildFontDataUrls();
     }
 
     return this.fontDataUrlsPromise;
+  }
+
+  private async buildFontDataUrls(): Promise<FontDataUrls> {
+    return {
+      regularFontDataUrl: await this.readAssetAsDataUrl(
+        this.regularFontPath,
+        'font/woff',
+      ),
+      boldFontDataUrl: await this.readAssetAsDataUrl(
+        this.boldFontPath,
+        'font/woff',
+      ),
+    };
   }
 
   async dispose(): Promise<void> {

@@ -15,6 +15,7 @@ import {
 } from "@/constants/particles";
 
 interface Particle {
+  id: string;
   x: number;
   y: number;
   size: number;
@@ -30,11 +31,12 @@ export function FloatingParticles() {
     // Use requestAnimationFrame to defer state update and avoid setState in effect warning
     // This ensures particles are only generated on client to avoid hydration mismatch
     const frameId = requestAnimationFrame(() => {
-      const width = window.innerWidth || DEFAULT_WINDOW_WIDTH;
-      const height = window.innerHeight || DEFAULT_WINDOW_HEIGHT;
+      const width = globalThis.innerWidth || DEFAULT_WINDOW_WIDTH;
+      const height = globalThis.innerHeight || DEFAULT_WINDOW_HEIGHT;
       
       setParticles(
         Array.from({ length: PARTICLE_COUNT }).map(() => ({
+          id: globalThis.crypto.randomUUID(),
           x: Math.random() * width,
           y: Math.random() * height,
           size: Math.random() * (PARTICLE_SIZE_MAX - PARTICLE_SIZE_MIN) + PARTICLE_SIZE_MIN,
@@ -55,9 +57,9 @@ export function FloatingParticles() {
 
   return (
     <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden">
-      {particles.map((particle, i) => (
+      {particles.map((particle) => (
         <motion.div
-          key={i}
+          key={particle.id}
           className="absolute rounded-full bg-primary/20 blur-sm"
           initial={{
             x: particle.x,
@@ -80,4 +82,3 @@ export function FloatingParticles() {
     </div>
   );
 }
-

@@ -10,13 +10,13 @@ import {
 } from "@/constants/members";
 import { MemberAvatar } from "@/components/members/MemberAvatar";
 
-interface MemberCardProps {
+type MemberCardProps = Readonly<{
   member: Member;
   index: number;
   baseDelay: number;
   isSenior?: boolean;
   onClick?: (member: Member) => void;
-}
+}>;
 
 export function MemberCard({
   member,
@@ -30,11 +30,7 @@ export function MemberCard({
   const hasCertifications = certificationCount > 0;
   const hasAchievements = achievementCount > 0;
 
-  const handleClick = () => {
-    if (onClick) {
-      onClick(member);
-    }
-  };
+  const handleClick = () => onClick?.(member);
 
   return (
     <motion.div
@@ -44,7 +40,19 @@ export function MemberCard({
       className="h-full"
     >
       <div
-        onClick={handleClick}
+        onClick={onClick ? handleClick : undefined}
+        onKeyDown={
+          onClick
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleClick();
+                }
+              }
+            : undefined
+        }
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
         className="gpu-accelerated-blur group relative h-full p-6 md:p-8 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 cursor-pointer flex flex-col"
       >
         <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -94,9 +102,9 @@ export function MemberCard({
           {/* Specialties */}
           {member.specialties && member.specialties.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {member.specialties.map((specialty, idx) => (
+              {member.specialties.map((specialty) => (
                 <span
-                  key={idx}
+                  key={specialty}
                   className={`px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-xs text-primary font-mono ${isSenior ? "px-3 py-1" : ""
                     }`}
                 >
@@ -110,9 +118,9 @@ export function MemberCard({
           {hasCertifications && member.certifications && (
             <div className="pt-2 border-t border-border/20 mt-auto">
               <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
-                {member.certifications.slice(0, MAX_DISPLAY_CERTIFICATIONS).map((cert, idx) => (
+                {member.certifications.slice(0, MAX_DISPLAY_CERTIFICATIONS).map((cert) => (
                   <div
-                    key={idx}
+                    key={`${cert.name}-${cert.issuer}-${cert.date ?? "unknown"}`}
                     className="flex items-center gap-2 text-xs text-muted-foreground"
                   >
                     <span
@@ -136,9 +144,9 @@ export function MemberCard({
           {!hasCertifications && hasAchievements && member.achievements && (
             <div className="pt-2 border-t border-border/20 mt-auto">
               <div className={`grid grid-cols-1 ${isSenior ? "gap-2" : "gap-1.5"}`}>
-                {member.achievements.slice(0, MAX_DISPLAY_ACHIEVEMENTS).map((achievement, idx) => (
+                {member.achievements.slice(0, MAX_DISPLAY_ACHIEVEMENTS).map((achievement) => (
                   <div
-                    key={idx}
+                    key={achievement}
                     className="flex items-center gap-2 text-xs text-muted-foreground"
                   >
                     <span

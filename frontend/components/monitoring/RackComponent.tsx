@@ -17,11 +17,16 @@ interface RackComponentProps {
   index: number;
 }
 
+const RACK_UNIT_LABELS = Array.from(
+  { length: TOTAL_RACK_U },
+  (_, index) => TOTAL_RACK_U - index,
+);
+
 /**
  * 랙 컴포넌트
  * 가이드라인: 단일 책임 원칙에 따라 랙 렌더링만 담당
  */
-export const RackComponent = memo<RackComponentProps>(
+export const RackComponent = memo<Readonly<RackComponentProps>>(
   ({ name, monitors, index }) => {
     // generateRackLayout을 useMemo로 메모이제이션
     const layout = useMemo(() => {
@@ -86,24 +91,24 @@ export const RackComponent = memo<RackComponentProps>(
         <div className="relative bg-[#0d0d0f] rounded-2xl p-4 border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden">
           <div className="relative flex bg-black rounded-xl overflow-hidden border-2 border-white/5 ring-1 ring-white/10 shadow-inner">
             <div className="w-10 flex flex-col border-r border-white/10 bg-[#080809]">
-              {Array.from({ length: TOTAL_RACK_U }).map((_, i) => (
+              {RACK_UNIT_LABELS.map((unit) => (
                 <div
-                  key={i}
+                  key={`left-unit-${unit}`}
                   className="h-6 flex items-center justify-center border-b border-white/3"
                 >
                   <span
-                    className={`text-[9px] font-bold font-mono leading-none ${(TOTAL_RACK_U - i) % 5 === 0 ? "text-white/40" : "text-white/10"}`}
+                    className={`text-[9px] font-bold font-mono leading-none ${unit % 5 === 0 ? "text-white/40" : "text-white/10"}`}
                   >
-                    {TOTAL_RACK_U - i}
+                    {unit}
                   </span>
                 </div>
               ))}
             </div>
 
             <div className="flex-1 flex flex-col bg-[#050506]">
-              {layout.map((item, i) => (
+              {layout.map((item) => (
                 <RackSlot
-                  key={item.monitor?.id || `blank-${i}`}
+                  key={item.monitor?.id ?? `blank-${item.u}`}
                   size={item.size}
                   monitor={item.monitor}
                 />
@@ -111,9 +116,9 @@ export const RackComponent = memo<RackComponentProps>(
             </div>
 
             <div className="w-4 flex flex-col border-l border-white/10 bg-[#080809]">
-              {Array.from({ length: TOTAL_RACK_U }).map((_, i) => (
+              {RACK_UNIT_LABELS.map((unit) => (
                 <div
-                  key={i}
+                  key={`right-unit-${unit}`}
                   className="h-6 flex items-center justify-center border-b border-white/3"
                 >
                   <div className="w-1 h-1 rounded-full bg-white/5 shadow-inner" />
@@ -144,4 +149,3 @@ export const RackComponent = memo<RackComponentProps>(
 );
 
 RackComponent.displayName = "RackComponent";
-

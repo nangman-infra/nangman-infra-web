@@ -1,24 +1,53 @@
 "use client";
 
-import { useState, memo } from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import type { MonitorStatus } from "@/lib/api";
 import { getSmartName } from "@/components/monitoring/utils";
 
-interface RackSlotProps {
+type RackSlotProps = Readonly<{
   size: number;
   monitor: MonitorStatus | null;
-}
+}>;
 
 const RACK_SLOT_HEIGHT_PER_U = 24;
+
+function getStatusLabel(status: MonitorStatus["status"]): string {
+  if (status === "up") {
+    return "ONLINE";
+  }
+  if (status === "down") {
+    return "OFFLINE";
+  }
+  return "PENDING";
+}
+
+function getSlotBackgroundClass(status: MonitorStatus["status"]): string {
+  if (status === "down") {
+    return "bg-red-500/10";
+  }
+  if (status === "up") {
+    return "bg-[#121214] shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]";
+  }
+  return "bg-[#121214]";
+}
+
+function getLedClassName(status: MonitorStatus["status"]): string {
+  if (status === "up") {
+    return "bg-[#00ff00] shadow-[0_0_12px_rgba(0,255,0,0.8)]";
+  }
+  if (status === "down") {
+    return "bg-[#ff0000] shadow-[0_0_12px_rgba(255,0,0,0.8)]";
+  }
+  return "bg-[#ffff00]";
+}
 
 /**
  * 랙 슬롯 컴포넌트
  * 가이드라인: 단일 책임 원칙에 따라 랙 슬롯 렌더링만 담당
  */
-export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
+export const RackSlot = memo(({ size, monitor }: RackSlotProps) => {
   const height = size * RACK_SLOT_HEIGHT_PER_U;
-  const [isHovered, setIsHovered] = useState(false);
 
   if (!monitor) {
     return (
@@ -42,17 +71,16 @@ export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
   }
 
   const isUp = monitor.status === "up";
-  const isDown = monitor.status === "down";
   const smartName = getSmartName(monitor.name);
+  const fullName = smartName === monitor.name ? null : monitor.name;
+  const statusLabel = getStatusLabel(monitor.status);
+  const availabilityClassName = isUp ? "text-green-400" : "text-white/40";
 
   return (
     <div
       style={{ height: `${height}px` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`flex flex-col justify-center px-6 border-b border-white/15 relative group cursor-pointer transition-all duration-300 
-        ${isDown ? "bg-red-500/10" : "bg-[#121214] hover:bg-[#1a1a1c]"} 
-        ${isUp ? "shadow-[inset_0_0_20px_rgba(34,197,94,0.05)]" : ""}`}
+      className={`flex flex-col justify-center px-6 border-b border-white/15 relative group transition-all duration-300 ${getSlotBackgroundClass(monitor.status)}`}
+      title={monitor.name}
     >
       <div className="absolute inset-0 bg-linear-to-b from-white/2 to-transparent pointer-events-none" />
 
@@ -69,13 +97,7 @@ export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
                 type: "tween",
               }}
               style={{ willChange: "transform, opacity" }}
-              className={`w-2 h-2 rounded-full transition-all duration-500 ${
-                isUp
-                  ? "bg-[#00ff00] shadow-[0_0_12px_rgba(0,255,0,0.8)]"
-                  : isDown
-                    ? "bg-[#ff0000] shadow-[0_0_12px_rgba(255,0,0,0.8)]"
-                    : "bg-[#ffff00]"
-              }`}
+              className={`w-2 h-2 rounded-full transition-all duration-500 ${getLedClassName(monitor.status)}`}
             />
             <div
               className={`w-2 h-1 rounded-sm ${isUp ? "bg-[#00ff00]/20" : "bg-white/5"}`}
@@ -87,32 +109,22 @@ export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
               <span
                 className={`text-[10px] font-black font-mono tracking-widest ${isUp ? "text-primary" : "text-white/40"}`}
               >
-                {isUp ? "ONLINE" : isDown ? "OFFLINE" : "PENDING"}
+                {statusLabel}
               </span>
               <span className="text-[8px] text-white/20 font-mono uppercase tracking-tighter shrink-0">
                 NID:{monitor.id.toString().padStart(3, "0")}
               </span>
             </div>
 
-            <div className="overflow-hidden whitespace-nowrap relative h-5 flex items-center w-full min-w-0">
-              <motion.h4
-                initial={false}
-                animate={isHovered ? { x: [0, -120, 0] } : { x: 0 }}
-                transition={
-                  isHovered
-                    ? {
-                        duration: 10,
-                        repeat: Infinity,
-                        ease: "linear",
-                        type: "tween",
-                      }
-                    : { duration: 0.2, ease: "easeInOut", type: "tween" }
-                }
-                style={{ willChange: "transform" }}
-                className="text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none block whitespace-nowrap"
-              >
-                {isHovered ? monitor.name : smartName}
-              </motion.h4>
+            <div className="overflow-hidden relative flex flex-col justify-center w-full min-w-0">
+              <h4 className="text-xs md:text-sm font-bold text-white/90 font-mono tracking-tighter uppercase italic leading-none block truncate">
+                {smartName}
+              </h4>
+              {fullName && (
+                <span className="text-[9px] text-white/35 font-mono truncate mt-1">
+                  {fullName}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -123,9 +135,7 @@ export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
               <span className="text-[8px] text-white/30 tracking-tighter mb-1 uppercase">
                 Availability
               </span>
-              <span
-                className={`text-xs font-black leading-none ${isUp ? "text-green-400" : "text-white/40"}`}
-              >
+              <span className={`text-xs font-black leading-none ${availabilityClassName}`}>
                 {monitor.uptime.toFixed(2)}%
               </span>
             </div>
@@ -152,4 +162,3 @@ export const RackSlot = memo<RackSlotProps>(({ size, monitor }) => {
 });
 
 RackSlot.displayName = "RackSlot";
-

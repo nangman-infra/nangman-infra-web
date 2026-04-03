@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
   Loader2,
@@ -22,9 +22,9 @@ import {
 } from "@/constants/monitoring";
 import type { MonitorStatus } from "@/lib/api";
 
-interface LastUpdateTickerProps {
+type LastUpdateTickerProps = Readonly<{
   lastUpdate: Date | null;
-}
+}>;
 
 function formatLastUpdateText(lastUpdate: Date | null, nowMs: number): string {
   if (!lastUpdate) {
@@ -107,6 +107,41 @@ export function MonitoringSection() {
       monitorsWithUptime.length
     );
   }, [monitors]);
+
+  let content: ReactNode;
+  if (loading && monitors.length === 0) {
+    content = (
+      <div className="flex flex-col items-center justify-center py-40 gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="font-mono text-xs tracking-[0.5em] opacity-50 uppercase animate-pulse">
+          Initializing Rack Bay...
+        </p>
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div className="flex flex-col items-center justify-center py-40 gap-4">
+        <AlertCircle className="w-10 h-10 text-red-400" />
+        <p className="font-mono text-sm text-red-400">{error}</p>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-12 items-start">
+        {sortedGroups.map(([groupName, groupMonitors], rackIdx) => (
+          <RackComponent
+            key={groupName}
+            name={groupName}
+            monitors={groupMonitors}
+            index={rackIdx}
+          />
+        ))}
+        <div className="md:col-span-1 lg:col-span-1 2xl:col-span-3">
+          <InsightsPanel index={sortedGroups.length} data={insights} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="relative z-10 w-full px-4 py-8 bg-[#020203]">
@@ -219,34 +254,7 @@ export function MonitoringSection() {
           </div>
         </div>
 
-        {loading && monitors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            <p className="font-mono text-xs tracking-[0.5em] opacity-50 uppercase animate-pulse">
-              Initializing Rack Bay...
-            </p>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-40 gap-4">
-            <AlertCircle className="w-10 h-10 text-red-400" />
-            <p className="font-mono text-sm text-red-400">{error}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-12 items-start">
-            {sortedGroups.map(([groupName, groupMonitors], rackIdx) => (
-              <RackComponent
-                key={groupName}
-                name={groupName}
-                monitors={groupMonitors}
-                index={rackIdx}
-              />
-            ))}
-            {/* NOC OVERVIEW 패널: 실제 데이터 전달 */}
-            <div className="md:col-span-1 lg:col-span-1 2xl:col-span-3">
-              <InsightsPanel index={sortedGroups.length} data={insights} />
-            </div>
-          </div>
-        )}
+        {content}
       </div>
     </section>
   );

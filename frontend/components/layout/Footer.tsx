@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Github, Mail, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
+import { GitHubIcon } from "@/components/icons/GitHubIcon";
 
 const navItems = [
   { name: "About", href: "/about" },
@@ -117,7 +118,7 @@ export function Footer() {
                 className="text-muted-foreground hover:text-primary transition-colors"
                 aria-label="GitHub"
               >
-                <Github className="w-5 h-5" />
+                <GitHubIcon className="w-5 h-5" />
               </Link>
             </div>
           </motion.div>

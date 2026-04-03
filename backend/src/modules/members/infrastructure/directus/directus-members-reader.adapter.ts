@@ -268,10 +268,10 @@ export class DirectusMembersReaderAdapter implements MemberReaderPort {
     return value
       .trim()
       .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9\-가-힣]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replaceAll(/\s+/g, '-')
+      .replaceAll(/[^a-z0-9\-가-힣]/g, '')
+      .replaceAll(/-+/g, '-')
+      .replaceAll(/(^-)|(-$)/g, '');
   }
 
   private toArray(value: unknown): unknown[] {

@@ -7,9 +7,9 @@ import { BookOpen, ArrowRight, CalendarDays } from "lucide-react";
 import type { BlogPost } from "@/data/blogPosts";
 import { getBlogPostSourceUrl } from "@/lib/blog";
 
-interface BlogSectionProps {
+type BlogSectionProps = Readonly<{
   latestPosts: BlogPost[];
-}
+}>;
 
 function formatDate(value: string): string {
   const timestamp = Date.parse(value);

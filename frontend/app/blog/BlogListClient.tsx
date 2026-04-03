@@ -7,9 +7,9 @@ import Image from "next/image";
 import type { BlogPost } from "@/data/blogPosts";
 import { getBlogPostSourceUrl } from "@/lib/blog";
 
-interface BlogListClientProps {
+type BlogListClientProps = Readonly<{
   posts: BlogPost[];
-}
+}>;
 
 type SortOption = "latest" | "oldest" | "author";
 

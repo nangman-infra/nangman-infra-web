@@ -5,9 +5,9 @@ import Link from "next/link";
 import { ArrowRight, BellRing } from "lucide-react";
 import type { Announcement } from "@/lib/domain/announcement";
 
-interface AnnouncementsSectionProps {
+type AnnouncementsSectionProps = Readonly<{
   latestAnnouncements: Announcement[];
-}
+}>;
 
 function typeBadgeClass(type: Announcement["type"]): string {
   if (type === "notice") {

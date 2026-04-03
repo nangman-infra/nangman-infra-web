@@ -12,18 +12,82 @@ import {
   OUTPUT_FADE_DURATION_MS,
 } from "@/constants/animations";
 
+type TerminalPhase = "command" | "output" | "clearing";
+
 interface TerminalCommand {
   command: string;
   output: React.ReactNode[];
 }
 
-interface TerminalDisplayProps {
+type TerminalDisplayProps = Readonly<{
   commands: TerminalCommand[];
   onCycleComplete?: () => void;
+}>;
+
+function startTypingAnimation(
+  command: string,
+  onType: (value: string) => void,
+  onComplete: () => void,
+): () => void {
+  let currentIndex = 0;
+  let outputDelayTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const typingInterval = setInterval(() => {
+    if (currentIndex < command.length) {
+      onType(command.slice(0, currentIndex + 1));
+      currentIndex += 1;
+      return;
+    }
+
+    clearInterval(typingInterval);
+    outputDelayTimer = setTimeout(onComplete, OUTPUT_DELAY_MS);
+  }, TYPING_SPEED_MS);
+
+  return () => {
+    clearInterval(typingInterval);
+    if (outputDelayTimer) {
+      clearTimeout(outputDelayTimer);
+    }
+  };
+}
+
+function startOutputAnimation(
+  lineCount: number,
+  onLineVisible: (visibleLineCount: number) => void,
+  onOutputComplete: () => void,
+  onCleared: () => void,
+): () => void {
+  let lineIndex = 0;
+  let waitTimer: ReturnType<typeof setTimeout> | null = null;
+  let clearTimer: ReturnType<typeof setTimeout> | null = null;
+
+  const outputInterval = setInterval(() => {
+    if (lineIndex < lineCount) {
+      lineIndex += 1;
+      onLineVisible(lineIndex);
+      return;
+    }
+
+    clearInterval(outputInterval);
+    waitTimer = setTimeout(() => {
+      onOutputComplete();
+      clearTimer = setTimeout(onCleared, CLEAR_DELAY_MS);
+    }, OUTPUT_COMPLETE_WAIT_MS);
+  }, OUTPUT_LINE_DISPLAY_SPEED_MS);
+
+  return () => {
+    clearInterval(outputInterval);
+    if (waitTimer) {
+      clearTimeout(waitTimer);
+    }
+    if (clearTimer) {
+      clearTimeout(clearTimer);
+    }
+  };
 }
 
 export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayProps) {
-  const [currentPhase, setCurrentPhase] = useState<'command' | 'output' | 'clearing'>('command');
+  const [currentPhase, setCurrentPhase] = useState<TerminalPhase>("command");
   const [currentCommandIndex, setCurrentCommandIndex] = useState(0);
   const [typedText, setTypedText] = useState("");
   const [showOutput, setShowOutput] = useState(false);
@@ -43,74 +107,52 @@ export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayPr
   }, []);
 
   useEffect(() => {
-    if (currentPhase === 'command' && currentCommand) {
-      // Typing command
-      let currentIndex = 0;
+    if (currentPhase === "command" && currentCommand) {
       setTypedText("");
-      const typingInterval = setInterval(() => {
-        if (currentIndex < currentCommand.command.length) {
-          setTypedText(currentCommand.command.slice(0, currentIndex + 1));
-          currentIndex++;
-        } else {
-          clearInterval(typingInterval);
-          setTimeout(() => {
-            setCurrentPhase('output');
-            setShowOutput(true);
-            setVisibleLines(0);
-          }, OUTPUT_DELAY_MS);
-        }
-      }, TYPING_SPEED_MS);
+      return startTypingAnimation(currentCommand.command, setTypedText, () => {
+        setCurrentPhase("output");
+        setShowOutput(true);
+        setVisibleLines(0);
+      });
+    }
 
-      return () => clearInterval(typingInterval);
-    } else if (currentPhase === 'output' && showOutput) {
-      // Showing output lines
-      let lineIndex = 0;
-      const outputInterval = setInterval(() => {
-        if (lineIndex < currentCommand.output.length) {
-          setVisibleLines(lineIndex + 1);
-          lineIndex++;
-        } else {
-          clearInterval(outputInterval);
-          // Wait a bit then clear screen and move to next command
-          setTimeout(() => {
-            setCurrentPhase('clearing');
-            setIsCleared(true);
-            setShowOutput(false);
-            setVisibleLines(0);
-            setTypedText("");
-            
-            // Clear screen and move to next command
-            setTimeout(() => {
-              setIsCleared(false);
-              // Move to next command or cycle
-              if (currentCommandIndex < commands.length - 1) {
-                setCurrentCommandIndex(currentCommandIndex + 1);
-                setCurrentPhase('command');
-              } else {
-                // Cycle complete, restart from beginning
-                setCurrentCommandIndex(0);
-                setCurrentPhase('command');
-                onCycleComplete?.();
-              }
-            }, CLEAR_DELAY_MS);
-          }, OUTPUT_COMPLETE_WAIT_MS);
-        }
-      }, OUTPUT_LINE_DISPLAY_SPEED_MS);
+    if (currentPhase === "output" && showOutput && currentCommand) {
+      return startOutputAnimation(
+        currentCommand.output.length,
+        setVisibleLines,
+        () => {
+          setCurrentPhase("clearing");
+          setIsCleared(true);
+          setShowOutput(false);
+          setVisibleLines(0);
+          setTypedText("");
+        },
+        () => {
+          setIsCleared(false);
+          if (currentCommandIndex < commands.length - 1) {
+            setCurrentCommandIndex(currentCommandIndex + 1);
+            setCurrentPhase("command");
+            return;
+          }
 
-      return () => clearInterval(outputInterval);
+          setCurrentCommandIndex(0);
+          setCurrentPhase("command");
+          onCycleComplete?.();
+        },
+      );
     }
   }, [currentPhase, currentCommand, showOutput, currentCommandIndex, commands.length, onCycleComplete]);
 
   // Get current display text based on phase
   const getDisplayText = () => {
-    if (currentPhase === 'command') {
+    if (currentPhase === "command") {
       return typedText;
     }
     return "";
   };
 
   const shouldShowCursor = () => {
-    if (currentPhase === 'command') {
+    if (currentPhase === "command") {
       return typedText.length < (currentCommand?.command.length || 0);
     }
     return false;
@@ -136,7 +178,7 @@ export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayPr
       </div>
 
       {/* Current Output - Full screen, scrollable if needed */}
-      {showOutput && currentPhase === 'output' && currentCommand && (
+      {showOutput && currentPhase === "output" && currentCommand && (
         <div className="flex-1 space-y-1 text-[#cccccc] overflow-y-auto min-h-0">
           {currentCommand.output.slice(0, visibleLines).map((line, idx) => {
             const key = React.isValidElement(line) && line.key ? line.key : idx;
@@ -156,4 +198,3 @@ export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayPr
     </div>
   );
 }
-

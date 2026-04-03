@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 import { TerminalDisplay } from "@/components/features/TerminalDisplay";
 import type { TerminalCommand } from "@/data/terminalCommands";
 
-interface TerminalSectionProps {
+type TerminalSectionProps = Readonly<{
   terminalCommands: TerminalCommand[];
-}
+}>;
 
 export function TerminalSection({ terminalCommands }: TerminalSectionProps) {
   return (
@@ -53,4 +53,3 @@ export function TerminalSection({ terminalCommands }: TerminalSectionProps) {
     </section>
   );
 }
-

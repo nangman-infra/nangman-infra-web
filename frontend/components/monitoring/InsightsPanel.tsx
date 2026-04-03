@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Clock, Activity } from "lucide-react";
 import {
@@ -16,22 +16,174 @@ import type { MonitoringStatusResponse } from "@/lib/api";
 import { TOTAL_RACK_U, MAX_LOG_DISPLAY_COUNT } from "@/constants/monitoring";
 
 type InsightsData = NonNullable<MonitoringStatusResponse["data"]>["insights"];
+type TrafficHistoryEntry = InsightsData["network"]["traffic"]["history"][number];
+type InsightsLogEntry = InsightsData["logs"][number];
+type UpsInsights = InsightsData["ups"];
+type ChartDatum = TrafficHistoryEntry & { outboundNeg: number };
+
+interface TrafficTooltipItem {
+  dataKey?: string | number;
+  value?: string | number;
+  payload: ChartDatum;
+}
+
+type TrafficTooltipProps = Readonly<{
+  active?: boolean;
+  payload?: TrafficTooltipItem[];
+}>;
 
 interface InsightsPanelProps {
   index: number;
   data: InsightsData | null;
 }
 
+type TrafficSectionProps = Readonly<{
+  data: InsightsData | null;
+  chartData: ChartDatum[];
+  yDomain: [number, number];
+}>;
+
+type SystemResourcesSectionProps = Readonly<{
+  data: InsightsData | null;
+}>;
+
+type LogSectionProps = Readonly<{
+  logs: InsightsLogEntry[];
+  ups?: UpsInsights;
+}>;
+
 const MIN_CHART_DATA_POINTS = 2;
 const MIN_CHART_SCALE_MBPS = 1;
 const CHART_SCALE_MULTIPLIER = 1.2;
+const RACK_UNIT_LABELS = Array.from(
+  { length: TOTAL_RACK_U },
+  (_, index) => TOTAL_RACK_U - index,
+);
+
+function renderTrafficTooltipContent(props: unknown): ReactNode {
+  const { active, payload } = (props ?? {}) as TrafficTooltipProps;
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const inbound = payload.find((item) => item.dataKey === "inbound")?.value;
+  const outbound = payload.find((item) => item.dataKey === "outboundNeg")?.value;
+  const timestamp = payload[0]?.payload?.timestamp;
+
+  return (
+    <div className="bg-[#0d0d0f]/90 border border-white/10 p-4 rounded-xl font-mono shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-white/5">
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+        <Clock className="w-3 h-3 text-white/40" />
+        <span className="text-[10px] text-white/60 tracking-tighter uppercase">
+          {timestamp}
+        </span>
+      </div>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-12">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+            <div className="flex flex-col">
+              <span className="text-[8px] text-white/30 leading-none uppercase mb-1">
+                Inbound
+              </span>
+              <span className="text-xs text-white/90 font-bold leading-none">
+                TRAFFIC_IN
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-sm font-black text-primary italic leading-none">
+              {inbound}
+            </span>
+            <span className="text-[9px] text-primary/40 font-bold ml-1 uppercase">
+              Mbps
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-12">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+            <div className="flex flex-col">
+              <span className="text-[8px] text-white/30 leading-none uppercase mb-1">
+                Outbound
+              </span>
+              <span className="text-xs text-white/90 font-bold leading-none">
+                TRAFFIC_OUT
+              </span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-sm font-black text-blue-400 italic leading-none">
+              {Math.abs(Number(outbound ?? 0))}
+            </span>
+            <span className="text-[9px] text-blue-400/40 font-bold ml-1 uppercase">
+              Mbps
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getLogLevelColor(level: string): string {
+  switch (level) {
+    case "WARN":
+      return "text-yellow-400";
+    case "ALERT":
+      return "text-red-400";
+    case "SUCCESS":
+      return "text-green-400";
+    case "PROBE":
+      return "text-primary";
+    default:
+      return "text-blue-400";
+  }
+}
+
+function formatRuntime(seconds: number | null): string {
+  if (!seconds) {
+    return "N/A";
+  }
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
+function getUpsStatusColor(status: string): string {
+  switch (status) {
+    case "ONLINE":
+    case "CHARGING":
+      return "text-green-400";
+    case "ONBATT":
+      return "text-yellow-400";
+    case "LOWBATT":
+      return "text-red-400";
+    default:
+      return "text-white/60";
+  }
+}
+
+function getUpsStatusIcon(status: string): string {
+  switch (status) {
+    case "ONLINE":
+    case "CHARGING":
+      return "●";
+    case "ONBATT":
+      return "◐";
+    case "LOWBATT":
+      return "◯";
+    default:
+      return "○";
+  }
+}
 
 /**
  * 인사이트 패널 컴포넌트
  * 가이드라인: 단일 책임 원칙에 따라 인사이트 표시만 담당
  */
-export const InsightsPanel = memo<InsightsPanelProps>(({ index, data }) => {
-  const chartData = useMemo(() => {
+export const InsightsPanel = memo<Readonly<InsightsPanelProps>>(({ index, data }) => {
+  const chartData = useMemo<ChartDatum[]>(() => {
     if (!data) return [];
     return data.network.traffic.history.map((h) => ({
       ...h,
@@ -90,15 +242,15 @@ export const InsightsPanel = memo<InsightsPanelProps>(({ index, data }) => {
         <div className="relative flex bg-black rounded-xl overflow-hidden border-2 border-white/5 ring-1 ring-white/10 shadow-inner h-full min-h-[1008px]">
           {/* 42U 눈금 (랙과 동일하게 유지) */}
           <div className="w-10 flex flex-col border-r border-white/10 bg-[#080809] shrink-0">
-            {Array.from({ length: TOTAL_RACK_U }).map((_, i) => (
+            {RACK_UNIT_LABELS.map((unit) => (
               <div
-                key={i}
+                key={`left-unit-${unit}`}
                 className="h-6 flex items-center justify-center border-b border-white/3"
               >
                 <span
-                  className={`text-[9px] font-bold font-mono leading-none ${(TOTAL_RACK_U - i) % 5 === 0 ? "text-white/40" : "text-white/10"}`}
+                  className={`text-[9px] font-bold font-mono leading-none ${unit % 5 === 0 ? "text-white/40" : "text-white/10"}`}
                 >
-                  {TOTAL_RACK_U - i}
+                  {unit}
                 </span>
               </div>
             ))}
@@ -117,9 +269,9 @@ export const InsightsPanel = memo<InsightsPanelProps>(({ index, data }) => {
           </div>
 
           <div className="w-4 flex flex-col border-l border-white/10 bg-[#080809] shrink-0">
-            {Array.from({ length: TOTAL_RACK_U }).map((_, i) => (
+            {RACK_UNIT_LABELS.map((unit) => (
               <div
-                key={i}
+                key={`right-unit-${unit}`}
                 className="h-6 flex items-center justify-center border-b border-white/3"
               >
                 <div className="w-1 h-1 rounded-full bg-white/5 shadow-inner" />
@@ -155,11 +307,7 @@ function TrafficSection({
   data,
   chartData,
   yDomain,
-}: {
-  data: InsightsData | null;
-  chartData: Array<{ timestamp: string; inbound: number; outbound: number; outboundNeg: number }>;
-  yDomain: [number, number];
-}) {
+}: TrafficSectionProps) {
   return (
     <div className="flex flex-col gap-4 2xl:col-span-2">
       <div className="flex justify-between items-center border-b border-white/10 pb-2">
@@ -234,72 +382,7 @@ function TrafficSection({
                     stroke: "rgba(255,255,255,0.2)",
                     strokeWidth: 1,
                   }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const inbound = payload.find(
-                        (p) => p.dataKey === "inbound",
-                      )?.value;
-                      const outbound = payload.find(
-                        (p) => p.dataKey === "outboundNeg",
-                      )?.value;
-
-                      return (
-                        <div className="bg-[#0d0d0f]/90 border border-white/10 p-4 rounded-xl font-mono shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-white/5">
-                          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
-                            <Clock className="w-3 h-3 text-white/40" />
-                            <span className="text-[10px] text-white/60 tracking-tighter uppercase">
-                              {payload[0].payload.timestamp}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between gap-12">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                                <div className="flex flex-col">
-                                  <span className="text-[8px] text-white/30 leading-none uppercase mb-1">
-                                    Inbound
-                                  </span>
-                                  <span className="text-xs text-white/90 font-bold leading-none">
-                                    TRAFFIC_IN
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-sm font-black text-primary italic leading-none">
-                                  {inbound}
-                                </span>
-                                <span className="text-[9px] text-primary/40 font-bold ml-1 uppercase">
-                                  Mbps
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between gap-12">
-                              <div className="flex items-center gap-2.5">
-                                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                <div className="flex flex-col">
-                                  <span className="text-[8px] text-white/30 leading-none uppercase mb-1">
-                                    Outbound
-                                  </span>
-                                  <span className="text-xs text-white/90 font-bold leading-none">
-                                    TRAFFIC_OUT
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-sm font-black text-blue-400 italic leading-none">
-                                  {Math.abs(outbound as number)}
-                                </span>
-                                <span className="text-[9px] text-blue-400/40 font-bold ml-1 uppercase">
-                                  Mbps
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
+                  content={renderTrafficTooltipContent}
                 />
                 <Area
                   type="monotone"
@@ -406,9 +489,11 @@ function TrafficSection({
 // System Resources Section 서브 컴포넌트
 function SystemResourcesSection({
   data,
-}: {
-  data: InsightsData | null;
-}) {
+}: SystemResourcesSectionProps) {
+  const loadText = data
+    ? data.system.load.map((load) => load.toFixed(2)).join(" / ")
+    : "0.00 / 0.00 / 0.00";
+
   return (
     <div className="flex flex-col gap-8">
       {/* System Resource Cluster */}
@@ -419,11 +504,7 @@ function SystemResourcesSection({
           </span>
           <div className="flex items-center gap-2 font-mono text-[9px]">
             <span className="text-white/20">LOAD:</span>
-            <span className="text-primary font-bold">
-              {data?.system.load
-                .map((l: number) => l.toFixed(2))
-                .join(" / ") || "0.00 / 0.00 / 0.00"}
-            </span>
+            <span className="text-primary font-bold">{loadText}</span>
           </div>
         </div>
 
@@ -549,65 +630,7 @@ function SystemResourcesSection({
 function LogSection({
   logs,
   ups,
-}: {
-  logs: Array<{
-    timestamp: string;
-    level: string;
-    source: string;
-    message: string;
-  }>;
-  ups?: InsightsData['ups'];
-}) {
-  const getLogLevelColor = (level: string) => {
-    switch (level) {
-      case "WARN":
-        return "text-yellow-400";
-      case "ALERT":
-        return "text-red-400";
-      case "SUCCESS":
-        return "text-green-400";
-      case "PROBE":
-        return "text-primary";
-      default:
-        return "text-blue-400";
-    }
-  };
-
-  const formatRuntime = (seconds: number | null): string => {
-    if (!seconds) return "N/A";
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}m ${secs}s`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ONLINE":
-      case "CHARGING":
-        return "text-green-400";
-      case "ONBATT":
-        return "text-yellow-400";
-      case "LOWBATT":
-        return "text-red-400";
-      default:
-        return "text-white/60";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "ONLINE":
-      case "CHARGING":
-        return "●";
-      case "ONBATT":
-        return "◐";
-      case "LOWBATT":
-        return "◯";
-      default:
-        return "○";
-    }
-  };
-
+}: LogSectionProps) {
   return (
     <div className="flex flex-col gap-4 2xl:col-span-3 mt-4">
       <div className="flex justify-between items-center border-b border-white/10 pb-2">
@@ -620,14 +643,14 @@ function LogSection({
         {ups && (
           <div className="mb-4 pb-3 border-b border-white/10">
             <div className="flex items-center gap-2 mb-3">
-              <span className={`text-[10px] font-bold ${getStatusColor(ups.status)}`}>
-                {getStatusIcon(ups.status)}
+              <span className={`text-[10px] font-bold ${getUpsStatusColor(ups.status)}`}>
+                {getUpsStatusIcon(ups.status)}
               </span>
               <span className="text-[10px] font-black text-white/80 tracking-wider uppercase">
                 UPS STATUS
               </span>
               <span className="flex-1 border-t border-white/10"></span>
-              <span className={`text-[10px] font-bold ${getStatusColor(ups.status)}`}>
+              <span className={`text-[10px] font-bold ${getUpsStatusColor(ups.status)}`}>
                 {ups.status}
                 {ups.status === "CHARGING" && (
                   <span className="text-blue-400 ml-1">+ CHARGING</span>
@@ -706,9 +729,9 @@ function LogSection({
 
         {/* System Logs */}
         {logs.length > 0 ? (
-          logs.map((log, idx) => (
+          logs.map((log) => (
             <div
-              key={`${log.timestamp}-${idx}`}
+              key={`${log.timestamp}-${log.source}-${log.level}-${log.message}`}
               className="flex gap-3 mb-2 animate-in fade-in slide-in-from-left-2 duration-300"
             >
               <span className="text-white/20 shrink-0">
@@ -730,4 +753,3 @@ function LogSection({
     </div>
   );
 }
-

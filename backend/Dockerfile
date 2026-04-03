@@ -48,8 +48,6 @@ RUN pnpm install --prod --frozen-lockfile
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-RUN chown -R app:app /app
-
 # Expose port
 EXPOSE 3333
 

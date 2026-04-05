@@ -14,6 +14,15 @@ interface Project {
 
 const projects: Project[] = [
   {
+    id: "touch-browser",
+    name: "touch-browser",
+    description:
+      "웹 페이지를 AI 에이전트가 인용 가능한 구조화된 증거로 읽을 수 있도록 바꾸는 evidence-first 브라우징 도구입니다. read-view, compact-view, extract, session synthesis를 제공합니다.",
+    status: "live",
+    version: "pilot-ready",
+    url: "https://github.com/nangman-infra/touch-browser",
+  },
+  {
     id: "netlab",
     name: "Netlab",
     description: "네트워크 구축과 통신 작업을 도움주는 웹 애플리케이션",

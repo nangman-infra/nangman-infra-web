@@ -10,14 +10,6 @@ export interface NoticeSeed {
 
 export const noticeSeeds: NoticeSeed[] = [
   {
-    id: 'touch-browser-20260405-launch',
-    title: 'touch-browser 프로젝트 공개',
-    content:
-      '웹 페이지를 AI 에이전트가 인용 가능한 구조화된 증거로 읽을 수 있도록 변환하는 touch-browser를 공개했습니다. read-view, compact-view, extract, session synthesis를 제공하며 공개 문서 벤치마크 5/5 성공과 cleaned DOM 기준 평균 11.58배 토큰 절감을 기록했습니다.',
-    date: '2026. 4. 5',
-    type: 'update',
-  },
-  {
     id: 'ops-20260301-goal',
     title: '2026 상반기 운영 목표',
     content:

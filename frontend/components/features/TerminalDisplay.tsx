@@ -55,11 +55,9 @@ function startOutputAnimation(
   lineCount: number,
   onLineVisible: (visibleLineCount: number) => void,
   onOutputComplete: () => void,
-  onCleared: () => void,
 ): () => void {
   let lineIndex = 0;
   let waitTimer: ReturnType<typeof setTimeout> | null = null;
-  let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
   const outputInterval = setInterval(() => {
     if (lineIndex < lineCount) {
@@ -71,7 +69,6 @@ function startOutputAnimation(
     clearInterval(outputInterval);
     waitTimer = setTimeout(() => {
       onOutputComplete();
-      clearTimer = setTimeout(onCleared, CLEAR_DELAY_MS);
     }, OUTPUT_COMPLETE_WAIT_MS);
   }, OUTPUT_LINE_DISPLAY_SPEED_MS);
 
@@ -79,9 +76,6 @@ function startOutputAnimation(
     clearInterval(outputInterval);
     if (waitTimer) {
       clearTimeout(waitTimer);
-    }
-    if (clearTimer) {
-      clearTimeout(clearTimer);
     }
   };
 }
@@ -127,19 +121,24 @@ export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayPr
           setVisibleLines(0);
           setTypedText("");
         },
-        () => {
-          setIsCleared(false);
-          if (currentCommandIndex < commands.length - 1) {
-            setCurrentCommandIndex(currentCommandIndex + 1);
-            setCurrentPhase("command");
-            return;
-          }
-
-          setCurrentCommandIndex(0);
-          setCurrentPhase("command");
-          onCycleComplete?.();
-        },
       );
+    }
+
+    if (currentPhase === "clearing") {
+      const clearTimer = setTimeout(() => {
+        setIsCleared(false);
+        if (currentCommandIndex < commands.length - 1) {
+          setCurrentCommandIndex(currentCommandIndex + 1);
+          setCurrentPhase("command");
+          return;
+        }
+
+        setCurrentCommandIndex(0);
+        setCurrentPhase("command");
+        onCycleComplete?.();
+      }, CLEAR_DELAY_MS);
+
+      return () => clearTimeout(clearTimer);
     }
   }, [currentPhase, currentCommand, showOutput, currentCommandIndex, commands.length, onCycleComplete]);
 

@@ -72,11 +72,18 @@ describe('GetAllBlogPostsUseCase', () => {
       if (rssUrl.includes('se-juno')) {
         return [
           {
-            title: '  Stateful &amp; Stateless  ',
-            content: '<p>Hello &amp; <strong>world</strong></p>',
+            title: '  Public IP &mdash; Reverse Proxy &amp; DNS  ',
+            content:
+              '<p>Nginx &middot; host routing &rarr; upstream</p>',
             link: 'https://example.com/new',
             isoDate: '2026-02-10T10:00:00.000Z',
-            categories: [' Infra ', 'Cloud', '', 'Ops', 'Extra'],
+            categories: [
+              ' Infra ',
+              'DNS &amp; Proxy',
+              '',
+              'Ops &middot; SRE',
+              'Extra',
+            ],
           },
         ];
       }
@@ -104,11 +111,16 @@ describe('GetAllBlogPostsUseCase', () => {
 
     expect(mockBlogFeedReader.read).toHaveBeenCalledTimes(blogSources.length);
     expect(result).toHaveLength(2);
-    expect(result[0].title).toBe('Stateful & Stateless');
+    expect(result[0].title).toBe('Public IP — Reverse Proxy & DNS');
     expect(result[0].link).toBe('https://example.com/new');
     expect(result[1].link).toBe('https://example.com/old');
-    expect(result[0].description).toBe('Hello & world');
-    expect(result[0].tags).toEqual(['Infra', 'Cloud', 'Ops', 'Extra']);
+    expect(result[0].description).toBe('Nginx · host routing → upstream');
+    expect(result[0].tags).toEqual([
+      'Infra',
+      'DNS & Proxy',
+      'Ops · SRE',
+      'Extra',
+    ]);
     expect(mockBlogCache.set).toHaveBeenCalledTimes(1);
     expect(mockBlogCache.set).toHaveBeenCalledWith(
       'all_blog_posts',

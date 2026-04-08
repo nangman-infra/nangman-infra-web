@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { decode } from 'he';
 import { BlogPost } from '../../domain/blog-post';
 import { BlogFeedItem } from '../../domain/blog-feed-item';
 import { MemberBlogConfig } from '../../domain/member-blog-config';
@@ -112,39 +113,7 @@ export class GetAllBlogPostsUseCase {
   }
 
   private decodeHtmlEntities(value: string): string {
-    return value.replaceAll(
-      /&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g,
-      (entity, token: string) => {
-        if (token.startsWith('#')) {
-          const isHex = token[1]?.toLowerCase() === 'x';
-          const numericPart = isHex ? token.slice(2) : token.slice(1);
-          const codePoint = Number.parseInt(numericPart, isHex ? 16 : 10);
-
-          if (!Number.isNaN(codePoint)) {
-            return String.fromCodePoint(codePoint);
-          }
-
-          return entity;
-        }
-
-        switch (token.toLowerCase()) {
-          case 'amp':
-            return '&';
-          case 'lt':
-            return '<';
-          case 'gt':
-            return '>';
-          case 'quot':
-            return '"';
-          case 'apos':
-            return "'";
-          case 'nbsp':
-            return ' ';
-          default:
-            return entity;
-        }
-      },
-    );
+    return decode(value, { isAttributeValue: false, strict: false });
   }
 
   private toIsoDate(value: unknown): string {
@@ -175,9 +144,8 @@ export class GetAllBlogPostsUseCase {
     }
 
     return value
-      .filter((item): item is string => typeof item === 'string')
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0)
+      .map((item) => this.toOptionalString(item))
+      .filter((item): item is string => item !== null)
       .slice(0, 4);
   }
 }

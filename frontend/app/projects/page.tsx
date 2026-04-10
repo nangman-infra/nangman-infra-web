@@ -14,6 +14,14 @@ interface Project {
 
 const projects: Project[] = [
   {
+    id: "when2work",
+    name: "When2Work",
+    description:
+      "링크 하나로 팀원의 가능한 시간을 모으고, 가장 많이 겹치는 시간대를 빠르게 찾을 수 있는 일정 조율 서비스입니다.",
+    status: "live",
+    url: "https://when2work.whitejbb.cloud",
+  },
+  {
     id: "touch-browser",
     name: "touch-browser",
     description:

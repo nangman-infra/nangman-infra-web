@@ -6,6 +6,12 @@ import { BlogSourceProviderPort } from '../../domain/ports/blog-source-provider.
 export class StaticBlogSourceProviderAdapter implements BlogSourceProviderPort {
   private readonly sources: MemberBlogConfig[] = [
     {
+      name: 'Seongwon',
+      rssUrl: 'https://judo0179.tistory.com/rss',
+      platform: 'tistory',
+      profileImage: '/profiles/seongwon.png',
+    },
+    {
       name: 'Juno',
       rssUrl: 'https://se-juno.tistory.com/rss',
       platform: 'tistory',

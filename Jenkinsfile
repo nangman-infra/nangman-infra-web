@@ -1,5 +1,11 @@
 import groovy.json.JsonOutput
 
+def HARBOR_CREDENTIALS_ID = 'ba149ba1-93b4-422d-8d89-45fb7787bb7f'
+def DEFAULT_SONARQUBE_INSTALLATION = 'sonarqube'
+def DEFAULT_SONAR_SCANNER_TOOL = 'SonarScanner'
+def DEFAULT_SONAR_PROJECT_KEY = 'nangman-web'
+def DEFAULT_SONAR_PROJECT_NAME = 'nangman-infra-web'
+
 pipeline {
     agent any
     
@@ -42,6 +48,7 @@ pipeline {
         // Harbor 레지스트리 설정
         HARBOR_REGISTRY = 'harbor.nangman.cloud'
         HARBOR_PROJECT = 'library'
+        HARBOR_CREDS_ID = "${HARBOR_CREDENTIALS_ID}"
         FRONTEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:latest"
         BACKEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:latest"
         
@@ -55,6 +62,12 @@ pipeline {
         
         // Mattermost 설정
         MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
+
+        // SonarQube 설정
+        SONARQUBE_INSTALLATION = "${DEFAULT_SONARQUBE_INSTALLATION}"
+        SONAR_SCANNER_TOOL = "${DEFAULT_SONAR_SCANNER_TOOL}"
+        SONAR_PROJECT_KEY = "${DEFAULT_SONAR_PROJECT_KEY}"
+        SONAR_PROJECT_NAME = "${DEFAULT_SONAR_PROJECT_NAME}"
         
         // Docker Buildx 설정
         DOCKER_BUILDKIT = '1'
@@ -232,9 +245,15 @@ pipeline {
                                 cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
                                 cd ..
                             '''
-                            def scannerHome = tool 'SonarScanner'
-                            withSonarQubeEnv('sonarqube') {
-                                sh "${scannerHome}/bin/sonar-scanner"
+                            echo "🔎 SonarQube project: ${env.SONAR_PROJECT_NAME} (${env.SONAR_PROJECT_KEY})"
+                            def scannerHome = tool env.SONAR_SCANNER_TOOL
+                            withSonarQubeEnv(env.SONARQUBE_INSTALLATION) {
+                                sh """
+                                    ${scannerHome}/bin/sonar-scanner \
+                                    -Dproject.settings=sonar-project.properties \
+                                    -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \
+                                    -Dsonar.projectName=${env.SONAR_PROJECT_NAME}
+                                """
                             }
                             timeout(time: 15, unit: 'MINUTES') {
                                 waitForQualityGate abortPipeline: false
@@ -263,7 +282,7 @@ pipeline {
                                 script {
                                     echo "🏗️ Building Frontend image (multi-architecture)"
                                     withCredentials([usernamePassword(
-                                        credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
+                                        credentialsId: env.HARBOR_CREDS_ID,
                                         usernameVariable: 'HARBOR_USERNAME',
                                         passwordVariable: 'HARBOR_PASSWORD'
                                     )]) {
@@ -289,7 +308,7 @@ pipeline {
                                 script {
                                     echo "🏗️ Building Backend image (multi-architecture)"
                                     withCredentials([usernamePassword(
-                                        credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
+                                        credentialsId: env.HARBOR_CREDS_ID,
                                         usernameVariable: 'HARBOR_USERNAME',
                                         passwordVariable: 'HARBOR_PASSWORD'
                                     )]) {
@@ -317,7 +336,7 @@ pipeline {
                         script {
                             echo "✅ Verifying multi-architecture manifests"
                             withCredentials([usernamePassword(
-                                credentialsId: 'ba149ba1-93b4-422d-8d89-45fb7787bb7f',
+                                credentialsId: env.HARBOR_CREDS_ID,
                                 usernameVariable: 'HARBOR_USERNAME',
                                 passwordVariable: 'HARBOR_PASSWORD'
                             )]) {
@@ -395,17 +414,5 @@ pipeline {
             }
         }
         
-        always {
-            script {
-                // 배포 파이프라인이 실행된 경우에만 정리
-                if (env.IS_DEPLOY_REQUEST == 'true') {
-                    echo "🧹 Cleaning up Docker resources (keeping cache)"
-                    sh '''
-                        # 빌드 캐시는 유지하고 불필요한 리소스만 정리
-                        docker buildx prune -f --filter until=24h || true
-                    '''
-                }
-            }
-        }
     }
 }

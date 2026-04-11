@@ -68,6 +68,11 @@ pipeline {
         SONAR_SCANNER_TOOL = "${DEFAULT_SONAR_SCANNER_TOOL}"
         SONAR_PROJECT_KEY = "${DEFAULT_SONAR_PROJECT_KEY}"
         SONAR_PROJECT_NAME = "${DEFAULT_SONAR_PROJECT_NAME}"
+
+        // 실패 알림 기본값
+        FAILURE_CATEGORY = 'build'
+        FAILURE_STAGE = 'Unknown'
+        FAILURE_REASON = '빌드 중 오류가 발생했습니다.'
         
         // Docker Buildx 설정
         DOCKER_BUILDKIT = '1'
@@ -240,6 +245,9 @@ pipeline {
                 stage('SonarQube Analysis') {
                     steps {
                         script {
+                            env.FAILURE_CATEGORY = 'sonar'
+                            env.FAILURE_STAGE = 'SonarQube Analysis'
+                            env.FAILURE_REASON = 'SonarQube 분석에 실패해 배포가 중단되었습니다.'
                             sh '''
                                 cd frontend && pnpm install --frozen-lockfile && pnpm test:cov || true
                                 cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
@@ -255,8 +263,15 @@ pipeline {
                                     -Dsonar.projectName=${env.SONAR_PROJECT_NAME}
                                 """
                             }
+                            def qualityGate
                             timeout(time: 15, unit: 'MINUTES') {
-                                waitForQualityGate abortPipeline: false
+                                qualityGate = waitForQualityGate abortPipeline: false
+                            }
+
+                            if (qualityGate?.status != 'OK') {
+                                env.FAILURE_STAGE = 'Quality Gate'
+                                env.FAILURE_REASON = 'SonarQube 품질 기준을 통과하지 못해 배포가 중단되었습니다.'
+                                error("Quality Gate failed: ${qualityGate?.status ?: 'UNKNOWN'}")
                             }
                         }
                     }
@@ -404,13 +419,17 @@ pipeline {
         failure {
             script {
                 echo "❌ Pipeline failed"
-                sh '''
-                    curl -X POST $MATTERMOST_WEBHOOK \
+                def failureHeadline = env.FAILURE_CATEGORY == 'sonar'
+                    ? "⚠️ **SonarQube 품질 검증 실패로 배포가 중단되었습니다.**"
+                    : "❌ **배포 실패**"
+                def payload = JsonOutput.toJson([
+                    text: "${failureHeadline}\n\n**Build:** #${env.BUILD_NUMBER}\n**Stage:** ${env.FAILURE_STAGE}\n**Error:** ${env.FAILURE_REASON}\n\n[로그 확인하기](${env.BUILD_URL})"
+                ])
+                sh """
+                    curl -X POST \$MATTERMOST_WEBHOOK \
                     -H 'Content-Type: application/json' \
-                    -d '{
-                        "text": "❌ **배포 실패**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Stage:** Unknown\\n**Error:** 빌드 중 오류가 발생했습니다.\\n\\n[로그 확인하기]('$BUILD_URL')"
-                    }'
-                '''
+                    -d '${payload}'
+                """
             }
         }
         

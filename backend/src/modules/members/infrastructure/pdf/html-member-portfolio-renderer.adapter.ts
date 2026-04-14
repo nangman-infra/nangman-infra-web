@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
 import { chromium, type Browser } from 'playwright-core';
 import { MemberProfile } from '../../domain/member-profile';
@@ -13,8 +14,90 @@ interface FontDataUrls {
 }
 
 const BROWSER_PATH_ENV = 'MEMBER_PDF_BROWSER_PATH';
+const BROWSER_RUNTIME_DIR_ENV = 'MEMBER_PDF_BROWSER_RUNTIME_DIR';
 const FRONTEND_URL_ENV = 'FRONTEND_URL';
 const LOCAL_FRONTEND_URL = 'http://localhost:3002';
+const DEFAULT_BROWSER_RUNTIME_DIR = join(
+  tmpdir(),
+  'nangman-member-pdf-browser',
+);
+const BROWSER_CACHE_DIR_NAME = 'cache';
+const BROWSER_CONFIG_DIR_NAME = 'config';
+const BROWSER_DATA_DIR_NAME = 'data';
+const CHROMIUM_LAUNCH_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+  '--disable-features=Vulkan',
+  '--disable-crash-reporter',
+  '--disable-crashpad',
+] as const;
+
+function toStringEnvMap(env: NodeJS.ProcessEnv): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(env).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ),
+  );
+}
+
+export function getChromiumLaunchArgs(): string[] {
+  return [...CHROMIUM_LAUNCH_ARGS];
+}
+
+export async function buildBrowserRuntimeEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<Record<string, string>> {
+  const runtimeDir =
+    env[BROWSER_RUNTIME_DIR_ENV]?.trim() || DEFAULT_BROWSER_RUNTIME_DIR;
+  const cacheDir = join(runtimeDir, BROWSER_CACHE_DIR_NAME);
+  const configDir = join(runtimeDir, BROWSER_CONFIG_DIR_NAME);
+  const dataDir = join(runtimeDir, BROWSER_DATA_DIR_NAME);
+
+  await Promise.all([
+    mkdir(runtimeDir, { recursive: true }),
+    mkdir(cacheDir, { recursive: true }),
+    mkdir(configDir, { recursive: true }),
+    mkdir(dataDir, { recursive: true }),
+  ]);
+
+  return {
+    ...toStringEnvMap(env),
+    HOME: runtimeDir,
+    XDG_CACHE_HOME: cacheDir,
+    XDG_CONFIG_HOME: configDir,
+    XDG_DATA_HOME: dataDir,
+  };
+}
+
+export function summarizeBrowserLaunchErrorMessage(message: string): string {
+  if (message.includes('chrome_crashpad_handler: --database is required')) {
+    return 'Chromium 실행 환경 디렉터리를 초기화하지 못해 PDF 생성에 실패했습니다.';
+  }
+
+  if (message.includes('Target page, context or browser has been closed')) {
+    return 'Chromium 브라우저 프로세스가 시작 직후 종료되어 PDF 생성에 실패했습니다.';
+  }
+
+  return message;
+}
+
+function buildBrowserLaunchLogDetail(message: string): string {
+  const relevantLines = message
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.length > 0 &&
+        (line.includes('chrome_crashpad_handler') ||
+          line.includes('Connection reset by peer') ||
+          line.startsWith('browserType.launch:') ||
+          line.startsWith('Call log:')),
+    );
+
+  return relevantLines.slice(0, 6).join(' | ');
+}
 
 @Injectable()
 export class HtmlMemberPortfolioRendererAdapter
@@ -143,19 +226,16 @@ export class HtmlMemberPortfolioRendererAdapter
   }
 
   private async getBrowser(executablePath: string): Promise<Browser> {
-    this.browserPromise ??= chromium
-      .launch({
-        executablePath,
-        headless: true,
-        ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--disable-features=Vulkan',
-        ],
-      })
+    this.browserPromise ??= buildBrowserRuntimeEnv()
+      .then((launchEnv) =>
+        chromium.launch({
+          executablePath,
+          headless: true,
+          ignoreDefaultArgs: ['--enable-unsafe-swiftshader'],
+          env: launchEnv,
+          args: getChromiumLaunchArgs(),
+        }),
+      )
       .then((browser) => {
         browser.on('disconnected', () => {
           this.browserPromise = null;
@@ -164,7 +244,21 @@ export class HtmlMemberPortfolioRendererAdapter
       })
       .catch((error) => {
         this.browserPromise = null;
-        throw error;
+
+        const rawMessage =
+          error instanceof Error
+            ? error.message
+            : 'Chromium 브라우저 실행 중 알 수 없는 오류가 발생했습니다.';
+        const summarizedMessage = summarizeBrowserLaunchErrorMessage(rawMessage);
+        const detail = buildBrowserLaunchLogDetail(rawMessage);
+
+        this.logger.error('Failed to launch Chromium for member portfolio PDF', {
+          executablePath,
+          error: summarizedMessage,
+          detail,
+        });
+
+        throw new Error(summarizedMessage);
       });
 
     return this.browserPromise;

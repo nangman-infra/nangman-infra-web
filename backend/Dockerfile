@@ -35,7 +35,8 @@ RUN apt-get update && \
       iputils-ping \
       nut-client && \
     groupadd --system app && \
-    useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app && \
+    useradd --system --create-home --home-dir /home/app --gid app --shell /usr/sbin/nologin app && \
+    install -d -o app -g app /home/app/.cache /home/app/.config /home/app/.local/share && \
     rm -rf /var/lib/apt/lists/* && \
     corepack enable && corepack prepare pnpm@10.24.0 --activate
 
@@ -50,6 +51,8 @@ COPY --from=builder /app/dist ./dist
 
 # Expose port
 EXPOSE 3333
+
+ENV HOME=/home/app
 
 USER app
 

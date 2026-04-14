@@ -1,422 +1,200 @@
 import groovy.json.JsonOutput
 
-def HARBOR_CREDENTIALS_ID = 'ba149ba1-93b4-422d-8d89-45fb7787bb7f'
 def DEFAULT_SONARQUBE_INSTALLATION = 'sonarqube'
 def DEFAULT_SONAR_SCANNER_TOOL = 'SonarScanner'
 def DEFAULT_SONAR_PROJECT_KEY = 'nangman-web'
 def DEFAULT_SONAR_PROJECT_NAME = 'nangman-infra-web'
+def GITHUB_WEBHOOK_TRIGGER_TOKEN_CREDENTIAL_ID = 'GITHUB_WEBHOOK_TRIGGER_TOKEN'
+def EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID = 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN'
 
 pipeline {
     agent any
-    
-    parameters {
-        booleanParam(
-            name: 'IS_DEPLOY_REQUEST', 
-            defaultValue: false, 
-            description: '매터모스트 버튼 클릭 시 true'
-        )
-    }
-    
+
     triggers {
-        // GitHub Push와 Mattermost 버튼이 같은 Generic Webhook Trigger 엔드포인트를 사용합니다.
-        // Declarative pipeline에서는 동일한 GenericTrigger를 중복 선언할 수 없어서
-        // 실제 트리거 토큰은 하나로 유지하고, 외부 앱 액션도 같은 토큰으로 Jenkins를 호출합니다.
         GenericTrigger(
             genericVariables: [
                 [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
                 [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: 'NO_REPO'],
-                [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
+                [key: 'GIT_SHA', value: '$.after', defaultValue: '']
             ],
-            tokenCredentialId: 'GITHUB_WEBHOOK_TRIGGER_TOKEN',
-            causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
-            regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            regexpFilterExpression: 'true.*|false NO_REPO|.*nangman-infra-web.*',
+            tokenCredentialId: GITHUB_WEBHOOK_TRIGGER_TOKEN_CREDENTIAL_ID,
+            causeString: 'GitHub webhook 이벤트 발생',
+            regexpFilterText: '$GIT_REF $REPO_URL',
+            regexpFilterExpression: 'refs/heads/main .*nangman-infra-web.*',
             printContributedVariables: true,
             printPostContent: true
         )
     }
-    
+
     environment {
-        // Harbor 레지스트리 설정
-        HARBOR_REGISTRY = 'harbor.nangman.cloud'
-        HARBOR_PROJECT = 'library'
-        HARBOR_CREDS_ID = "${HARBOR_CREDENTIALS_ID}"
-        FRONTEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:latest"
-        BACKEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:latest"
-        
-        // 빌드 캐시 이미지 (레지스트리 캐시 사용)
-        FRONTEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:buildcache"
-        BACKEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:buildcache"
-        
-        // Watchtower 설정
-        WATCHTOWER_URL = 'http://172.16.0.25:8080'
-        WATCHTOWER_TOKEN = credentials('2eb5ae85-6341-4cae-834e-20a5382e1f34')
-        
-        // Mattermost 설정
         MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
 
-        // SonarQube 설정
         SONARQUBE_INSTALLATION = "${DEFAULT_SONARQUBE_INSTALLATION}"
         SONAR_SCANNER_TOOL = "${DEFAULT_SONAR_SCANNER_TOOL}"
         SONAR_PROJECT_KEY = "${DEFAULT_SONAR_PROJECT_KEY}"
         SONAR_PROJECT_NAME = "${DEFAULT_SONAR_PROJECT_NAME}"
 
-        // 실패 알림 기본값
-        FAILURE_CATEGORY = 'build'
         FAILURE_STAGE = 'Unknown'
-        FAILURE_REASON = '빌드 중 오류가 발생했습니다.'
-        
-        // Docker Buildx 설정
-        DOCKER_BUILDKIT = '1'
-        DOCKER_CLI_EXPERIMENTAL = 'enabled'
-        
-        // 멀티 아키텍처 플랫폼
-        PLATFORMS = 'linux/amd64,linux/arm64'
+        FAILURE_REASON = '검증 중 오류가 발생했습니다.'
     }
-    
+
     options {
-        // 빌드 이력 보관
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        
-        // 타임아웃 설정 (30분)
         timeout(time: 30, unit: 'MINUTES')
-        
-        // 타임스탬프 추가
         timestamps()
-        
-        // ANSI 컬러 출력
         ansiColor('xterm')
     }
-    
+
     stages {
-        stage('Distinguish Event') {
+        stage('Checkout') {
             steps {
                 script {
-                    // 디버깅용 로그
-                    echo "🔍 트리거 분석: GIT_REF=${env.GIT_REF}, IS_DEPLOY_REQUEST=${env.IS_DEPLOY_REQUEST}"
+                    echo "🔍 GitHub webhook 수신: ref=${env.GIT_REF}, sha=${env.GIT_SHA}"
+
+                    checkout scm
+
+                    if (env.GIT_SHA?.trim()) {
+                        sh """
+                            git fetch --all --tags --prune
+                            git checkout ${env.GIT_SHA}
+                        """
+                    }
+
+                    env.SOURCE_BRANCH = env.GIT_REF?.replaceFirst('^refs/heads/', '') ?: 'main'
+                    env.RESOLVED_COMMIT_SHA = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                    env.RESOLVED_COMMIT_SHORT = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    currentBuild.description = "검증 ${env.RESOLVED_COMMIT_SHORT}"
                 }
             }
         }
-        
-        // =========================================================
-        // [경로 1] Push 감지 (GIT_REF가 있고, 배포 요청이 아닐 때)
-        // =========================================================
-        stage('Notify Approval Request') {
-            when {
-                allOf {
-                    expression { return env.GIT_REF != '' && env.GIT_REF != null }
-                    expression { return env.IS_DEPLOY_REQUEST == 'false' }
-                }
-            }
+
+        stage('Validation Start Notification') {
             steps {
                 script {
-                    echo "📣 GitHub Push 감지됨! 승인 요청 보냅니다."
-                    
-                    def branch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'unknown'
-                    def jobName = env.JOB_NAME ?: 'nangman-infra'
-                    def buildNumber = env.BUILD_NUMBER
-                    def buildUrl = env.BUILD_URL
-                    
+                    def payload = JsonOutput.toJson([
+                        text: "🔎 **검증 시작**\n\n**Branch:** ${env.SOURCE_BRANCH}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT}`\n**Build:** #${env.BUILD_NUMBER}\n\nSonarQube 검증을 시작합니다.\n[빌드 확인](${env.BUILD_URL})"
+                    ])
+
+                    sh """
+                        curl -X POST \$MATTERMOST_WEBHOOK \
+                        -H 'Content-Type: application/json' \
+                        -d '${payload}'
+                    """
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    env.FAILURE_STAGE = 'SonarQube Analysis'
+                    env.FAILURE_REASON = 'SonarQube 분석에 실패해 배포 승인 요청을 보내지 못했습니다.'
+
+                    sh '''
+                        cd frontend && pnpm install --frozen-lockfile && pnpm test:cov || true
+                        cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
+                        cd ..
+                    '''
+
+                    echo "🔎 SonarQube project: ${env.SONAR_PROJECT_NAME} (${env.SONAR_PROJECT_KEY})"
+                    def scannerHome = tool env.SONAR_SCANNER_TOOL
+
+                    withSonarQubeEnv(env.SONARQUBE_INSTALLATION) {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dproject.settings=sonar-project.properties \
+                            -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \
+                            -Dsonar.projectName=${env.SONAR_PROJECT_NAME} \
+                            -Dsonar.scm.revision=${env.RESOLVED_COMMIT_SHA}
+                        """
+                    }
+
+                    def qualityGate
+                    timeout(time: 15, unit: 'MINUTES') {
+                        qualityGate = waitForQualityGate abortPipeline: false
+                    }
+
+                    if (qualityGate?.status != 'OK') {
+                        env.FAILURE_STAGE = 'Quality Gate'
+                        env.FAILURE_REASON = "SonarQube 품질 기준을 통과하지 못했습니다. status=${qualityGate?.status ?: 'UNKNOWN'}"
+                        error("Quality Gate failed: ${qualityGate?.status ?: 'UNKNOWN'}")
+                    }
+                }
+            }
+        }
+
+        stage('Request Deployment Approval') {
+            steps {
+                script {
+                    def sonarUrl = "https://sonarqube.nangman.cloud/dashboard?id=${env.SONAR_PROJECT_KEY}"
+
                     withCredentials([
-                        string(credentialsId: 'GITHUB_WEBHOOK_TRIGGER_TOKEN', variable: 'WEBHOOK_TOKEN')
+                        string(credentialsId: EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID, variable: 'APP_TRIGGER_TOKEN')
                     ]) {
-                        // Jenkins Generic Webhook Trigger URL
-                        def jenkinsWebhookUrl = "https://jenkins.nangman.cloud/generic-webhook-trigger/invoke?token=${WEBHOOK_TOKEN}"
-                        
-                        // Mattermost로 버튼 달린 메시지 전송
+                        def deployWebhookUrl = "https://jenkins.nangman.cloud/generic-webhook-trigger/invoke?token=${APP_TRIGGER_TOKEN}"
                         def payload = JsonOutput.toJson([
-                            text: "🚀 **배포 승인 요청**\n\n**Repository:** ${jobName}\n**Branch:** ${branch}\n**Build:** #${buildNumber}\n**Trigger:** Push 감지\n\n배포를 진행하시겠습니까?",
+                            text: "✅ **검증 완료**\n\n**Branch:** ${env.SOURCE_BRANCH}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT}`\n**Build:** #${env.BUILD_NUMBER}\n**Sonar:** 통과\n\n배포를 진행하시겠습니까?\n[빌드 확인](${env.BUILD_URL}) | [SonarQube](${sonarUrl})",
                             attachments: [[
-                                color: "#FFA500",
+                                color: "#2D9CDB",
                                 actions: [
                                     [
                                         name: "🚀 배포 시작",
                                         integration: [
-                                            url: jenkinsWebhookUrl,
+                                            url: deployWebhookUrl,
                                             context: [
-                                                is_deploy: "true",
-                                                job_name: "${jobName}",
-                                                build_number: "${buildNumber}",
-                                                branch: "${branch}"
+                                                action: "deploy",
+                                                commit_sha: "${env.RESOLVED_COMMIT_SHA}",
+                                                commit_short: "${env.RESOLVED_COMMIT_SHORT}",
+                                                branch: "${env.SOURCE_BRANCH}",
+                                                validation_build_number: "${env.BUILD_NUMBER}",
+                                                validation_build_url: "${env.BUILD_URL}",
+                                                validation_job_name: "${env.JOB_NAME}"
                                             ]
                                         ]
                                     ],
                                     [
                                         name: "❌ 배포 취소",
                                         integration: [
-                                            url: jenkinsWebhookUrl,
+                                            url: deployWebhookUrl,
                                             context: [
-                                                is_deploy: "false",
-                                                job_name: "${jobName}",
-                                                build_number: "${buildNumber}",
-                                                branch: "${branch}"
+                                                action: "cancel",
+                                                commit_sha: "${env.RESOLVED_COMMIT_SHA}",
+                                                commit_short: "${env.RESOLVED_COMMIT_SHORT}",
+                                                branch: "${env.SOURCE_BRANCH}",
+                                                validation_build_number: "${env.BUILD_NUMBER}",
+                                                validation_build_url: "${env.BUILD_URL}",
+                                                validation_job_name: "${env.JOB_NAME}"
                                             ]
                                         ]
                                     ]
                                 ]
                             ]]
                         ])
-                        
+
                         sh """
                             curl -X POST \$MATTERMOST_WEBHOOK \
                             -H 'Content-Type: application/json' \
                             -d '${payload}'
                         """
                     }
-                    
-                    echo "✅ Mattermost 알림 전송 완료. 버튼 클릭 대기 중..."
-                    currentBuild.result = 'SUCCESS'
-                    currentBuild.description = "배포 승인 대기 중"
-                }
-            }
-        }
-        
-        // =========================================================
-        // [경로 3] 배포 취소 버튼 클릭 (IS_DEPLOY_REQUEST가 false일 때)
-        // =========================================================
-        stage('Deploy Cancelled') {
-            when {
-                allOf {
-                    // Push가 아니고(GIT_REF 없음) && 배포 요청이 'false'일 때
-                    expression { return env.GIT_REF == '' || env.GIT_REF == null }
-                    expression { return env.IS_DEPLOY_REQUEST == 'false' }
-                }
-            }
-            steps {
-                script {
-                    echo "❌ 사용자가 배포를 취소했습니다."
-                    
-                    // 1. 매터모스트 메시지 수정 (버튼 없애기 위해)
-                    sh '''
-                        curl -X POST $MATTERMOST_WEBHOOK \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "text": "❌ **배포 취소**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Status:** 사용자가 배포를 취소했습니다."
-                        }'
-                    '''
-                    
-                    // 2. 빌드 상태를 'ABORTED(취소됨)'로 설정
-                    currentBuild.result = 'ABORTED'
-                    currentBuild.description = "사용자에 의해 취소됨"
-                }
-            }
-        }
-        
-        // =========================================================
-        // [경로 2] 버튼 클릭 감지 (IS_DEPLOY_REQUEST가 true일 때)
-        // =========================================================
-        stage('Deploy Pipeline') {
-            when {
-                expression { return env.IS_DEPLOY_REQUEST == 'true' }
-            }
-            stages {
-                stage('Deploy Start Notification') {
-                    steps {
-                        script {
-                            echo "🚀 배포 버튼 클릭됨! 배포 시작."
-                            sh '''
-                                curl -X POST $MATTERMOST_WEBHOOK \
-                                -H 'Content-Type: application/json' \
-                                -d '{
-                                    "text": "✅ **배포 시작**\\n\\n**Build:** #'$BUILD_NUMBER'\\n**Status:** 빌드를 시작합니다..."
-                                }'
-                            '''
-                        }
-                    }
-                }
-                
-                stage('Checkout') {
-                    steps {
-                        script {
-                            echo "📦 Checking out code from ${env.GIT_BRANCH}"
-                            checkout scm
-                        }
-                    }
-                }
-                
-                stage('SonarQube Analysis') {
-                    steps {
-                        script {
-                            env.FAILURE_CATEGORY = 'sonar'
-                            env.FAILURE_STAGE = 'SonarQube Analysis'
-                            env.FAILURE_REASON = 'SonarQube 분석에 실패해 배포가 중단되었습니다.'
-                            sh '''
-                                cd frontend && pnpm install --frozen-lockfile && pnpm test:cov || true
-                                cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
-                                cd ..
-                            '''
-                            echo "🔎 SonarQube project: ${env.SONAR_PROJECT_NAME} (${env.SONAR_PROJECT_KEY})"
-                            def scannerHome = tool env.SONAR_SCANNER_TOOL
-                            withSonarQubeEnv(env.SONARQUBE_INSTALLATION) {
-                                sh """
-                                    ${scannerHome}/bin/sonar-scanner \
-                                    -Dproject.settings=sonar-project.properties \
-                                    -Dsonar.projectKey=${env.SONAR_PROJECT_KEY} \
-                                    -Dsonar.projectName=${env.SONAR_PROJECT_NAME}
-                                """
-                            }
-                            def qualityGate
-                            timeout(time: 15, unit: 'MINUTES') {
-                                qualityGate = waitForQualityGate abortPipeline: false
-                            }
-
-                            if (qualityGate?.status != 'OK') {
-                                env.FAILURE_STAGE = 'Quality Gate'
-                                env.FAILURE_REASON = 'SonarQube 품질 기준을 통과하지 못해 배포가 중단되었습니다.'
-                                error("Quality Gate failed: ${qualityGate?.status ?: 'UNKNOWN'}")
-                            }
-                        }
-                    }
-                }
-
-                stage('Setup Buildx') {
-                    steps {
-                        script {
-                            echo "🔧 Setting up Docker Buildx for multi-platform builds"
-                            sh '''
-                                docker buildx version
-                                docker buildx inspect --bootstrap || docker buildx create --use --name multiarch-builder --platform linux/amd64,linux/arm64
-                                docker buildx use multiarch-builder
-                            '''
-                        }
-                    }
-                }
-                
-                stage('Build Images') {
-                    parallel {
-                        stage('Build Frontend') {
-                            steps {
-                                script {
-                                    echo "🏗️ Building Frontend image (multi-architecture)"
-                                    withCredentials([usernamePassword(
-                                        credentialsId: env.HARBOR_CREDS_ID,
-                                        usernameVariable: 'HARBOR_USERNAME',
-                                        passwordVariable: 'HARBOR_PASSWORD'
-                                    )]) {
-                                        sh '''
-                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
-                                            
-                                            docker buildx build \
-                                                --platform $PLATFORMS \
-                                                --tag $FRONTEND_IMAGE \
-                                                --cache-from type=registry,ref=$FRONTEND_CACHE \
-                                                --cache-to type=registry,ref=$FRONTEND_CACHE,mode=max \
-                                                --push \
-                                                --progress=plain \
-                                                ./frontend
-                                        '''
-                                    }
-                                }
-                            }
-                        }
-                        
-                        stage('Build Backend') {
-                            steps {
-                                script {
-                                    echo "🏗️ Building Backend image (multi-architecture)"
-                                    withCredentials([usernamePassword(
-                                        credentialsId: env.HARBOR_CREDS_ID,
-                                        usernameVariable: 'HARBOR_USERNAME',
-                                        passwordVariable: 'HARBOR_PASSWORD'
-                                    )]) {
-                                        sh '''
-                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
-                                            
-                                            docker buildx build \
-                                                --platform $PLATFORMS \
-                                                --tag $BACKEND_IMAGE \
-                                                --cache-from type=registry,ref=$BACKEND_CACHE \
-                                                --cache-to type=registry,ref=$BACKEND_CACHE,mode=max \
-                                                --push \
-                                                --progress=plain \
-                                                ./backend
-                                        '''
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('Verify Images') {
-                    steps {
-                        script {
-                            echo "✅ Verifying multi-architecture manifests"
-                            withCredentials([usernamePassword(
-                                credentialsId: env.HARBOR_CREDS_ID,
-                                usernameVariable: 'HARBOR_USERNAME',
-                                passwordVariable: 'HARBOR_PASSWORD'
-                            )]) {
-                                sh '''
-                                    echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
-                                    
-                                    echo "Frontend manifest:"
-                                    docker manifest inspect $FRONTEND_IMAGE | grep -A 3 '"platform"'
-                                    
-                                    echo "Backend manifest:"
-                                    docker manifest inspect $BACKEND_IMAGE | grep -A 3 '"platform"'
-                                '''
-                            }
-                        }
-                    }
-                }
-                
-                stage('Trigger Watchtower') {
-                    steps {
-                        script {
-                            echo "🚀 Triggering Watchtower to update containers"
-                            sh '''
-                                response=$(curl -s -w "\\n%{http_code}" \
-                                    -H "Authorization: Bearer $WATCHTOWER_TOKEN" \
-                                    $WATCHTOWER_URL/v1/update)
-                                
-                                http_code=$(echo "$response" | tail -n1)
-                                body=$(echo "$response" | sed '$d')
-                                
-                                if [ "$http_code" -eq 200 ]; then
-                                    echo "✅ Watchtower update triggered successfully"
-                                    echo "Response: $body"
-                                else
-                                    echo "❌ Failed to trigger Watchtower update"
-                                    echo "HTTP Code: $http_code"
-                                    echo "Response: $body"
-                                    exit 1
-                                fi
-                            '''
-                        }
-                    }
                 }
             }
         }
     }
-    
+
     post {
         success {
             script {
-                echo "✅ Pipeline completed successfully"
-                // 배포 파이프라인이 실행된 경우에만 성공 알림
-                if (env.IS_DEPLOY_REQUEST == 'true') {
-                    def duration = currentBuild.durationString.replace(' and counting', '')
-                    sh """
-                        curl -X POST \$MATTERMOST_WEBHOOK \
-                        -H 'Content-Type: application/json' \
-                        -d '{
-                            "text": "✅ **배포 성공**\\n\\n**Build:** #'\$BUILD_NUMBER'\\n**Duration:** ${duration}\\n\\n**Images:**\\n- Frontend: '\$FRONTEND_IMAGE'\\n- Backend: '\$BACKEND_IMAGE'\\n\\n**Status:** Watchtower가 컨테이너를 업데이트했습니다."
-                        }'
-                    """
-                }
+                echo "✅ Validation pipeline completed successfully"
             }
         }
-        
+
         failure {
             script {
-                echo "❌ Pipeline failed"
-                def failureHeadline = env.FAILURE_CATEGORY == 'sonar'
-                    ? "⚠️ **SonarQube 품질 검증 실패로 배포가 중단되었습니다.**"
-                    : "❌ **배포 실패**"
                 def payload = JsonOutput.toJson([
-                    text: "${failureHeadline}\n\n**Build:** #${env.BUILD_NUMBER}\n**Stage:** ${env.FAILURE_STAGE}\n**Error:** ${env.FAILURE_REASON}\n\n[로그 확인하기](${env.BUILD_URL})"
+                    text: "⚠️ **검증 실패**\n\n**Branch:** ${env.SOURCE_BRANCH ?: 'unknown'}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT ?: 'unknown'}`\n**Build:** #${env.BUILD_NUMBER}\n**Stage:** ${env.FAILURE_STAGE}\n**Error:** ${env.FAILURE_REASON}\n\n[로그 확인하기](${env.BUILD_URL})"
                 ])
+
                 sh """
                     curl -X POST \$MATTERMOST_WEBHOOK \
                     -H 'Content-Type: application/json' \
@@ -424,6 +202,5 @@ pipeline {
                 """
             }
         }
-        
     }
 }

@@ -1,0 +1,291 @@
+import groovy.json.JsonOutput
+
+def HARBOR_CREDENTIALS_ID = 'ba149ba1-93b4-422d-8d89-45fb7787bb7f'
+def EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID = 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN'
+
+pipeline {
+    agent any
+
+    triggers {
+        GenericTrigger(
+            genericVariables: [
+                [key: 'DEPLOY_ACTION', value: '$.context.action', defaultValue: ''],
+                [key: 'COMMIT_SHA', value: '$.context.commit_sha', defaultValue: ''],
+                [key: 'COMMIT_SHORT', value: '$.context.commit_short', defaultValue: ''],
+                [key: 'SOURCE_BRANCH', value: '$.context.branch', defaultValue: 'main'],
+                [key: 'VALIDATION_BUILD_NUMBER', value: '$.context.validation_build_number', defaultValue: ''],
+                [key: 'VALIDATION_BUILD_URL', value: '$.context.validation_build_url', defaultValue: ''],
+                [key: 'VALIDATION_JOB_NAME', value: '$.context.validation_job_name', defaultValue: '']
+            ],
+            tokenCredentialId: EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID,
+            causeString: '외부 앱 웹훅 이벤트 발생',
+            regexpFilterText: '$DEPLOY_ACTION $COMMIT_SHA',
+            regexpFilterExpression: '(deploy|cancel) [0-9a-fA-F]{7,40}',
+            printContributedVariables: true,
+            printPostContent: true
+        )
+    }
+
+    environment {
+        HARBOR_REGISTRY = 'harbor.nangman.cloud'
+        HARBOR_PROJECT = 'library'
+        HARBOR_CREDS_ID = "${HARBOR_CREDENTIALS_ID}"
+        FRONTEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:latest"
+        BACKEND_IMAGE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:latest"
+
+        FRONTEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-frontend:buildcache"
+        BACKEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:buildcache"
+
+        WATCHTOWER_URL = 'http://172.16.0.25:8080'
+        WATCHTOWER_TOKEN = credentials('2eb5ae85-6341-4cae-834e-20a5382e1f34')
+        MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
+
+        FAILURE_STAGE = 'Unknown'
+        FAILURE_REASON = '배포 중 오류가 발생했습니다.'
+
+        DOCKER_BUILDKIT = '1'
+        DOCKER_CLI_EXPERIMENTAL = 'enabled'
+        PLATFORMS = 'linux/amd64,linux/arm64'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 45, unit: 'MINUTES')
+        timestamps()
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage('Distinguish Request') {
+            steps {
+                script {
+                    echo "🔍 배포 요청 분석: action=${env.DEPLOY_ACTION}, branch=${env.SOURCE_BRANCH}, sha=${env.COMMIT_SHA}"
+                    currentBuild.description = "${env.DEPLOY_ACTION ?: 'unknown'} ${env.COMMIT_SHORT ?: 'unknown'}"
+                }
+            }
+        }
+
+        stage('Deploy Cancelled') {
+            when {
+                expression { return env.DEPLOY_ACTION == 'cancel' }
+            }
+            steps {
+                script {
+                    def payload = JsonOutput.toJson([
+                        text: "❌ **배포 취소**\n\n**Branch:** ${env.SOURCE_BRANCH}\n**Commit:** `${env.COMMIT_SHORT ?: env.COMMIT_SHA}`\n**Validation Build:** #${env.VALIDATION_BUILD_NUMBER}\n\n사용자가 배포를 취소했습니다."
+                    ])
+
+                    sh """
+                        curl -X POST \$MATTERMOST_WEBHOOK \
+                        -H 'Content-Type: application/json' \
+                        -d '${payload}'
+                    """
+
+                    currentBuild.result = 'ABORTED'
+                }
+            }
+        }
+
+        stage('Deploy Pipeline') {
+            when {
+                expression { return env.DEPLOY_ACTION == 'deploy' }
+            }
+            stages {
+                stage('Checkout Approved Commit') {
+                    steps {
+                        script {
+                            env.FAILURE_STAGE = 'Checkout Approved Commit'
+                            env.FAILURE_REASON = '승인된 커밋을 체크아웃하지 못했습니다.'
+
+                            checkout scm
+                            sh """
+                                git fetch --all --tags --prune
+                                git checkout ${env.COMMIT_SHA}
+                            """
+
+                            env.RESOLVED_COMMIT_SHA = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+                            env.RESOLVED_COMMIT_SHORT = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                            env.FRONTEND_IMAGE_COMMIT = "${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/nangman-infra-frontend:${env.RESOLVED_COMMIT_SHORT}"
+                            env.BACKEND_IMAGE_COMMIT = "${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/nangman-infra-backend:${env.RESOLVED_COMMIT_SHORT}"
+                            currentBuild.description = "deploy ${env.RESOLVED_COMMIT_SHORT}"
+                        }
+                    }
+                }
+
+                stage('Deploy Start Notification') {
+                    steps {
+                        script {
+                            def payload = JsonOutput.toJson([
+                                text: "🚀 **배포 시작**\n\n**Branch:** ${env.SOURCE_BRANCH}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT}`\n**Validation Build:** #${env.VALIDATION_BUILD_NUMBER}\n\n승인된 커밋 배포를 시작합니다.\n[검증 빌드 확인](${env.VALIDATION_BUILD_URL})"
+                            ])
+
+                            sh """
+                                curl -X POST \$MATTERMOST_WEBHOOK \
+                                -H 'Content-Type: application/json' \
+                                -d '${payload}'
+                            """
+                        }
+                    }
+                }
+
+                stage('Setup Buildx') {
+                    steps {
+                        script {
+                            env.FAILURE_STAGE = 'Setup Buildx'
+                            env.FAILURE_REASON = 'Docker Buildx 초기화에 실패했습니다.'
+                            sh '''
+                                docker buildx version
+                                docker buildx inspect --bootstrap || docker buildx create --use --name multiarch-builder --platform linux/amd64,linux/arm64
+                                docker buildx use multiarch-builder
+                            '''
+                        }
+                    }
+                }
+
+                stage('Build Images') {
+                    parallel {
+                        stage('Build Frontend') {
+                            steps {
+                                script {
+                                    env.FAILURE_STAGE = 'Build Frontend'
+                                    env.FAILURE_REASON = '프론트엔드 이미지 빌드 또는 푸시에 실패했습니다.'
+                                    withCredentials([usernamePassword(
+                                        credentialsId: env.HARBOR_CREDS_ID,
+                                        usernameVariable: 'HARBOR_USERNAME',
+                                        passwordVariable: 'HARBOR_PASSWORD'
+                                    )]) {
+                                        sh '''
+                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
+
+                                            docker buildx build \
+                                                --platform $PLATFORMS \
+                                                --tag $FRONTEND_IMAGE \
+                                                --tag $FRONTEND_IMAGE_COMMIT \
+                                                --cache-from type=registry,ref=$FRONTEND_CACHE \
+                                                --cache-to type=registry,ref=$FRONTEND_CACHE,mode=max \
+                                                --push \
+                                                --progress=plain \
+                                                ./frontend
+                                        '''
+                                    }
+                                }
+                            }
+                        }
+
+                        stage('Build Backend') {
+                            steps {
+                                script {
+                                    env.FAILURE_STAGE = 'Build Backend'
+                                    env.FAILURE_REASON = '백엔드 이미지 빌드 또는 푸시에 실패했습니다.'
+                                    withCredentials([usernamePassword(
+                                        credentialsId: env.HARBOR_CREDS_ID,
+                                        usernameVariable: 'HARBOR_USERNAME',
+                                        passwordVariable: 'HARBOR_PASSWORD'
+                                    )]) {
+                                        sh '''
+                                            echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
+
+                                            docker buildx build \
+                                                --platform $PLATFORMS \
+                                                --tag $BACKEND_IMAGE \
+                                                --tag $BACKEND_IMAGE_COMMIT \
+                                                --cache-from type=registry,ref=$BACKEND_CACHE \
+                                                --cache-to type=registry,ref=$BACKEND_CACHE,mode=max \
+                                                --push \
+                                                --progress=plain \
+                                                ./backend
+                                        '''
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                stage('Verify Images') {
+                    steps {
+                        script {
+                            env.FAILURE_STAGE = 'Verify Images'
+                            env.FAILURE_REASON = '멀티 아키텍처 이미지 검증에 실패했습니다.'
+                            withCredentials([usernamePassword(
+                                credentialsId: env.HARBOR_CREDS_ID,
+                                usernameVariable: 'HARBOR_USERNAME',
+                                passwordVariable: 'HARBOR_PASSWORD'
+                            )]) {
+                                sh '''
+                                    echo "$HARBOR_PASSWORD" | docker login $HARBOR_REGISTRY -u "$HARBOR_USERNAME" --password-stdin
+
+                                    echo "Frontend manifest:"
+                                    docker manifest inspect $FRONTEND_IMAGE_COMMIT | grep -A 3 '"platform"'
+
+                                    echo "Backend manifest:"
+                                    docker manifest inspect $BACKEND_IMAGE_COMMIT | grep -A 3 '"platform"'
+                                '''
+                            }
+                        }
+                    }
+                }
+
+                stage('Trigger Watchtower') {
+                    steps {
+                        script {
+                            env.FAILURE_STAGE = 'Trigger Watchtower'
+                            env.FAILURE_REASON = 'Watchtower 업데이트 트리거에 실패했습니다.'
+                            sh '''
+                                response=$(curl -s -w "\\n%{http_code}" \
+                                    -H "Authorization: Bearer $WATCHTOWER_TOKEN" \
+                                    $WATCHTOWER_URL/v1/update)
+
+                                http_code=$(echo "$response" | tail -n1)
+                                body=$(echo "$response" | sed '$d')
+
+                                if [ "$http_code" -eq 200 ]; then
+                                    echo "✅ Watchtower update triggered successfully"
+                                    echo "Response: $body"
+                                else
+                                    echo "❌ Failed to trigger Watchtower update"
+                                    echo "HTTP Code: $http_code"
+                                    echo "Response: $body"
+                                    exit 1
+                                fi
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                if (env.DEPLOY_ACTION == 'deploy') {
+                    def duration = currentBuild.durationString.replace(' and counting', '')
+                    def payload = JsonOutput.toJson([
+                        text: "✅ **배포 성공**\n\n**Branch:** ${env.SOURCE_BRANCH}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT}`\n**Validation Build:** #${env.VALIDATION_BUILD_NUMBER}\n**Duration:** ${duration}\n\n**Images:**\n- Frontend: `${env.FRONTEND_IMAGE_COMMIT}`\n- Backend: `${env.BACKEND_IMAGE_COMMIT}`\n\nWatchtower가 컨테이너를 업데이트했습니다."
+                    ])
+
+                    sh """
+                        curl -X POST \$MATTERMOST_WEBHOOK \
+                        -H 'Content-Type: application/json' \
+                        -d '${payload}'
+                    """
+                }
+            }
+        }
+
+        failure {
+            script {
+                def payload = JsonOutput.toJson([
+                    text: "❌ **배포 실패**\n\n**Branch:** ${env.SOURCE_BRANCH ?: 'unknown'}\n**Commit:** `${env.RESOLVED_COMMIT_SHORT ?: env.COMMIT_SHORT ?: env.COMMIT_SHA ?: 'unknown'}`\n**Stage:** ${env.FAILURE_STAGE}\n**Error:** ${env.FAILURE_REASON}\n\n[로그 확인하기](${env.BUILD_URL})"
+                ])
+
+                sh """
+                    curl -X POST \$MATTERMOST_WEBHOOK \
+                    -H 'Content-Type: application/json' \
+                    -d '${payload}'
+                """
+            }
+        }
+    }
+}

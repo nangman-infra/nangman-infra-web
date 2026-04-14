@@ -18,7 +18,9 @@ pipeline {
     }
     
     triggers {
-        // GitHub Push 전용 웹훅 트리거
+        // GitHub Push와 Mattermost 버튼이 같은 Generic Webhook Trigger 엔드포인트를 사용합니다.
+        // Declarative pipeline에서는 동일한 GenericTrigger를 중복 선언할 수 없어서
+        // 실제 트리거 토큰은 하나로 유지하고, 외부 앱 액션도 같은 토큰으로 Jenkins를 호출합니다.
         GenericTrigger(
             genericVariables: [
                 [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
@@ -26,24 +28,9 @@ pipeline {
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
             tokenCredentialId: 'GITHUB_WEBHOOK_TRIGGER_TOKEN',
-            causeString: 'GitHub webhook 이벤트 발생',
-            regexpFilterText: '$REPO_URL',
-            regexpFilterExpression: '.*nangman-infra-web.*',
-            printContributedVariables: true,
-            printPostContent: true
-        )
-
-        // Mattermost 등 외부 앱 액션 전용 웹훅 트리거
-        GenericTrigger(
-            genericVariables: [
-                [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
-                [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: 'NO_REPO'],
-                [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
-            ],
-            tokenCredentialId: 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN',
-            causeString: '외부 앱 웹훅 이벤트 발생',
+            causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
             regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            regexpFilterExpression: 'true.*|false NO_REPO',
+            regexpFilterExpression: 'true.*|false NO_REPO|.*nangman-infra-web.*',
             printContributedVariables: true,
             printPostContent: true
         )
@@ -131,7 +118,7 @@ pipeline {
                     def buildUrl = env.BUILD_URL
                     
                     withCredentials([
-                        string(credentialsId: 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN', variable: 'WEBHOOK_TOKEN')
+                        string(credentialsId: 'GITHUB_WEBHOOK_TRIGGER_TOKEN', variable: 'WEBHOOK_TOKEN')
                     ]) {
                         // Jenkins Generic Webhook Trigger URL
                         def jenkinsWebhookUrl = "https://jenkins.nangman.cloud/generic-webhook-trigger/invoke?token=${WEBHOOK_TOKEN}"

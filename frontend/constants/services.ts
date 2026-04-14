@@ -83,6 +83,14 @@ export const SERVICES: Service[] = [
     category: 'communication',
   },
   {
+    id: 'huly',
+    name: 'Huly',
+    description: '태스크 및 티켓 워크플로우 관리',
+    icon: 'huly-workflow.svg',
+    url: 'https://now.nangman.cloud',
+    category: 'communication',
+  },
+  {
     id: 'mail',
     name: 'Mail',
     description: '웹 메일 서비스',

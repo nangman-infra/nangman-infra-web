@@ -18,27 +18,32 @@ pipeline {
     }
     
     triggers {
-        // 👇 [중요] GenericTrigger 하나로 통합!
-        // GitHub Push와 Mattermost 버튼을 모두 받습니다.
+        // GitHub Push 전용 웹훅 트리거
         GenericTrigger(
             genericVariables: [
-                // 1. GitHub Push가 오면 'ref' 값이 들어옴 (예: refs/heads/main)
                 [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
                 [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: 'NO_REPO'],
-                // 2. Mattermost 버튼이 오면 'is_deploy' 값이 들어옴
                 [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
             ],
-            // 👇 [핵심] 토큰을 크레덴셜로 관리
-            token: 'nangman-trigger-secret',
-            causeString: 'Webhook 이벤트 발생 (Push 또는 버튼)',
+            tokenCredentialId: 'GITHUB_WEBHOOK_TRIGGER_TOKEN',
+            causeString: 'GitHub webhook 이벤트 발생',
+            regexpFilterText: '$REPO_URL',
+            regexpFilterExpression: '.*nangman-infra-web.*',
+            printContributedVariables: true,
+            printPostContent: true
+        )
 
-            // 👇 [필터] 버튼 클릭(true)이거나, 리포지토리 주소에 'nangman-infra-web'이 있을 때만 실행!
+        // Mattermost 등 외부 앱 액션 전용 웹훅 트리거
+        GenericTrigger(
+            genericVariables: [
+                [key: 'GIT_REF', value: '$.ref', defaultValue: ''],
+                [key: 'REPO_URL', value: '$.repository.clone_url', defaultValue: 'NO_REPO'],
+                [key: 'IS_DEPLOY_REQUEST', value: '$.context.is_deploy', defaultValue: 'false']
+            ],
+            tokenCredentialId: 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN',
+            causeString: '외부 앱 웹훅 이벤트 발생',
             regexpFilterText: '$IS_DEPLOY_REQUEST $REPO_URL',
-            // 👇 [수정 2] 필터링 규칙 강화!
-            // 1. true.* : 배포 시작 버튼 (항상 통과)
-            // 2. false NO_REPO       : 배포 취소 버튼 (리포지토리 주소가 없을 때만 통과)
-            // 3. .*nangman-infra-web.* : 인프라 리포지토리 Push일 때만 통과
-            regexpFilterExpression: 'true.*|false NO_REPO|.*nangman-infra-web.*',
+            regexpFilterExpression: 'true.*|false NO_REPO',
             printContributedVariables: true,
             printPostContent: true
         )
@@ -126,7 +131,7 @@ pipeline {
                     def buildUrl = env.BUILD_URL
                     
                     withCredentials([
-                        string(credentialsId: 'jenkins-webhook-token', variable: 'WEBHOOK_TOKEN')
+                        string(credentialsId: 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN', variable: 'WEBHOOK_TOKEN')
                     ]) {
                         // Jenkins Generic Webhook Trigger URL
                         def jenkinsWebhookUrl = "https://jenkins.nangman.cloud/generic-webhook-trigger/invoke?token=${WEBHOOK_TOKEN}"

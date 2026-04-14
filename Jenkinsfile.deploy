@@ -37,7 +37,7 @@ pipeline {
         BACKEND_CACHE = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/nangman-infra-backend:buildcache"
 
         WATCHTOWER_URL = 'http://172.16.0.25:8080'
-        WATCHTOWER_TOKEN = credentials('2eb5ae85-6341-4cae-834e-20a5382e1f34')
+        WATCHTOWER_TOKEN = credentials('nangman-infra-main-web-watchtower-api-token')
         MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
 
         FAILURE_STAGE = 'Unknown'

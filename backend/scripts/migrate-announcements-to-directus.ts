@@ -211,18 +211,20 @@ async function ensureFields(baseUrl: string, token: string): Promise<void> {
       continue;
     }
 
+    let fieldInterface = 'input';
+    if (field.type === 'text') {
+      fieldInterface = 'input-multiline';
+    } else if (field.type === 'timestamp') {
+      fieldInterface = 'datetime';
+    }
+
     await axios.post(
       `${baseUrl}/fields/${NOTICES_COLLECTION}`,
       {
         field: field.field,
         type: field.type,
         meta: {
-          interface:
-            field.type === 'text'
-              ? 'input-multiline'
-              : field.type === 'timestamp'
-                ? 'datetime'
-                : 'input',
+          interface: fieldInterface,
           ...(field.required ? { required: true } : {}),
         },
         schema: {

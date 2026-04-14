@@ -177,18 +177,20 @@ async function ensureFields(baseUrl: string, token: string): Promise<void> {
       continue;
     }
 
+    let fieldInterface = 'input';
+    if (field.type === 'json') {
+      fieldInterface = 'input-code';
+    } else if (field.type === 'text') {
+      fieldInterface = 'input-multiline';
+    }
+
     await axios.post(
       `${baseUrl}/fields/${MEMBERS_COLLECTION}`,
       {
         field: field.field,
         type: field.type,
         meta: {
-          interface:
-            field.type === 'json'
-              ? 'input-code'
-              : field.type === 'text'
-                ? 'input-multiline'
-                : 'input',
+          interface: fieldInterface,
           ...(field.required ? { required: true } : {}),
         },
         schema: {

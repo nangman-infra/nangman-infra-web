@@ -63,14 +63,25 @@ export const SERVICES: Service[] = [
     category: 'security',
   },
   {
-    id: 'docmost',
-    name: 'Docmost',
+    id: 'phase',
+    name: 'Phase',
     description: {
-      ko: '문서 관리 및 협업',
+      ko: '시크릿 및 환경 변수 관리',
+      en: 'Secrets and environment variable management',
+    },
+    icon: 'phase.svg',
+    url: 'https://secrets.nangman.cloud',
+    category: 'security',
+  },
+  {
+    id: 'outline',
+    name: 'Outline',
+    description: {
+      ko: '문서 관리 및 협업 워크스페이스',
       en: 'Documentation and collaboration workspace',
     },
-    icon: 'docmost.png',
-    url: 'https://docmost.console.nangman.cloud',
+    icon: 'outline.svg',
+    url: 'https://docs.console.nangman.cloud',
     category: 'communication',
   },
   {

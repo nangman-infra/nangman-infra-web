@@ -8,7 +8,7 @@ def GITHUB_WEBHOOK_TRIGGER_TOKEN_CREDENTIAL_ID = 'GITHUB_WEBHOOK_TRIGGER_TOKEN'
 def EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID = 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN'
 
 pipeline {
-    agent any
+    agent { label 'spot-agent' }
 
     triggers {
         GenericTrigger(

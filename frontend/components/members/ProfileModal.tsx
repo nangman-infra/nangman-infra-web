@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -33,14 +34,9 @@ type ProfileModalProps = Readonly<{
   onClose: () => void;
 }>;
 
-const PORTFOLIO_DOWNLOAD_DURATION_TEXT = "약 30초~1분";
 const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
 const PORTFOLIO_JOB_MAX_WAIT_MS = 10 * 60 * 1000;
 const PORTFOLIO_JOB_STORAGE_KEY = "members:portfolio-job-state:v2";
-const PORTFOLIO_STALE_JOB_MESSAGE =
-  "기존 포트폴리오 PDF 작업이 만료되어 새 작업을 다시 시작합니다.";
-const PORTFOLIO_STALE_JOB_RETRY_MESSAGE =
-  "기존 포트폴리오 PDF 작업이 만료되었습니다. 버튼을 다시 눌러 새로 생성해주세요.";
 
 type PortfolioJobStatus = "queued" | "running" | "completed" | "failed";
 
@@ -166,7 +162,13 @@ function shouldPersistPortfolioJobState(state: PortfolioJobUiState): boolean {
   );
 }
 
-function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
+function normalizePortfolioJobResponse(
+  payload: unknown,
+  messages: {
+    invalidResponse: string;
+    missingJobId: string;
+  },
+): PortfolioJobResponse {
   const source =
     payload &&
     typeof payload === "object" &&
@@ -177,7 +179,7 @@ function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
       : payload;
 
   if (!source || typeof source !== "object") {
-    throw new Error("포트폴리오 PDF 작업 응답 형식이 올바르지 않습니다.");
+    throw new Error(messages.invalidResponse);
   }
 
   const sourceRecord = source as Record<string, unknown>;
@@ -194,7 +196,7 @@ function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
       : undefined;
 
   if (!jobId) {
-    throw new Error("포트폴리오 PDF 작업 식별자를 받지 못했습니다.");
+    throw new Error(messages.missingJobId);
   }
 
   return {
@@ -203,38 +205,6 @@ function normalizePortfolioJobResponse(payload: unknown): PortfolioJobResponse {
     message,
     ...(errorMessage ? { errorMessage } : {}),
   };
-}
-
-function getProgressHintMessage(elapsedMs: number): string {
-  if (elapsedMs < 10000) {
-    return "서버에서 작업을 준비하고 있어요.";
-  }
-  if (elapsedMs < 30000) {
-    return "프로필 정보를 수집하고 있어요.";
-  }
-  if (elapsedMs < 60000) {
-    return "문서를 생성하고 있어요.";
-  }
-  if (elapsedMs < 120000) {
-    return "레이아웃을 정리하고 있어요.";
-  }
-  return "데이터 양이 많아 시간이 더 필요해요. 계속 작업 중입니다.";
-}
-
-function composeProgressMessage(baseMessage: string | undefined, elapsedMs: number): string {
-  const progressHint = getProgressHintMessage(elapsedMs);
-  if (!baseMessage?.trim()) {
-    return progressHint;
-  }
-  return `${baseMessage.trim()} ${progressHint}`.trim();
-}
-
-function isPortfolioJobNotFoundError(error: unknown): boolean {
-  return (
-    error instanceof PortfolioJobRequestError &&
-    error.status === 404 &&
-    error.message.includes("포트폴리오 PDF 작업을 찾을 수 없습니다.")
-  );
 }
 
 function toSafeFileName(value: string): string {
@@ -273,20 +243,27 @@ function resolveFileNameFromDisposition(
   return fallback;
 }
 
-async function resolveErrorMessage(response: Response): Promise<string> {
-  try {
-    const data = (await response.json()) as { message?: string };
-    if (typeof data.message === "string" && data.message.trim()) {
-      return data.message.trim();
+async function resolveErrorMessage(
+  response: Response,
+  fallbackMessage: string,
+  options?: { exposeBackendMessage?: boolean },
+): Promise<string> {
+  if (options?.exposeBackendMessage) {
+    try {
+      const data = (await response.json()) as { message?: string };
+      if (typeof data.message === "string" && data.message.trim()) {
+        return data.message.trim();
+      }
+    } catch {
+      // ignore parse error and use fallback message
     }
-  } catch {
-    // ignore parse error and use fallback message
   }
 
-  return "포트폴리오 PDF 다운로드에 실패했습니다.";
+  return fallbackMessage;
 }
 
 export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
+  const t = useTranslations("ProfileModal");
   const [portfolioJobStatus, setPortfolioJobStatus] = useState<PortfolioJobStatus | "idle">(
     "idle",
   );
@@ -308,6 +285,63 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const jobStateByMemberRef = useRef<Record<string, PortfolioJobUiState>>({});
   const currentMemberKeyRef = useRef<string>("");
   const memberJobKey = (member?.slug?.trim() || member?.name?.trim() || "").trim();
+  const copy = useMemo(
+    () => ({
+      downloadDuration: t("downloadDuration"),
+      staleJobMessage: t("staleJobMessage"),
+      staleJobRetryMessage: t("staleJobRetryMessage"),
+      invalidResponse: t("invalidResponse"),
+      missingJobId: t("missingJobId"),
+      downloadFailed: t("downloadFailed"),
+      jobFailed: t("jobFailed"),
+      buttonIdle: t("buttonIdle"),
+      buttonDownloading: t("buttonDownloading"),
+      buttonGenerating: t("buttonGenerating"),
+      buttonCompleted: t("buttonCompleted"),
+      autoReady: t("autoReady"),
+      autoDownloading: t("autoDownloading"),
+      manualDownloading: t("manualDownloading"),
+      downloadStarted: t("downloadStarted"),
+      manualRetryReady: t("manualRetryReady"),
+      waitTooLong: t("waitTooLong"),
+      keepRunningHint: t("keepRunningHint"),
+      statusStarting: t("statusStarting"),
+      progressPreparing: t("progressPreparing"),
+      progressCollecting: t("progressCollecting"),
+      progressRendering: t("progressRendering"),
+      progressLayout: t("progressLayout"),
+      progressLongRunning: t("progressLongRunning"),
+    }),
+    [t],
+  );
+  const getProgressHintMessage = useCallback(
+    (elapsedMs: number): string => {
+      if (elapsedMs < 10000) {
+        return copy.progressPreparing;
+      }
+      if (elapsedMs < 30000) {
+        return copy.progressCollecting;
+      }
+      if (elapsedMs < 60000) {
+        return copy.progressRendering;
+      }
+      if (elapsedMs < 120000) {
+        return copy.progressLayout;
+      }
+      return copy.progressLongRunning;
+    },
+    [copy],
+  );
+  const composeProgressMessage = useCallback(
+    (baseMessage: string | undefined, elapsedMs: number): string => {
+      const progressHint = getProgressHintMessage(elapsedMs);
+      if (!baseMessage?.trim()) {
+        return progressHint;
+      }
+      return `${baseMessage.trim()} ${progressHint}`.trim();
+    },
+    [getProgressHintMessage],
+  );
 
   useEffect(() => {
     isOpenRef.current = isOpen;
@@ -515,14 +549,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   const isPortfolioGenerating =
     portfolioJobStatus === "queued" || portfolioJobStatus === "running";
   const isPortfolioButtonDisabled = isPortfolioGenerating || isDownloadingPortfolio;
-  let portfolioButtonLabel = "포트폴리오 PDF";
+  let portfolioButtonLabel = copy.buttonIdle;
   if (isDownloadingPortfolio) {
     portfolioButtonLabel =
       portfolioJobStatus === "completed"
-        ? "PDF 다운로드 중..."
-        : "PDF 생성 중...";
+        ? copy.buttonDownloading
+        : copy.buttonGenerating;
   } else if (portfolioJobStatus === "completed") {
-    portfolioButtonLabel = "포트폴리오 PDF 다운로드";
+    portfolioButtonLabel = copy.buttonCompleted;
   }
 
   const downloadPortfolioByJobId = async (jobId: string): Promise<void> => {
@@ -532,7 +566,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     });
 
     if (!response.ok) {
-      const message = await resolveErrorMessage(response);
+      const message = await resolveErrorMessage(response, copy.downloadFailed);
       throw new PortfolioJobRequestError(message, response.status);
     }
 
@@ -575,8 +609,8 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     setDownloadErrorMessage(null);
     setDownloadStatusMessage(
       mode === "stale-recovery"
-        ? `${PORTFOLIO_STALE_JOB_MESSAGE} ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`
-        : `포트폴리오 PDF 생성 작업을 시작합니다. ${PORTFOLIO_DOWNLOAD_DURATION_TEXT} 정도 소요될 수 있습니다.`,
+        ? `${copy.staleJobMessage} ${copy.downloadDuration}`
+        : `${copy.statusStarting} ${copy.downloadDuration}`,
     );
 
     try {
@@ -586,11 +620,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       });
 
       if (!response.ok) {
-        const message = await resolveErrorMessage(response);
+        const message = await resolveErrorMessage(response, copy.jobFailed);
         throw new PortfolioJobRequestError(message, response.status);
       }
 
-      const payload = normalizePortfolioJobResponse(await response.json());
+      const payload = normalizePortfolioJobResponse(await response.json(), {
+        invalidResponse: copy.invalidResponse,
+        missingJobId: copy.missingJobId,
+      });
       activeJobIdRef.current = payload.jobId;
       setActiveJobId(payload.jobId);
       setPortfolioJobStatus(payload.status);
@@ -604,7 +641,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         staleJobRecoveryAttemptedRef.current = false;
         setPortfolioJobStatus("failed");
         setIsDownloadingPortfolio(false);
-        throw new Error(payload.errorMessage || payload.message || "포트폴리오 PDF 생성에 실패했습니다.");
+        throw new Error(copy.jobFailed);
       }
 
       if (payload.status === "completed") {
@@ -621,7 +658,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
-          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+          : copy.downloadFailed,
       );
       setDownloadStatusMessage(null);
       setIsDownloadingPortfolio(false);
@@ -632,14 +669,14 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     if (staleJobRecoveryAttemptedRef.current) {
       clearCurrentMemberJobState({
         statusMessage: null,
-        errorMessage: PORTFOLIO_STALE_JOB_RETRY_MESSAGE,
+        errorMessage: copy.staleJobRetryMessage,
       });
       return;
     }
 
     staleJobRecoveryAttemptedRef.current = true;
     clearCurrentMemberJobState({
-      statusMessage: PORTFOLIO_STALE_JOB_MESSAGE,
+      statusMessage: copy.staleJobMessage,
       errorMessage: null,
       preserveRecoveryFlag: true,
     });
@@ -654,9 +691,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     setPortfolioJobStatus("completed");
 
     if (mode === "auto" && !isOpenRef.current) {
-      setDownloadStatusMessage(
-        "포트폴리오 PDF가 준비되었습니다. 모달에서 버튼을 눌러 다운로드하세요.",
-      );
+      setDownloadStatusMessage(copy.autoReady);
       setDownloadErrorMessage(null);
       setIsDownloadingPortfolio(false);
       return;
@@ -665,18 +700,18 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     setIsDownloadingPortfolio(true);
     setDownloadStatusMessage(
       mode === "auto"
-        ? "포트폴리오 PDF가 준비되어 다운로드를 시작합니다."
-        : "준비된 포트폴리오 PDF를 다운로드합니다.",
+        ? copy.autoDownloading
+        : copy.manualDownloading,
     );
     setDownloadErrorMessage(null);
 
     try {
       await downloadPortfolioByJobId(jobId);
       staleJobRecoveryAttemptedRef.current = false;
-      setDownloadStatusMessage("포트폴리오 PDF 다운로드를 시작했습니다.");
+      setDownloadStatusMessage(copy.downloadStarted);
       setDownloadErrorMessage(null);
     } catch (error) {
-      if (isPortfolioJobNotFoundError(error)) {
+      if (error instanceof PortfolioJobRequestError && error.status === 404) {
         await recoverFromStalePortfolioJob();
         return;
       }
@@ -684,11 +719,9 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
-          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+          : copy.downloadFailed,
       );
-      setDownloadStatusMessage(
-        "포트폴리오 PDF가 준비되었습니다. 버튼을 눌러 다시 다운로드하세요.",
-      );
+      setDownloadStatusMessage(copy.manualRetryReady);
     } finally {
       setIsDownloadingPortfolio(false);
     }
@@ -704,9 +737,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     if (elapsedMs > PORTFOLIO_JOB_MAX_WAIT_MS) {
       pollingCancelledRef.current = true;
       setPortfolioJobStatus("failed");
-      setDownloadErrorMessage(
-        "포트폴리오 PDF 생성 시간이 길어지고 있습니다. 잠시 후 다시 시도해주세요.",
-      );
+      setDownloadErrorMessage(copy.waitTooLong);
       setDownloadStatusMessage(null);
       setIsDownloadingPortfolio(false);
       return;
@@ -723,7 +754,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       }
 
       if (!response.ok) {
-        const message = await resolveErrorMessage(response);
+        const message = await resolveErrorMessage(response, copy.jobFailed);
         if (response.status === 404) {
           await recoverFromStalePortfolioJob();
           return;
@@ -732,7 +763,10 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         throw new PortfolioJobRequestError(message, response.status);
       }
 
-      const data = normalizePortfolioJobResponse(await response.json());
+      const data = normalizePortfolioJobResponse(await response.json(), {
+        invalidResponse: copy.invalidResponse,
+        missingJobId: copy.missingJobId,
+      });
       if (pollingCancelledRef.current) {
         return;
       }
@@ -747,7 +781,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
         pollingCancelledRef.current = true;
         staleJobRecoveryAttemptedRef.current = false;
         setPortfolioJobStatus("failed");
-        throw new Error(data.errorMessage || data.message || "포트폴리오 PDF 생성에 실패했습니다.");
+        throw new Error(copy.jobFailed);
       }
 
       setPortfolioJobStatus(data.status);
@@ -762,7 +796,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
       setDownloadErrorMessage(
         error instanceof Error && error.message.trim()
           ? error.message
-          : "포트폴리오 PDF 다운로드에 실패했습니다.",
+          : copy.downloadFailed,
       );
       setDownloadStatusMessage(null);
       setIsDownloadingPortfolio(false);
@@ -792,13 +826,15 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl lg:max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-4 pt-6 pb-4 sm:px-6 lg:px-8 border-b border-border/30 sticky top-0 bg-background z-10 flex flex-row items-center justify-between">
-          <DialogTitle className="sr-only">{member.name} 프로필</DialogTitle>
+          <DialogTitle className="sr-only">
+            {t("dialogTitle", { name: member.name })}
+          </DialogTitle>
           <DialogClose
             onClick={onClose}
             className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
           >
             <X className="h-4 w-4" />
-            <span className="sr-only">닫기</span>
+            <span className="sr-only">{t("close")}</span>
           </DialogClose>
         </DialogHeader>
 
@@ -840,7 +876,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-xs sm:text-sm text-primary hover:bg-primary/20 hover:border-primary/30 transition-all"
                     >
                       <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>홈페이지</span>
+                      <span>{t("homepage")}</span>
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                     </a>
                   )}
@@ -852,7 +888,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20 text-xs sm:text-sm text-primary hover:bg-primary/20 hover:border-primary/30 transition-all"
                     >
                       <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>블로그</span>
+                      <span>{t("blog")}</span>
                       <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                     </a>
                   )}
@@ -878,7 +914,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                   )}
                   {isPortfolioGenerating && (
                     <span className="text-xs text-muted-foreground/80">
-                      창을 닫아도 서버에서 작업은 계속 진행됩니다.
+                      {copy.keepRunningHint}
                     </span>
                   )}
                   {downloadErrorMessage && (
@@ -899,7 +935,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <span className="w-1 h-5 sm:h-6 bg-primary rounded-full shrink-0" />{" "}
-                소개
+                {t("bio")}
               </h3>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 {member.bio}
@@ -917,7 +953,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <Code className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                전문 분야
+                {t("specialties")}
               </h3>
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {member.specialties.map((specialty) => (
@@ -942,7 +978,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                학력
+                {t("education")}
               </h3>
               <div className="space-y-4 sm:space-y-5">
                 {member.education.map((edu) => (
@@ -973,7 +1009,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                     {/* Thesis */}
                     {edu.thesis && (
                       <div className="mb-3 pb-3 border-b border-border/10">
-                        <p className="text-xs text-muted-foreground/70 mb-1">졸업논문</p>
+                        <p className="text-xs text-muted-foreground/70 mb-1">{t("thesis")}</p>
                         <p className="text-xs sm:text-sm text-muted-foreground wrap-break-word">{edu.thesis}</p>
                       </div>
                     )}
@@ -990,7 +1026,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                     {/* Papers */}
                     {edu.papers && edu.papers.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-border/10">
-                        <p className="text-xs text-muted-foreground/70 mb-2">논문 및 연구 활동</p>
+                        <p className="text-xs text-muted-foreground/70 mb-2">{t("papers")}</p>
                         <div className="space-y-2">
                           {edu.papers.map((paper) => (
                             <div key={`${paper.title}-${paper.type}-${paper.date}`} className="text-xs sm:text-sm">
@@ -1027,7 +1063,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                경력 사항
+                {t("workExperience")}
               </h3>
               <div className="space-y-3 sm:space-y-4">
                 {member.workExperience.map((exp) => (
@@ -1073,7 +1109,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                주요 성과 ({member.achievements.length}개)
+                {t("achievements", { count: member.achievements.length })}
               </h3>
               <div className="space-y-2 sm:space-y-2.5">
                 {member.achievements.map((achievement) => (
@@ -1099,7 +1135,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                자격증 및 인증 ({member.certifications.length}개)
+                {t("certifications", { count: member.certifications.length })}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {member.certifications.map((cert) => (
@@ -1130,7 +1166,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                주요 프로젝트 ({member.projects.length}개)
+                {t("projects", { count: member.projects.length })}
               </h3>
               <div className="space-y-3 sm:space-y-4">
                 {member.projects.map((project) => (
@@ -1214,14 +1250,16 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
             >
               <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                멘토링
+                {t("mentoring")}
               </h3>
               <div className="p-3 sm:p-4 rounded-lg bg-card/50 border border-border/20">
                 <p className="text-sm sm:text-base text-muted-foreground wrap-break-word">
-                  <span className="font-semibold text-primary">
-                    {member.mentoring.count}명
-                  </span>{" "}
-                  의 후배들을 멘토링하며 실무 경험과 기술 지식을 공유하고 있습니다.
+                  {t.rich("mentoringBody", {
+                    count: member.mentoring.count,
+                    strong: (chunks) => (
+                      <span className="font-semibold text-primary">{chunks}</span>
+                    ),
+                  })}
                 </p>
                 {member.mentoring.description && (
                   <p className="text-xs sm:text-sm text-muted-foreground/80 mt-2 wrap-break-word">

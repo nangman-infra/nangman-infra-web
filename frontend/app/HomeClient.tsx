@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Terminal } from "@/components/features/Terminal";
 import { Background } from "@/components/features/Background";
@@ -35,6 +36,7 @@ export default function HomeClient({
     latestPosts,
     latestAnnouncements,
 }: HomeClientProps) {
+    const locale = useLocale();
     const [isTerminalOpen, setIsTerminalOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const mouseX = useMotionValue(0.5);
@@ -93,6 +95,19 @@ export default function HomeClient({
     const springConfig = { damping: SPRING_DAMPING, stiffness: SPRING_STIFFNESS };
     const x = useSpring(useTransform(mouseX, [0, 1], [PARALLAX_X_MIN, PARALLAX_X_MAX]), springConfig);
     const y = useSpring(useTransform(mouseY, [0, 1], [PARALLAX_Y_MIN, PARALLAX_Y_MAX]), springConfig);
+    const organizationDescription =
+        locale === "en"
+            ? "An infrastructure engineering community where working engineers and mentees grow together through practical systems work."
+            : "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티";
+    const websiteDescription =
+        locale === "en"
+            ? "An infrastructure engineering community focused on practical learning and shared growth."
+            : "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티";
+    const organizationAlternateName = locale === "en" ? "Nangman Infra" : "낭만 인프라";
+    const contactType = locale === "en" ? "Contact" : "문의";
+    const addressLocality = locale === "en" ? "Yuseong-gu, Daejeon" : "대전광역시 유성구";
+    const addressRegion = locale === "en" ? "Daejeon" : "대전광역시";
+    const streetAddress = locale === "en" ? "125 Dongseo-daero" : "동서대로 125";
 
     return (
         <>
@@ -104,22 +119,21 @@ export default function HomeClient({
                         "@context": "https://schema.org",
                         "@type": "Organization",
                         name: "Nangman Infra",
-                        alternateName: "낭만 인프라",
+                        alternateName: organizationAlternateName,
                         url: "https://nangman.cloud",
                         logo: "https://nangman.cloud/icon.png",
-                        description:
-                            "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티",
+                        description: organizationDescription,
                         address: {
                             "@type": "PostalAddress",
-                            addressLocality: "대전광역시 유성구",
-                            addressRegion: "대전광역시",
-                            streetAddress: "동서대로 125",
+                            addressLocality,
+                            addressRegion,
+                            streetAddress,
                             addressCountry: "KR",
                         },
                         contactPoint: {
                             "@type": "ContactPoint",
                             email: "contact@nangman.cloud",
-                            contactType: "문의",
+                            contactType,
                         },
                         sameAs: [
                             "https://github.com/nangman-infra",
@@ -135,9 +149,8 @@ export default function HomeClient({
                         "@type": "WebSite",
                         name: "Nangman Infra",
                         url: "https://nangman.cloud",
-                        description:
-                            "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티",
-                        inLanguage: "ko-KR",
+                        description: websiteDescription,
+                        inLanguage: locale === "en" ? "en-US" : "ko-KR",
                     }),
                 }}
             />

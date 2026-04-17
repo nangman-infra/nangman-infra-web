@@ -3,6 +3,7 @@ import {
   type IncidentSeverity,
   incidentReports,
 } from "@/data/incidentReports";
+import type { AppLocale } from "@/i18n/routing";
 
 export function getIncidentReports(): IncidentReport[] {
   return [...incidentReports].sort((a, b) =>
@@ -28,7 +29,22 @@ export function getIncidentSeverityStyle(severity: IncidentSeverity): string {
   return "border-blue-500/40 bg-blue-500/10 text-blue-300";
 }
 
-export function getIncidentStatusLabel(status: IncidentReport["status"]): string {
+export function getIncidentStatusLabel(
+  status: IncidentReport["status"],
+  locale: AppLocale,
+): string {
+  if (locale === "ko") {
+    if (status === "resolved") {
+      return "해결됨";
+    }
+
+    if (status === "mitigated") {
+      return "완화됨";
+    }
+
+    return "조사 중";
+  }
+
   if (status === "resolved") {
     return "Resolved";
   }

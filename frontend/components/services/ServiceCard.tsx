@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { ExternalLink } from "lucide-react";
-import type { Service } from "@/constants/services";
+import { useLocale } from "next-intl";
+import type { AppLocale } from "@/i18n/routing";
+import {
+  getLocalizedText,
+  type Service,
+} from "@/constants/services";
 import { cn } from "@/lib/utils";
 import {
   SERVICE_CARD_ANIMATION_DURATION,
@@ -46,6 +51,7 @@ function getIconUrl(iconName: string): string {
 }
 
 export function ServiceCard({ service, index }: ServiceCardProps) {
+  const locale = useLocale() as AppLocale;
   const hasUrl = Boolean(service.url);
   const hasUrls = Boolean(service.urls && service.urls.length > 0);
   const hasIcon = Boolean(service.icon);
@@ -54,6 +60,11 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
   const [imageError, setImageError] = useState(!hasIcon); // 아이콘이 없으면 바로 에러 상태
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const serviceDescription = getLocalizedText(locale, service.description);
+  const dialogDescription =
+    locale === "ko"
+      ? "접근할 서버를 선택하세요"
+      : "Choose the target server";
 
   // 이미지 로드 완료 후 애니메이션 시작 (Safari 깜빡임 방지)
   useEffect(() => {
@@ -145,7 +156,7 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
           )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {service.description}
+          {serviceDescription}
         </p>
       </div>
 
@@ -173,9 +184,7 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{service.name}</DialogTitle>
-            <DialogDescription>
-              접근할 서버를 선택하세요
-            </DialogDescription>
+            <DialogDescription>{dialogDescription}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {service.urls.map((urlOption) => (
@@ -189,7 +198,7 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
                 }}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                {urlOption.label}
+                {getLocalizedText(locale, urlOption.label)}
               </Button>
             ))}
           </div>

@@ -1,0 +1,171 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { BellRing, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocale } from "next-intl";
+import type { Announcement, AnnouncementType } from "@/lib/domain/announcement";
+
+const PAGE_SIZE = 10;
+
+type NoticeFilter = "all" | AnnouncementType;
+
+function typeBadgeClass(type: AnnouncementType): string {
+  if (type === "notice") {
+    return "border-primary/30 bg-primary/10 text-primary";
+  }
+
+  return "border-border/50 bg-background/40 text-muted-foreground";
+}
+
+function typeLabel(type: AnnouncementType, locale: string): string {
+  if (type === "notice") {
+    return locale === "ko" ? "공지" : "Notice";
+  }
+
+  return locale === "ko" ? "업데이트" : "Update";
+}
+
+type AnnouncementsClientProps = Readonly<{
+  announcements: Announcement[];
+}>;
+
+export default function AnnouncementsClient({
+  announcements,
+}: AnnouncementsClientProps) {
+  const locale = useLocale();
+  const [filter, setFilter] = useState<NoticeFilter>("all");
+  const [page, setPage] = useState(1);
+  const filterLabels: Record<NoticeFilter, string> =
+    locale === "ko"
+      ? { all: "전체", notice: "공지", update: "업데이트" }
+      : { all: "All", notice: "Notice", update: "Update" };
+  const copy =
+    locale === "ko"
+      ? {
+          title: "공지사항",
+          subtitle: "운영 공지와 업데이트 소식을 확인하세요",
+          empty: "표시할 공지사항이 없습니다.",
+          previous: "이전",
+          next: "다음",
+        }
+      : {
+          title: "Announcements",
+          subtitle: "Check operational notices and service updates.",
+          empty: "No announcements are available.",
+          previous: "Previous",
+          next: "Next",
+        };
+
+  const filteredAnnouncements = useMemo(() => {
+    if (filter === "all") {
+      return announcements;
+    }
+
+    return announcements.filter((item) => item.type === filter);
+  }, [announcements, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAnnouncements.length / PAGE_SIZE));
+  const pageIndex = Math.max(1, Math.min(page, totalPages));
+  const start = (pageIndex - 1) * PAGE_SIZE;
+  const pagedAnnouncements = filteredAnnouncements.slice(start, start + PAGE_SIZE);
+
+  return (
+    <div className="min-h-screen pt-24 pb-16 px-4">
+      <div className="relative max-w-6xl mx-auto">
+        <div className="space-y-8 md:space-y-10">
+          <div className="text-center space-y-3">
+            <h1 className="text-3xl md:text-4xl font-bold">{copy.title}</h1>
+            <p className="text-muted-foreground">
+              {copy.subtitle}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {(Object.keys(filterLabels) as NoticeFilter[]).map((type) => {
+              const active = filter === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setFilter(type);
+                    setPage(1);
+                  }}
+                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+                    active
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-border/40 text-muted-foreground hover:bg-card/40"
+                  }`}
+                >
+                  {filterLabels[type]}
+                </button>
+              );
+            })}
+          </div>
+
+          {pagedAnnouncements.length === 0 ? (
+            <div className="rounded-2xl border border-border/40 bg-card/20 p-8 text-center text-muted-foreground backdrop-blur-sm">
+              {copy.empty}
+            </div>
+          ) : (
+            <div className="space-y-4 md:space-y-5">
+              {pagedAnnouncements.map((announcement) => (
+                <article
+                  key={announcement.id}
+                  className="gpu-accelerated-blur group relative overflow-hidden rounded-2xl border border-border/30 bg-card/20 p-5 md:p-6 backdrop-blur-sm transition-colors hover:border-primary/35"
+                >
+                  <div className="absolute inset-0 bg-linear-to-r from-primary/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <div className="relative z-10 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-mono ${typeBadgeClass(
+                          announcement.type,
+                        )}`}
+                      >
+                        <BellRing className="h-3 w-3" />
+                        {typeLabel(announcement.type, locale)}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {announcement.date}
+                      </span>
+                    </div>
+                    <h2 className="text-lg md:text-xl font-semibold tracking-tight">
+                      {announcement.title}
+                    </h2>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {announcement.content}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              disabled={pageIndex <= 1}
+              className="inline-flex items-center gap-1 rounded-md border border-border/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-card/40 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {copy.previous}
+            </button>
+            <span className="min-w-16 text-center text-sm text-muted-foreground font-mono">
+              {pageIndex} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={pageIndex >= totalPages}
+              className="inline-flex items-center gap-1 rounded-md border border-border/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-card/40 disabled:opacity-40"
+            >
+              {copy.next}
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -10,6 +10,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useMonitoringStatus } from "@/hooks/useMonitoringStatus";
 import { RackComponent } from "@/components/monitoring/RackComponent";
 import { InsightsPanel } from "@/components/monitoring/InsightsPanel";
@@ -26,25 +27,32 @@ type LastUpdateTickerProps = Readonly<{
   lastUpdate: Date | null;
 }>;
 
-function formatLastUpdateText(lastUpdate: Date | null, nowMs: number): string {
+function formatLastUpdateText(
+  lastUpdate: Date | null,
+  nowMs: number,
+  locale: string,
+): string {
   if (!lastUpdate) {
-    return "Never";
+    return locale === "ko" ? "기록 없음" : "Never";
   }
 
   const diff = Math.floor((nowMs - lastUpdate.getTime()) / 1000);
   if (diff < SECONDS_PER_MINUTE) {
-    return `${diff}s ago`;
+    return locale === "ko" ? `${diff}초 전` : `${diff}s ago`;
   }
   if (diff < SECONDS_PER_HOUR) {
-    return `${Math.floor(diff / SECONDS_PER_MINUTE)}m ago`;
+    return locale === "ko"
+      ? `${Math.floor(diff / SECONDS_PER_MINUTE)}분 전`
+      : `${Math.floor(diff / SECONDS_PER_MINUTE)}m ago`;
   }
-  return lastUpdate.toLocaleTimeString("ko-KR", {
+  return lastUpdate.toLocaleTimeString(locale === "ko" ? "ko-KR" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
 function LastUpdateTicker({ lastUpdate }: LastUpdateTickerProps) {
+  const locale = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -57,11 +65,13 @@ function LastUpdateTicker({ lastUpdate }: LastUpdateTickerProps) {
   }, [lastUpdate]);
 
   const lastUpdateText = useMemo(
-    () => formatLastUpdateText(lastUpdate, nowMs),
-    [lastUpdate, nowMs],
+    () => formatLastUpdateText(lastUpdate, nowMs, locale),
+    [lastUpdate, locale, nowMs],
   );
 
-  return <span>Last update: {lastUpdateText}</span>;
+  return (
+    <span>{locale === "ko" ? `마지막 갱신: ${lastUpdateText}` : `Last update: ${lastUpdateText}`}</span>
+  );
 }
 
 /**
@@ -69,6 +79,7 @@ function LastUpdateTicker({ lastUpdate }: LastUpdateTickerProps) {
  * 가이드라인: 컴포넌트 분리 및 커스텀 훅 사용으로 가독성 향상
  */
 export function MonitoringSection() {
+  const locale = useLocale();
   const {
     monitors,
     summary,
@@ -78,15 +89,43 @@ export function MonitoringSection() {
     lastUpdate,
   } = useMonitoringStatus();
 
+  const copy =
+    locale === "ko"
+      ? {
+          groupFallback: "인프라",
+          loading: "랙 정보를 초기화하는 중...",
+          activeRacks: "활성 랙",
+          globalStatus: "전체 상태",
+          warning: "주의",
+          optimal: "정상",
+          avgAvailability: "평균 가용성",
+          online: "정상",
+          offline: "오프라인",
+          pending: "대기 중",
+          autoRefresh: "자동 새로고침",
+        }
+      : {
+          groupFallback: "Infrastructure",
+          loading: "Initializing Rack Bay...",
+          activeRacks: "Active Racks",
+          globalStatus: "Global Status",
+          warning: "Warning",
+          optimal: "Optimal",
+          avgAvailability: "Avg Availability",
+          online: "Online",
+          offline: "Offline",
+          pending: "Pending",
+          autoRefresh: "Auto-refresh",
+        };
   // useMemo로 계산값 메모이제이션
   const groupedMonitors = useMemo(() => {
     return monitors.reduce((acc, monitor) => {
-      const groupName = monitor.group || "Infrastructure";
+      const groupName = monitor.group || copy.groupFallback;
       if (!acc[groupName]) acc[groupName] = [];
       acc[groupName].push(monitor);
       return acc;
     }, {} as Record<string, MonitorStatus[]>);
-  }, [monitors]);
+  }, [copy.groupFallback, monitors]);
 
   // 정의된 순서대로 그룹 정렬 (메모이제이션)
   const sortedGroups = useMemo(() => {
@@ -114,7 +153,7 @@ export function MonitoringSection() {
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="font-mono text-xs tracking-[0.5em] opacity-50 uppercase animate-pulse">
-          Initializing Rack Bay...
+          {copy.loading}
         </p>
       </div>
     );
@@ -163,7 +202,7 @@ export function MonitoringSection() {
             <div className="flex gap-12 font-mono text-white">
               <div className="text-right">
                 <div className="text-[10px] text-white/40 uppercase mb-1 tracking-widest">
-                  Active Racks
+                  {copy.activeRacks}
                 </div>
                 <div className="text-3xl font-bold leading-none">
                   {sortedGroups.length.toString().padStart(2, "0")}
@@ -171,10 +210,10 @@ export function MonitoringSection() {
               </div>
               <div className="text-right border-l border-white/10 pl-12">
                 <div className="text-[10px] text-white/40 uppercase mb-1 tracking-widest">
-                  Global Status
+                  {copy.globalStatus}
                 </div>
                 <div className="text-3xl font-bold text-primary leading-none uppercase italic">
-                  {summary.offline > 0 ? "Warning" : "Optimal"}
+                  {summary.offline > 0 ? copy.warning : copy.optimal}
                 </div>
               </div>
             </div>
@@ -186,7 +225,7 @@ export function MonitoringSection() {
             <div className="bg-[#0d0d0f] border border-white/10 rounded-xl p-4 font-mono">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] text-white/40 uppercase tracking-widest">
-                  Avg Availability
+                  {copy.avgAvailability}
                 </span>
                 <Activity className="w-4 h-4 text-primary" />
               </div>
@@ -199,7 +238,7 @@ export function MonitoringSection() {
             <div className="bg-[#0d0d0f] border border-white/10 rounded-xl p-4 font-mono">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] text-white/40 uppercase tracking-widest">
-                  Online
+                  {copy.online}
                 </span>
                 <CheckCircle2 className="w-4 h-4 text-green-400" />
               </div>
@@ -212,7 +251,7 @@ export function MonitoringSection() {
             <div className="bg-[#0d0d0f] border border-white/10 rounded-xl p-4 font-mono">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] text-white/40 uppercase tracking-widest">
-                  Offline
+                  {copy.offline}
                 </span>
                 <XCircle className="w-4 h-4 text-red-400" />
               </div>
@@ -225,7 +264,7 @@ export function MonitoringSection() {
             <div className="bg-[#0d0d0f] border border-white/10 rounded-xl p-4 font-mono">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] text-white/40 uppercase tracking-widest">
-                  Pending
+                  {copy.pending}
                 </span>
                 <AlertCircle className="w-4 h-4 text-yellow-400" />
               </div>
@@ -248,7 +287,7 @@ export function MonitoringSection() {
                 className="w-2 h-2 rounded-full bg-green-400"
               />
               <span>
-                Auto-refresh: {MONITORING_REFRESH_INTERVAL_MS / 1000}s
+                {copy.autoRefresh}: {MONITORING_REFRESH_INTERVAL_MS / 1000}s
               </span>
             </div>
           </div>

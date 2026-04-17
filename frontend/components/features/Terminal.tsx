@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { X, Terminal as TerminalIcon, Minus, Maximize2, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -37,18 +38,27 @@ function getLogColor(type: LogEntry["type"]): string {
 }
 
 export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
+  const locale = useLocale();
+  const t = useTranslations("Terminal");
   const [input, setInput] = React.useState("");
   const [activeTab, setActiveTab] = React.useState(0);
   const [tabs] = React.useState([
     { id: 0, name: "Bash", path: "~" },
   ]);
-  const [logs, setLogs] = React.useState<LogEntry[]>([
-    createLogEntry("system", "Welcome to Nangman Infra v1.0.0"),
-    createLogEntry("system", "Type 'help' to see available commands."),
+  const [logs, setLogs] = React.useState<LogEntry[]>(() => [
+    createLogEntry("system", t("welcome")),
+    createLogEntry("system", t("helpHint")),
   ]);
   const [mounted, setMounted] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    setLogs([
+      createLogEntry("system", t("welcome")),
+      createLogEntry("system", t("helpHint")),
+    ]);
+  }, [t]);
 
   // Prevent hydration mismatch
   React.useEffect(() => {
@@ -80,18 +90,18 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
             "output",
             (
             <div className="space-y-1">
-              <p>Available commands:</p>
+              <p>{t("availableCommands")}</p>
               <div className="grid grid-cols-[100px_1fr] gap-2">
                 <span style={{ color: TERMINAL_COLORS.COMMAND }}>ls</span>
-                <span>List available pages</span>
+                <span>{t("commands.ls")}</span>
                 <span style={{ color: TERMINAL_COLORS.COMMAND }}>cd [page]</span>
-                <span>Navigate to a page</span>
+                <span>{t("commands.cd")}</span>
                 <span style={{ color: TERMINAL_COLORS.COMMAND }}>whoami</span>
-                <span>Show visitor info</span>
+                <span>{t("commands.whoami")}</span>
                 <span style={{ color: TERMINAL_COLORS.COMMAND }}>clear</span>
-                <span>Clear terminal history</span>
+                <span>{t("commands.clear")}</span>
                 <span style={{ color: TERMINAL_COLORS.COMMAND }}>exit</span>
-                <span>Close terminal</span>
+                <span>{t("commands.exit")}</span>
               </div>
             </div>
           ),
@@ -113,7 +123,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
         );
         break;
       case "whoami":
-        newLogs.push(createLogEntry("output", "visitor@nangman-infra (Guest)"));
+        newLogs.push(createLogEntry("output", t("whoamiOutput")));
         break;
       case "clear":
         setLogs([]);
@@ -127,16 +137,20 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
         if (trimmedCmd.startsWith("cd ")) {
           const target = trimmedCmd.split(" ")[1];
           if (TERMINAL_ROUTES.includes(target as typeof TERMINAL_ROUTES[number])) {
-            newLogs.push(createLogEntry("system", `Navigating to /${target}...`));
-            globalThis.location.href = `/${target}`;
+            newLogs.push(
+              createLogEntry("system", t("navigating", { path: `/${locale}/${target}` })),
+            );
+            globalThis.location.href = `/${locale}/${target}`;
           } else {
-            newLogs.push(createLogEntry("error", `Directory not found: ${target}`));
+            newLogs.push(
+              createLogEntry("error", t("directoryNotFound", { target })),
+            );
           }
         } else {
           newLogs.push(
             createLogEntry(
               "error",
-              `Command not found: ${trimmedCmd}. Type 'help' for help.`,
+              t("commandNotFound", { command: trimmedCmd }),
             ),
           );
         }
@@ -160,7 +174,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent 
+        <DialogContent 
         className="p-0 gap-0 overflow-hidden [&>button]:hidden rounded-lg"
         style={{
           width: '95vw',
@@ -172,7 +186,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
           boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
         }}
       >
-        <DialogTitle className="sr-only">터미널</DialogTitle>
+        <DialogTitle className="sr-only">{t("dialogTitle")}</DialogTitle>
         {/* Windows Terminal Style Tabs */}
         <div 
           className="flex items-center gap-0.5 px-2 pt-2"
@@ -220,7 +234,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
           <button
             className="p-2 rounded hover:bg-white/10 transition-colors ml-auto"
             style={{ color: TERMINAL_COLORS.TEXT }}
-            title="New Tab"
+            title={t("newTab")}
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -272,7 +286,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
             type="button"
             tabIndex={-1}
             onClick={focusInput}
-            aria-label="터미널 입력창에 포커스"
+            aria-label={t("focusInput")}
             className="absolute inset-0 z-0 cursor-text bg-transparent border-0 p-0"
           />
           <div className="relative z-10 space-y-1.5 pointer-events-none">
@@ -306,7 +320,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
                   color: TERMINAL_COLORS.TEXT,
                   caretColor: TERMINAL_COLORS.COMMAND,
                 }}
-                placeholder="명령어를 입력하세요"
+                placeholder={t("placeholder")}
                 autoComplete="off"
                 autoFocus
               />

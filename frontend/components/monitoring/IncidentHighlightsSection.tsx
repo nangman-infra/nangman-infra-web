@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { AlertTriangle, ArrowRight, Clock3 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import {
   getIncidentReports,
   getIncidentSeverityStyle,
@@ -9,6 +10,8 @@ import {
 const MAX_HIGHLIGHT_COUNT = 3;
 
 export function IncidentHighlightsSection() {
+  const locale = useLocale();
+  const t = useTranslations("IncidentsPage");
   const reports = getIncidentReports().slice(0, MAX_HIGHLIGHT_COUNT);
 
   if (reports.length === 0) {
@@ -27,7 +30,7 @@ export function IncidentHighlightsSection() {
               </span>
             </div>
             <h2 className="text-xl md:text-2xl font-black tracking-tight text-white uppercase italic">
-              Recent Incident Highlights
+              {t("highlightsTitle")}
             </h2>
           </div>
 
@@ -35,7 +38,7 @@ export function IncidentHighlightsSection() {
             href="/incidents"
             className="inline-flex items-center gap-1 text-xs md:text-sm text-primary hover:text-primary/80 transition-colors"
           >
-            <span>모든 이력 보기</span>
+            <span>{t("viewAll")}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -56,7 +59,7 @@ export function IncidentHighlightsSection() {
                   {report.severity}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-green-500/30 bg-green-500/10 px-2.5 py-0.5 text-[11px] font-mono text-green-300">
-                  {getIncidentStatusLabel(report.status)}
+                  {getIncidentStatusLabel(report.status, locale as "ko" | "en")}
                 </span>
               </div>
 
@@ -77,7 +80,7 @@ export function IncidentHighlightsSection() {
                   href={`/incidents/${report.slug}`}
                   className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors"
                 >
-                  <span>상세 보기</span>
+                  <span>{t("detail")}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

@@ -2,6 +2,7 @@
 
 import { motion, MotionValue } from "framer-motion";
 import { Terminal as TerminalIcon } from "lucide-react";
+import { useLocale } from "next-intl";
 
 type HeroSectionProps = Readonly<{
   x: MotionValue<number>;
@@ -10,6 +11,31 @@ type HeroSectionProps = Readonly<{
 }>;
 
 export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
+  const locale = useLocale();
+  const copy =
+    locale === "ko"
+      ? {
+          badge: "시스템 정상 운영 중",
+          titleLead: "우리는",
+          titleAccent: "보이지 않는 기반을 만듭니다.",
+          bodyLead: "인프라 엔지니어링 커뮤니티,",
+          bodyName: "낭만 인프라",
+          bodyEnd: "입니다.",
+          bodySub: "견고한 아키텍처 위에 뜨거운 열정을 담습니다.",
+          primaryCta: "인프라 콘솔 열기",
+          secondaryCta: "터미널 열기",
+        }
+      : {
+          badge: "System Operational",
+          titleLead: "We Build the",
+          titleAccent: "Invisible.",
+          bodyLead: "An infrastructure engineering community,",
+          bodyName: "Nangman Infra",
+          bodyEnd: ".",
+          bodySub: "We bring real passion to reliable systems architecture.",
+          primaryCta: "Open Console",
+          secondaryCta: "Open Terminal",
+        };
   return (
     <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center pb-4 md:pb-6">
       {/* Badge */}
@@ -29,7 +55,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
           </span>{" "}
-          System Operational
+          {copy.badge}
         </div>
       </motion.div>
 
@@ -50,7 +76,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             textShadow: '0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3)',
           }}
         >
-          We Build the
+          {copy.titleLead}
         </motion.span>
         <br className="md:hidden" />
         <motion.span 
@@ -63,7 +89,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             filter: 'drop-shadow(0 0 15px rgba(251, 191, 36, 0.3))',
           }}
         >
-          Invisible.
+          {copy.titleAccent}
           <motion.span
             animate={{ opacity: [1, 0.5, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -90,10 +116,10 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             textShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2)',
           }}
         >
-          인프라 엔지니어링 커뮤니티,{" "}
+          {copy.bodyLead}{" "}
           <span className="text-foreground font-semibold relative">
             <span className="relative z-10" style={{ textShadow: '0 1px 3px rgba(0, 0, 0, 0.4)' }}>
-              낭만 인프라
+              {copy.bodyName}
             </span>
             <motion.span
               className="absolute bottom-0 left-0 right-0 h-2 bg-primary/30 z-0"
@@ -102,7 +128,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
               transition={{ duration: 0.8, delay: 0.7 }}
             />
           </span>{" "}
-          입니다.
+          {copy.bodyEnd}
         </motion.p>
         <motion.p
           initial={{ opacity: 0 }}
@@ -113,7 +139,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             textShadow: '0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2)',
           }}
         >
-          견고한 아키텍처 위에 뜨거운 열정을 담습니다.
+          {copy.bodySub}
         </motion.p>
       </motion.div>
 
@@ -136,7 +162,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             whileHover={{ x: '100%' }}
             transition={{ duration: 0.6 }}
           />
-          <span className="relative z-10">Deploy Your Dream</span>
+          <span className="relative z-10">{copy.primaryCta}</span>
           <span className="absolute inset-0 rounded-lg ring-2 ring-white/20 group-hover:ring-white/40 transition-all"></span>
         </motion.button>
         
@@ -153,7 +179,7 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
             transition={{ duration: 0.6 }}
           />
           <TerminalIcon className="w-4 h-4 relative z-10" />
-          <span className="relative z-10">Open Terminal</span>
+          <span className="relative z-10">{copy.secondaryCta}</span>
           <kbd className="gpu-accelerated-blur ml-2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/40 bg-background/30 px-1.5 font-mono text-[10px] font-medium text-foreground/80 opacity-100 relative z-10 backdrop-blur-sm">
             <span className="text-xs">⌘</span>K
           </kbd>

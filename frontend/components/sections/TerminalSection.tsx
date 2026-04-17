@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
 import { TerminalDisplay } from "@/components/features/TerminalDisplay";
 import type { TerminalCommand } from "@/data/terminalCommands";
 
@@ -9,6 +10,17 @@ type TerminalSectionProps = Readonly<{
 }>;
 
 export function TerminalSection({ terminalCommands }: TerminalSectionProps) {
+  const locale = useLocale();
+  const copy =
+    locale === "ko"
+      ? {
+          title: "기본부터 차근차근 배우겠습니다",
+          subtitle: "시스템의 근본을 이해하고, 인프라의 동작 원리를 하나씩 알아갑니다",
+        }
+      : {
+          title: "We Learn from the Fundamentals",
+          subtitle: "We study how systems work and build infrastructure knowledge step by step.",
+        };
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-7xl mx-auto">
@@ -22,10 +34,10 @@ export function TerminalSection({ terminalCommands }: TerminalSectionProps) {
           {/* Section Title */}
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              기본부터 차근차근 배우겠습니다
+              {copy.title}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              시스템의 근본을 이해하고, 인프라의 동작 원리를 하나씩 알아갑니다
+              {copy.subtitle}
             </p>
           </div>
 

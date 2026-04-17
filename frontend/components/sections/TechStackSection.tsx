@@ -1,8 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
 
 export function TechStackSection() {
+  const locale = useLocale();
+  const copy =
+    locale === "ko"
+      ? {
+          title: "우리의 전문 영역",
+          subtitle: "네트워크, 운영체제, 클라우드부터 모니터링까지",
+          categories: {
+            network: "네트워크",
+            os: "운영체제",
+            cloud: "클라우드",
+            data: "데이터 & 모니터링",
+          },
+        }
+      : {
+          title: "Our Expertise",
+          subtitle: "From networking and operating systems to cloud and observability",
+          categories: {
+            network: "Network",
+            os: "OS",
+            cloud: "Cloud",
+            data: "Data & Monitoring",
+          },
+        };
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto">
@@ -15,10 +39,10 @@ export function TechStackSection() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Our Expertise
+              {copy.title}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              네트워크, 운영체제, 클라우드부터 모니터링까지
+              {copy.subtitle}
             </p>
           </motion.div>
 
@@ -35,7 +59,7 @@ export function TechStackSection() {
               <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                  Network
+                  {copy.categories.network}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 relative z-10">
                   {['TCP/IP', 'DNS', 'Routing', 'CDN'].map((tech) => (
@@ -61,7 +85,7 @@ export function TechStackSection() {
               <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                  OS
+                  {copy.categories.os}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 relative z-10">
                   {['Linux', 'Unix', 'Shell', 'Systemd'].map((tech) => (
@@ -87,7 +111,7 @@ export function TechStackSection() {
               <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                  Cloud
+                  {copy.categories.cloud}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 relative z-10">
                   {['AWS', 'Docker', 'K8s', 'Terraform'].map((tech) => (
@@ -113,7 +137,7 @@ export function TechStackSection() {
               <div className="gpu-accelerated-blur group relative h-full p-5 md:p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500">
                 <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <h3 className="text-lg md:text-xl font-semibold mb-4 relative z-10 text-foreground">
-                  Data & Monitor
+                  {copy.categories.data}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 relative z-10">
                   {['PostgreSQL', 'Redis', 'Prometheus', 'Grafana'].map((tech) => (

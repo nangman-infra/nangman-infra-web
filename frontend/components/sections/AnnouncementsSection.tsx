@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { ArrowRight, BellRing } from "lucide-react";
+import { useLocale } from "next-intl";
 import type { Announcement } from "@/lib/domain/announcement";
+import { Link } from "@/i18n/navigation";
 
 type AnnouncementsSectionProps = Readonly<{
   latestAnnouncements: Announcement[];
@@ -17,15 +18,30 @@ function typeBadgeClass(type: Announcement["type"]): string {
   return "border-border/50 bg-background/40 text-muted-foreground";
 }
 
-function typeLabel(type: Announcement["type"]): string {
+function typeLabel(type: Announcement["type"], locale: string): string {
   if (type === "notice") {
-    return "공지";
+    return locale === "ko" ? "공지" : "Notice";
   }
 
-  return "업데이트";
+  return locale === "ko" ? "업데이트" : "Update";
 }
 
 export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSectionProps) {
+  const locale = useLocale();
+  const copy =
+    locale === "ko"
+      ? {
+          title: "공지사항",
+          subtitle: "운영 소식과 업데이트를 확인하세요",
+          empty: "등록된 공지사항이 없습니다.",
+          viewAll: "전체 공지 보기",
+        }
+      : {
+          title: "Announcements",
+          subtitle: "Stay up to date with operational news and service updates.",
+          empty: "No announcements are available.",
+          viewAll: "View All Announcements",
+        };
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto">
@@ -39,16 +55,16 @@ export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSecti
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              공지사항
+              {copy.title}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              운영 소식과 업데이트를 확인하세요
+              {copy.subtitle}
             </p>
           </motion.div>
 
           {latestAnnouncements.length === 0 ? (
             <div className="rounded-2xl border border-border/40 bg-card/20 p-6 text-center text-muted-foreground backdrop-blur-sm">
-              등록된 공지사항이 없습니다.
+              {copy.empty}
             </div>
           ) : (
             <div className="space-y-4 md:space-y-5">
@@ -68,7 +84,7 @@ export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSecti
                         className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-mono ${typeBadgeClass(announcement.type)}`}
                       >
                         <BellRing className="h-3 w-3" />
-                        {typeLabel(announcement.type)}
+                        {typeLabel(announcement.type, locale)}
                       </span>
                       <span className="text-xs text-muted-foreground font-mono">{announcement.date}</span>
                     </div>
@@ -87,7 +103,7 @@ export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSecti
               href="/announcements"
               className="inline-flex items-center gap-2 rounded-md border border-primary/30 px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/10"
             >
-              전체 공지 보기
+              {copy.viewAll}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

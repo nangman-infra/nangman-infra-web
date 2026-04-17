@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
 import type { Member } from "@/types/member";
 import {
   ANIMATION_DURATION_SHORT,
@@ -83,6 +84,7 @@ function MemberSpecialties({ member, isSenior }: MemberCardContentProps) {
 }
 
 function MemberHighlights({ member, isSenior }: MemberCardContentProps) {
+  const locale = useLocale();
   const certifications = member.certifications ?? [];
   const achievements = member.achievements ?? [];
   const itemGapClassName = isSenior ? "gap-2" : "gap-1.5";
@@ -104,7 +106,11 @@ function MemberHighlights({ member, isSenior }: MemberCardContentProps) {
           {certifications.length > MAX_DISPLAY_CERTIFICATIONS && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
               <span className={`rounded-full bg-primary/40 shrink-0 ${bulletSizeClassName}`} />
-              <span>외 {certifications.length - MAX_DISPLAY_CERTIFICATIONS}개</span>
+              <span>
+                {locale === "ko"
+                  ? `외 ${certifications.length - MAX_DISPLAY_CERTIFICATIONS}개`
+                  : `${certifications.length - MAX_DISPLAY_CERTIFICATIONS} more`}
+              </span>
             </div>
           )}
         </div>
@@ -131,7 +137,11 @@ function MemberHighlights({ member, isSenior }: MemberCardContentProps) {
         {achievements.length > MAX_DISPLAY_ACHIEVEMENTS && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
             <span className={`rounded-full bg-primary/40 shrink-0 ${bulletSizeClassName}`} />
-            <span>외 {achievements.length - MAX_DISPLAY_ACHIEVEMENTS}개</span>
+            <span>
+              {locale === "ko"
+                ? `외 ${achievements.length - MAX_DISPLAY_ACHIEVEMENTS}개`
+                : `${achievements.length - MAX_DISPLAY_ACHIEVEMENTS} more`}
+            </span>
           </div>
         )}
       </div>

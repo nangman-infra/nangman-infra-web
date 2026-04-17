@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Nangman Infra | We Build the Invisible",
     short_name: "Nangman Infra",
     description:
-      "현업 엔지니어와 멘티가 함께 성장하며, 실무 중심의 인프라 경험을 축적하는 커뮤니티",
+      "An infrastructure engineering community where working engineers and mentees grow through practical systems work.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

@@ -1,5 +1,6 @@
 import groovy.json.JsonOutput
 
+def SPOT_AGENT_LABEL = 'spot-agent'
 def DEFAULT_SONARQUBE_INSTALLATION = 'sonarqube'
 def DEFAULT_SONAR_SCANNER_TOOL = 'SonarScanner'
 def DEFAULT_SONAR_PROJECT_KEY = 'nangman-web'
@@ -8,7 +9,7 @@ def GITHUB_WEBHOOK_TRIGGER_TOKEN_CREDENTIAL_ID = 'GITHUB_WEBHOOK_TRIGGER_TOKEN'
 def EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID = 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN'
 
 pipeline {
-    agent { label 'spot-agent' }
+    agent { label SPOT_AGENT_LABEL }
 
     triggers {
         GenericTrigger(

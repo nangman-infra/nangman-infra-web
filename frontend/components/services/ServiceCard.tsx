@@ -178,7 +178,8 @@ function ServiceCardBody({
 }
 
 export function ServiceCard({ service, index }: ServiceCardProps) {
-  const locale = (useLocale() === "en" ? "en" : "ko") as AppLocale;
+  const localeValue = useLocale();
+  const locale: AppLocale = localeValue === "en" ? "en" : "ko";
   const hasUrl = Boolean(service.url);
   const hasUrls = Boolean(service.urls && service.urls.length > 0);
   const hasIcon = Boolean(service.icon);

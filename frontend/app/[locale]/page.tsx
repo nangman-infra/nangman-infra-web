@@ -5,8 +5,6 @@ import { fetchBackendJson } from "@/lib/application/server/fetch-backend-json";
 import { setRequestLocale } from "next-intl/server";
 import HomeClient from "@/app/HomeClient";
 
-export const dynamic = "force-dynamic";
-
 const HOME_FEED_REVALIDATE_SECONDS = 300;
 const BLOG_BACKEND_PATH = "/api/v1/blog/posts";
 const ANNOUNCEMENTS_BACKEND_PATH = "/api/v1/notices";
@@ -14,9 +12,9 @@ const ANNOUNCEMENTS_BACKEND_PATH = "/api/v1/notices";
 // Server Component
 export default async function Home({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ locale: string }>;
-}) {
+}>) {
   const { locale } = await params;
   setRequestLocale(locale);
   const [latestPosts, latestAnnouncements] = await Promise.all([

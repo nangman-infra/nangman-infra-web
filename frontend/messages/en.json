@@ -100,5 +100,99 @@
     "progressRendering": "Rendering the document.",
     "progressLayout": "Finalizing the layout.",
     "progressLongRunning": "The document contains a lot of data, so the job needs a bit more time."
+  },
+  "AnnouncementsSection": {
+    "title": "Announcements",
+    "subtitle": "Stay up to date with operational news and service updates.",
+    "empty": "No announcements are available.",
+    "viewAll": "View All Announcements"
+  },
+  "BlogSection": {
+    "title": "Engineering Blog",
+    "subtitle": "We document troubleshooting paths and technical depth.",
+    "latest": "Latest Updates",
+    "sourcePrefix": "Source",
+    "recentEmpty": "Additional posts will appear here when available.",
+    "empty": "No blog posts are available yet.",
+    "viewAll": "View All Blog Posts",
+    "readOriginal": "Read Original",
+    "featured": "Featured"
+  },
+  "ContactSection": {
+    "title": "Want to Work Together?",
+    "subtitle": "We welcome collaboration, hiring, and technical exchange.",
+    "location": "Location",
+    "email": "Email",
+    "cta": "Contact Us",
+    "address": "125 Dongseo-daero, Yuseong-gu, Daejeon"
+  },
+  "SeniorsSection": {
+    "title": "We Grow with Senior Engineers",
+    "subtitle": "We learn alongside senior engineers working at AWS and Equinix",
+    "awsTitle": "AWS Infrastructure Mentor",
+    "equinixTitle": "Equinix Infrastructure Mentor",
+    "seniorDescription": "We grow together through hands-on industry experience.",
+    "mentoringTitle": "Mentoring",
+    "mentoringDescription": "Share practical experience and guidance",
+    "networkingTitle": "Networking",
+    "networkingDescription": "Build connections and stay in conversation",
+    "careerTitle": "Career Guidance",
+    "careerDescription": "Get advice on jobs and long-term direction"
+  },
+  "CurriculumSection": {
+    "title": "Learning Curriculum",
+    "subtitle": "A structured path from fundamentals to production practice",
+    "cards": {
+      "linux": {
+        "title": "Linux Commands",
+        "description": "Learn the fundamentals of shell usage, file systems, and process management",
+        "topics": ["Shell", "File System", "Processes", "Systemd"]
+      },
+      "networking": {
+        "title": "Networking",
+        "description": "Understand the principles behind TCP/IP, DNS, and routing",
+        "topics": ["TCP/IP", "DNS", "Routing"]
+      },
+      "os": {
+        "title": "Operating Systems",
+        "description": "Study Linux kernel concepts and core system administration",
+        "topics": ["Kernel", "System Administration"]
+      },
+      "hardware": {
+        "title": "Hardware Infrastructure",
+        "description": "Understand the physical foundations of servers, storage, and data centers",
+        "topics": ["Servers", "Storage"]
+      },
+      "aws": {
+        "title": "AWS Cloud",
+        "description": "Practice AWS core services such as EC2, S3, and VPC",
+        "topics": ["EC2", "S3", "VPC", "RDS"]
+      },
+      "containers": {
+        "title": "Containers",
+        "description": "Learn container orchestration with Docker and Kubernetes",
+        "topics": ["Docker", "K8s"]
+      },
+      "iac": {
+        "title": "IaC",
+        "description": "Manage infrastructure with Infrastructure as Code practices",
+        "topics": ["Terraform", "CloudFormation"]
+      },
+      "security": {
+        "title": "Security Basics",
+        "description": "Learn the basics of firewalls, encryption, and access control",
+        "topics": ["Firewall", "Encryption", "Access Control"]
+      },
+      "monitoring": {
+        "title": "Monitoring & Logging",
+        "description": "Monitor system health and analyze logs",
+        "topics": ["Prometheus", "Grafana", "ELK Stack"]
+      },
+      "projects": {
+        "title": "Production Projects",
+        "description": "Apply what you learned by building and operating real services",
+        "topics": ["Projects", "Hands-on", "Operations"]
+      }
+    }
   }
 }

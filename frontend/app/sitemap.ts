@@ -17,13 +17,39 @@ const LOCALIZED_PAGES = [
   "/contact",
 ] as const;
 
+function getChangeFrequency(
+  pathname: (typeof LOCALIZED_PAGES)[number],
+): "hourly" | "weekly" | "monthly" {
+  if (pathname === "/monitoring") {
+    return "hourly";
+  }
+
+  if (pathname === "") {
+    return "weekly";
+  }
+
+  return "monthly";
+}
+
+function getPagePriority(pathname: (typeof LOCALIZED_PAGES)[number]): number {
+  if (pathname === "") {
+    return 1;
+  }
+
+  if (pathname === "/services" || pathname === "/projects") {
+    return 0.9;
+  }
+
+  return 0.8;
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const pageEntries: MetadataRoute.Sitemap = routing.locales.flatMap((locale) =>
     LOCALIZED_PAGES.map((pathname) => ({
       url: `${BASE_URL}/${locale}${pathname}`,
       lastModified: DEFAULT_LAST_MODIFIED,
-      changeFrequency: pathname === "/monitoring" ? "hourly" : pathname === "" ? "weekly" : "monthly",
-      priority: pathname === "" ? 1 : pathname === "/services" || pathname === "/projects" ? 0.9 : 0.8,
+      changeFrequency: getChangeFrequency(pathname),
+      priority: getPagePriority(pathname),
       alternates: {
         languages: {
           ko: `${BASE_URL}/ko${pathname}`,

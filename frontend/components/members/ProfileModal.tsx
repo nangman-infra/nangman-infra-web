@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -37,6 +38,10 @@ type ProfileModalProps = Readonly<{
 const PORTFOLIO_JOB_POLL_INTERVAL_MS = 2500;
 const PORTFOLIO_JOB_MAX_WAIT_MS = 10 * 60 * 1000;
 const PORTFOLIO_JOB_STORAGE_KEY = "members:portfolio-job-state:v2";
+
+function renderMentoringHighlight(chunks: ReactNode): ReactNode {
+  return <span className="font-semibold text-primary">{chunks}</span>;
+}
 
 type PortfolioJobStatus = "queued" | "running" | "completed" | "failed";
 
@@ -1256,9 +1261,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                 <p className="text-sm sm:text-base text-muted-foreground wrap-break-word">
                   {t.rich("mentoringBody", {
                     count: member.mentoring.count,
-                    strong: (chunks) => (
-                      <span className="font-semibold text-primary">{chunks}</span>
-                    ),
+                    strong: renderMentoringHighlight,
                   })}
                 </p>
                 {member.mentoring.description && (

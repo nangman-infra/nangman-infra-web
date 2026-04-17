@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, BellRing } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Announcement } from "@/lib/domain/announcement";
 import { Link } from "@/i18n/navigation";
 
@@ -28,20 +28,7 @@ function typeLabel(type: Announcement["type"], locale: string): string {
 
 export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSectionProps) {
   const locale = useLocale();
-  const copy =
-    locale === "ko"
-      ? {
-          title: "공지사항",
-          subtitle: "운영 소식과 업데이트를 확인하세요",
-          empty: "등록된 공지사항이 없습니다.",
-          viewAll: "전체 공지 보기",
-        }
-      : {
-          title: "Announcements",
-          subtitle: "Stay up to date with operational news and service updates.",
-          empty: "No announcements are available.",
-          viewAll: "View All Announcements",
-        };
+  const t = useTranslations("AnnouncementsSection");
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto">
@@ -55,16 +42,16 @@ export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSecti
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {copy.title}
+              {t("title")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {copy.subtitle}
+              {t("subtitle")}
             </p>
           </motion.div>
 
           {latestAnnouncements.length === 0 ? (
             <div className="rounded-2xl border border-border/40 bg-card/20 p-6 text-center text-muted-foreground backdrop-blur-sm">
-              {copy.empty}
+              {t("empty")}
             </div>
           ) : (
             <div className="space-y-4 md:space-y-5">
@@ -103,7 +90,7 @@ export function AnnouncementsSection({ latestAnnouncements }: AnnouncementsSecti
               href="/announcements"
               className="inline-flex items-center gap-2 rounded-md border border-primary/30 px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/10"
             >
-              {copy.viewAll}
+              {t("viewAll")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

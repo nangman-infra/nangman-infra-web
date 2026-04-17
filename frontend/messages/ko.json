@@ -100,5 +100,99 @@
     "progressRendering": "문서를 생성하고 있어요.",
     "progressLayout": "레이아웃을 정리하고 있어요.",
     "progressLongRunning": "데이터 양이 많아 시간이 더 필요해요. 계속 작업 중입니다."
+  },
+  "AnnouncementsSection": {
+    "title": "공지사항",
+    "subtitle": "운영 소식과 업데이트를 확인하세요",
+    "empty": "등록된 공지사항이 없습니다.",
+    "viewAll": "전체 공지 보기"
+  },
+  "BlogSection": {
+    "title": "기술 블로그",
+    "subtitle": "문제 해결 과정과 기술적 깊이를 기록합니다",
+    "latest": "최신 업데이트",
+    "sourcePrefix": "원문",
+    "recentEmpty": "추가 포스트가 준비되면 여기에 표시됩니다.",
+    "empty": "아직 표시할 블로그 포스트가 없습니다.",
+    "viewAll": "전체 블로그 보기",
+    "readOriginal": "원문 보기",
+    "featured": "Featured"
+  },
+  "ContactSection": {
+    "title": "함께하고 싶으신가요?",
+    "subtitle": "프로젝트 협업, 채용, 기술 교류 등 언제든 환영합니다",
+    "location": "위치",
+    "email": "이메일",
+    "cta": "문의하기",
+    "address": "대전광역시 유성구 동서대로 125"
+  },
+  "SeniorsSection": {
+    "title": "선배들과 함께합니다",
+    "subtitle": "AWS, Equinix에서 근무하는 선배들과 함께 성장합니다",
+    "awsTitle": "AWS 인프라 엔지니어 선배",
+    "equinixTitle": "Equinix 인프라 엔지니어 선배",
+    "seniorDescription": "실무 경험을 나누며 함께 성장합니다",
+    "mentoringTitle": "멘토링",
+    "mentoringDescription": "실무 경험과 조언을 나눕니다",
+    "networkingTitle": "네트워킹",
+    "networkingDescription": "함께 연결되고 소통합니다",
+    "careerTitle": "진로 상담",
+    "careerDescription": "취업과 진로에 대한 조언을 받습니다"
+  },
+  "CurriculumSection": {
+    "title": "학습 커리큘럼",
+    "subtitle": "기초부터 실무까지 체계적으로 배웁니다",
+    "cards": {
+      "linux": {
+        "title": "리눅스 명령어",
+        "description": "Shell, 파일 시스템, 프로세스 관리의 기초를 다집니다",
+        "topics": ["Shell", "파일 시스템", "프로세스", "Systemd"]
+      },
+      "networking": {
+        "title": "네트워크",
+        "description": "TCP/IP, DNS, 라우팅의 원리를 이해합니다",
+        "topics": ["TCP/IP", "DNS", "라우팅"]
+      },
+      "os": {
+        "title": "운영체제",
+        "description": "Linux 커널과 시스템 관리의 핵심을 배웁니다",
+        "topics": ["커널", "시스템 관리"]
+      },
+      "hardware": {
+        "title": "하드웨어 인프라",
+        "description": "서버, 스토리지, 데이터센터의 물리적 구조를 이해합니다",
+        "topics": ["서버", "스토리지"]
+      },
+      "aws": {
+        "title": "AWS 클라우드",
+        "description": "EC2, S3, VPC 등 AWS 핵심 서비스를 실습합니다",
+        "topics": ["EC2", "S3", "VPC", "RDS"]
+      },
+      "containers": {
+        "title": "컨테이너",
+        "description": "Docker와 Kubernetes로 컨테이너 오케스트레이션을 배웁니다",
+        "topics": ["Docker", "K8s"]
+      },
+      "iac": {
+        "title": "IaC",
+        "description": "Infrastructure as Code로 인프라를 코드로 관리합니다",
+        "topics": ["Terraform", "CloudFormation"]
+      },
+      "security": {
+        "title": "기초 보안",
+        "description": "방화벽, 암호화, 접근 제어의 기초를 배웁니다",
+        "topics": ["방화벽", "암호화", "접근 제어"]
+      },
+      "monitoring": {
+        "title": "모니터링 & 로깅",
+        "description": "시스템 상태를 모니터링하고 로그를 분석합니다",
+        "topics": ["Prometheus", "Grafana", "ELK Stack"]
+      },
+      "projects": {
+        "title": "실무 프로젝트",
+        "description": "학습한 내용을 종합하여 실제 서비스를 구축하고 운영합니다",
+        "topics": ["프로젝트", "실전", "운영"]
+      }
+    }
   }
 }

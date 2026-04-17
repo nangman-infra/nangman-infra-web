@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { BookOpen, ArrowRight, CalendarDays } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { BlogPost } from "@/data/blogPosts";
 import { Link } from "@/i18n/navigation";
 import { getIntlLocale } from "@/lib/i18n";
@@ -36,30 +36,7 @@ function getSourceHostname(post: BlogPost): string {
 
 export function BlogSection({ latestPosts }: BlogSectionProps) {
   const locale = useLocale();
-  const copy =
-    locale === "ko"
-      ? {
-          title: "기술 블로그",
-          subtitle: "문제 해결 과정과 기술적 깊이를 기록합니다",
-          latest: "최신 업데이트",
-          sourcePrefix: "원문",
-          recentEmpty: "추가 포스트가 준비되면 여기에 표시됩니다.",
-          empty: "아직 표시할 블로그 포스트가 없습니다.",
-          viewAll: "전체 블로그 보기",
-          readOriginal: "원문 보기",
-          featured: "Featured",
-        }
-      : {
-          title: "Engineering Blog",
-          subtitle: "We document troubleshooting paths and technical depth.",
-          latest: "Latest Updates",
-          sourcePrefix: "Source",
-          recentEmpty: "Additional posts will appear here when available.",
-          empty: "No blog posts are available yet.",
-          viewAll: "View All Blog Posts",
-          readOriginal: "Read Original",
-          featured: "Featured",
-        };
+  const t = useTranslations("BlogSection");
   const sortedPosts = [...latestPosts].sort(
     (a, b) => Date.parse(b.date) - Date.parse(a.date),
   );
@@ -79,10 +56,10 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {copy.title}
+              {t("title")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {copy.subtitle}
+              {t("subtitle")}
             </p>
           </motion.div>
 
@@ -99,14 +76,14 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                   href={getBlogPostSourceUrl(featuredPost)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${featuredPost.title} ${copy.readOriginal}`}
+                  aria-label={`${featuredPost.title} ${t("readOriginal")}`}
                   className="absolute inset-0 rounded-2xl"
                 />
                 <div className="absolute inset-0 bg-linear-to-br from-primary/15 via-primary/5 to-transparent opacity-80 pointer-events-none" />
                 <div className="relative z-10 pointer-events-none space-y-5">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] tracking-widest uppercase px-2 py-1 rounded-full bg-primary/20 text-primary font-semibold">
-                      {copy.featured}
+                      {t("featured")}
                     </span>
                     <span className="text-[11px] tracking-wide px-2 py-1 rounded-full bg-background/60 border border-border/60 text-muted-foreground">
                       {featuredPost.platform}
@@ -153,7 +130,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                 className="rounded-2xl border border-border/40 bg-card/20 p-4 md:p-5 backdrop-blur-sm"
               >
                 <h3 className="text-sm font-semibold tracking-wide text-muted-foreground mb-4">
-                  {copy.latest}
+                  {t("latest")}
                 </h3>
                 <div className="space-y-2">
                   {recentList.length > 0 ? (
@@ -174,13 +151,13 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
                           <span>{formatDate(post.date, locale)}</span>
                         </div>
                         <div className="mt-2 text-xs text-primary">
-                          {copy.sourcePrefix}: {getSourceHostname(post)}
+                          {t("sourcePrefix")}: {getSourceHostname(post)}
                         </div>
                       </a>
                     ))
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      {copy.recentEmpty}
+                      {t("recentEmpty")}
                     </p>
                   )}
                 </div>
@@ -188,7 +165,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
             </div>
           ) : (
             <div className="rounded-2xl border border-border/40 bg-card/20 p-6 text-sm text-muted-foreground">
-              {copy.empty}
+              {t("empty")}
             </div>
           )}
 
@@ -205,7 +182,7 @@ export function BlogSection({ latestPosts }: BlogSectionProps) {
               className="inline-flex items-center gap-2 text-primary hover:gap-3 transition-all font-medium"
             >
               <BookOpen className="w-5 h-5" />
-              <span>{copy.viewAll}</span>
+              <span>{t("viewAll")}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>

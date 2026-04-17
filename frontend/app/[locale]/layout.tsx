@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { routing, type AppLocale } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import { getLanguageAlternates, getLocalizedUrl, getOpenGraphLocale } from "@/lib/i18n";
 import { siteSeo } from "@/content/seo";
 
@@ -100,7 +100,7 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
-  const resolvedLocale = locale as AppLocale;
+  const resolvedLocale = locale;
 
   return (
     <>

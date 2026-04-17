@@ -3,32 +3,10 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { MessageSquare, Users, Briefcase } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 
 export function SeniorsSection() {
-  const locale = useLocale();
-  const copy =
-    locale === "ko"
-      ? {
-          title: "선배들과 함께합니다",
-          subtitle: "AWS, Equinix에서 근무하는 선배들과 함께 성장합니다",
-          awsTitle: "AWS 인프라 엔지니어 선배",
-          equinixTitle: "Equinix 인프라 엔지니어 선배",
-          seniorDescription: "실무 경험을 나누며 함께 성장합니다",
-          mentoring: ["멘토링", "실무 경험과 조언을 나눕니다"],
-          networking: ["네트워킹", "함께 연결되고 소통합니다"],
-          career: ["진로 상담", "취업과 진로에 대한 조언을 받습니다"],
-        }
-      : {
-          title: "We Grow with Senior Engineers",
-          subtitle: "We learn alongside senior engineers working at AWS and Equinix",
-          awsTitle: "AWS Infrastructure Mentor",
-          equinixTitle: "Equinix Infrastructure Mentor",
-          seniorDescription: "We grow together through hands-on industry experience.",
-          mentoring: ["Mentoring", "Share practical experience and guidance"],
-          networking: ["Networking", "Build connections and stay in conversation"],
-          career: ["Career Guidance", "Get advice on jobs and long-term direction"],
-        };
+  const t = useTranslations("SeniorsSection");
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-7xl mx-auto">
@@ -42,10 +20,10 @@ export function SeniorsSection() {
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {copy.title}
+              {t("title")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {copy.subtitle}
+              {t("subtitle")}
             </p>
           </motion.div>
 
@@ -78,8 +56,8 @@ export function SeniorsSection() {
                 {/* Senior Info */}
                 <div className="text-center space-y-4 relative z-10">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">{copy.awsTitle}</h3>
-                    <p className="text-muted-foreground text-sm">{copy.seniorDescription}</p>
+                    <h3 className="text-xl font-semibold mb-1">{t("awsTitle")}</h3>
+                    <p className="text-muted-foreground text-sm">{t("seniorDescription")}</p>
                   </div>
                 </div>
               </div>
@@ -112,8 +90,8 @@ export function SeniorsSection() {
                 {/* Senior Info */}
                 <div className="text-center space-y-4 relative z-10">
                   <div>
-                    <h3 className="text-xl font-semibold mb-1">{copy.equinixTitle}</h3>
-                    <p className="text-muted-foreground text-sm">{copy.seniorDescription}</p>
+                    <h3 className="text-xl font-semibold mb-1">{t("equinixTitle")}</h3>
+                    <p className="text-muted-foreground text-sm">{t("seniorDescription")}</p>
                   </div>
                 </div>
               </div>
@@ -131,9 +109,9 @@ export function SeniorsSection() {
             >
               <div className="gpu-accelerated-blur group p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center">
                 <MessageSquare className="w-8 h-8 mx-auto mb-4 text-primary" />
-                <h3 className="font-semibold mb-2">{copy.mentoring[0]}</h3>
+                <h3 className="font-semibold mb-2">{t("mentoringTitle")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {copy.mentoring[1]}
+                  {t("mentoringDescription")}
                 </p>
               </div>
             </motion.div>
@@ -147,9 +125,9 @@ export function SeniorsSection() {
             >
               <div className="gpu-accelerated-blur group p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center">
                 <Users className="w-8 h-8 mx-auto mb-4 text-primary" />
-                <h3 className="font-semibold mb-2">{copy.networking[0]}</h3>
+                <h3 className="font-semibold mb-2">{t("networkingTitle")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {copy.networking[1]}
+                  {t("networkingDescription")}
                 </p>
               </div>
             </motion.div>
@@ -163,9 +141,9 @@ export function SeniorsSection() {
             >
               <div className="gpu-accelerated-blur group p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm hover:border-primary/40 hover:bg-card/30 transition-all duration-500 text-center">
                 <Briefcase className="w-8 h-8 mx-auto mb-4 text-primary" />
-                <h3 className="font-semibold mb-2">{copy.career[0]}</h3>
+                <h3 className="font-semibold mb-2">{t("careerTitle")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {copy.career[1]}
+                  {t("careerDescription")}
                 </p>
               </div>
             </motion.div>

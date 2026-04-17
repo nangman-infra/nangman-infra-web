@@ -26,7 +26,7 @@ function resolveLocaleText(
   locale: string,
   value: Readonly<Record<AppLocale, string>>,
 ): string {
-  return value[(locale === "en" ? "en" : "ko") as AppLocale];
+  return locale === "en" ? value.en : value.ko;
 }
 
 export function Header() {

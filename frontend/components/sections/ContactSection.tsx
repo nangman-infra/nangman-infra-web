@@ -2,29 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Mail, MapPin, MessageSquare, ArrowRight } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 
 export function ContactSection() {
-  const locale = useLocale();
-  const copy =
-    locale === "ko"
-      ? {
-          title: "함께하고 싶으신가요?",
-          subtitle: "프로젝트 협업, 채용, 기술 교류 등 언제든 환영합니다",
-          location: "위치",
-          email: "이메일",
-          cta: "문의하기",
-          address: "대전광역시 유성구 동서대로 125",
-        }
-      : {
-          title: "Want to Work Together?",
-          subtitle: "We welcome collaboration, hiring, and technical exchange.",
-          location: "Location",
-          email: "Email",
-          cta: "Contact Us",
-          address: "125 Dongseo-daero, Yuseong-gu, Daejeon",
-        };
+  const t = useTranslations("ContactSection");
   return (
     <section className="relative z-10 w-full px-4 py-12 md:py-16">
       <div className="relative max-w-6xl mx-auto">
@@ -38,10 +20,10 @@ export function ContactSection() {
             className="text-center"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {copy.title}
+              {t("title")}
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              {copy.subtitle}
+              {t("subtitle")}
             </p>
           </motion.div>
 
@@ -62,10 +44,10 @@ export function ContactSection() {
                     <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
                       <MapPin className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold">{copy.location}</h3>
+                    <h3 className="text-lg font-semibold">{t("location")}</h3>
                   </div>
                   <p className="text-base text-muted-foreground leading-relaxed">
-                    {copy.address}
+                    {t("address")}
                   </p>
                 </div>
               </div>
@@ -86,7 +68,7 @@ export function ContactSection() {
                     <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 group-hover:bg-primary/20 transition-colors">
                       <Mail className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-lg font-semibold">{copy.email}</h3>
+                    <h3 className="text-lg font-semibold">{t("email")}</h3>
                   </div>
                   <a
                     href="mailto:contact@nangman.cloud"
@@ -112,7 +94,7 @@ export function ContactSection() {
               className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium hover:gap-3 shadow-[0_0_20px_-5px_var(--primary)] hover:shadow-[0_0_40px_-5px_var(--primary)] min-h-[44px] touch-manipulation"
             >
               <MessageSquare className="w-5 h-5" />
-              <span>{copy.cta}</span>
+              <span>{t("cta")}</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </motion.div>

@@ -20,17 +20,14 @@ function resolveLocaleText(
   locale: string,
   value: Readonly<Record<AppLocale, string>>,
 ): string {
-  return value[(locale === "en" ? "en" : "ko") as AppLocale];
+  return locale === "en" ? value.en : value.ko;
 }
 
 export function Footer() {
   const locale = useLocale();
   const navigationTitle = locale === "en" ? "Navigation" : "바로가기";
   const contactTitle = locale === "en" ? "Contact" : "연락처";
-  const copyright =
-    locale === "en"
-      ? "© 2025 Nangman Infra. All rights reserved."
-      : "© 2025 Nangman Infra. All rights reserved.";
+  const copyright = "© 2025 Nangman Infra. All rights reserved.";
 
   return (
     <footer className="relative z-10 w-full border-t border-border/20 bg-background/40 backdrop-blur-sm gpu-accelerated-blur">

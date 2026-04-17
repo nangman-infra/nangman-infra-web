@@ -43,15 +43,142 @@ type ServiceCardProps = Readonly<{
  */
 function getIconUrl(iconName: string): string {
   // 파일 확장자가 있으면 로컬 파일로 간주
-  if (iconName.includes('.')) {
+  if (iconName.includes(".")) {
     return `/services/${iconName}`;
   }
   // Simple Icons CDN URL
   return `https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/${iconName}.svg`;
 }
 
+function getDialogDescription(locale: AppLocale): string {
+  return locale === "ko"
+    ? "접근할 서버를 선택하세요"
+    : "Choose the target server";
+}
+
+type ServiceCardBodyProps = Readonly<{
+  service: Service;
+  index: number;
+  isClickable: boolean;
+  imageLoaded: boolean;
+  imageError: boolean;
+  shouldAnimate: boolean;
+  description: string;
+  onImageLoad: () => void;
+  onImageError: () => void;
+}>;
+
+function ServiceCardBody({
+  service,
+  index,
+  isClickable,
+  imageLoaded,
+  imageError,
+  shouldAnimate,
+  description,
+  onImageLoad,
+  onImageError,
+}: ServiceCardBodyProps) {
+  return (
+    <motion.div
+      initial={
+        shouldAnimate
+          ? { opacity: 0, y: SERVICE_CARD_INITIAL_Y_OFFSET }
+          : { opacity: 1, y: 0 }
+      }
+      animate={{ opacity: 1, y: 0 }}
+      transition={
+        shouldAnimate
+          ? {
+              duration: SERVICE_CARD_ANIMATION_DURATION,
+              delay: index * SERVICE_CARD_ANIMATION_DELAY_INCREMENT,
+              ease: SERVICE_CARD_EASE_CURVE,
+            }
+          : { duration: 0 }
+      }
+      whileHover={
+        isClickable
+          ? { y: SERVICE_CARD_HOVER_Y_OFFSET, scale: SERVICE_CARD_HOVER_SCALE }
+          : {}
+      }
+      style={{ willChange: "transform, opacity" }}
+      className={cn(
+        "gpu-accelerated-blur group relative h-full p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm transition-all duration-500",
+        isClickable
+          ? "hover:border-primary/40 hover:bg-card/30 cursor-pointer"
+          : "opacity-60 cursor-not-allowed",
+      )}
+    >
+      <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div
+        className="relative w-16 h-16 mb-4 flex items-center justify-center shrink-0"
+        style={{ minHeight: "64px" }}
+      >
+        {service.icon && !imageError ? (
+          <>
+            {!imageLoaded && (
+              <div
+                className="absolute inset-0 bg-muted/10 rounded animate-pulse"
+                style={{ transform: "translateZ(0)" }}
+              />
+            )}
+            <Image
+              src={getIconUrl(service.icon)}
+              alt={service.name}
+              fill
+              sizes="64px"
+              priority={index < SERVICE_CARD_PRIORITY_THRESHOLD}
+              className={cn(
+                "object-contain transition-opacity duration-300",
+                !service.icon.includes(".") &&
+                  "dark:invert dark:brightness-[0.6] dark:saturate-[0.3] dark:opacity-80",
+                imageLoaded ? "opacity-100" : "opacity-0",
+              )}
+              onLoad={onImageLoad}
+              onError={onImageError}
+              style={{ transform: "translateZ(0)" }}
+            />
+          </>
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center bg-muted/10 rounded border border-border/20"
+            style={{ transform: "translateZ(0)" }}
+          >
+            <span className="text-xs font-mono text-muted-foreground">
+              {service.name[0]}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="relative z-10 space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+            {service.name}
+          </h3>
+          {isClickable && (
+            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-1" />
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {description}
+        </p>
+      </div>
+
+      <div className="absolute top-4 right-4">
+        <div
+          className={cn(
+            "w-2 h-2 rounded-full transition-colors",
+            isClickable ? "bg-green-500" : "bg-muted-foreground/30",
+          )}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 export function ServiceCard({ service, index }: ServiceCardProps) {
-  const locale = useLocale() as AppLocale;
+  const locale = (useLocale() === "en" ? "en" : "ko") as AppLocale;
   const hasUrl = Boolean(service.url);
   const hasUrls = Boolean(service.urls && service.urls.length > 0);
   const hasIcon = Boolean(service.icon);
@@ -61,10 +188,7 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const serviceDescription = getLocalizedText(locale, service.description);
-  const dialogDescription =
-    locale === "ko"
-      ? "접근할 서버를 선택하세요"
-      : "Choose the target server";
+  const dialogDescription = getDialogDescription(locale);
 
   // 이미지 로드 완료 후 애니메이션 시작 (Safari 깜빡임 방지)
   useEffect(() => {
@@ -78,98 +202,20 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
   }, [imageLoaded, imageError]);
 
   const cardContent = (
-    <motion.div
-      initial={shouldAnimate ? { opacity: 0, y: SERVICE_CARD_INITIAL_Y_OFFSET } : { opacity: 1, y: 0 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={
-        shouldAnimate
-          ? {
-              duration: SERVICE_CARD_ANIMATION_DURATION,
-              delay: index * SERVICE_CARD_ANIMATION_DELAY_INCREMENT,
-              ease: SERVICE_CARD_EASE_CURVE,
-            }
-          : { duration: 0 }
-      }
-      whileHover={isClickable ? { y: SERVICE_CARD_HOVER_Y_OFFSET, scale: SERVICE_CARD_HOVER_SCALE } : {}}
-      style={{ willChange: "transform, opacity" }}
-      className={cn(
-        "gpu-accelerated-blur group relative h-full p-6 rounded-xl border border-border/30 bg-card/20 backdrop-blur-sm transition-all duration-500",
-        isClickable
-          ? "hover:border-primary/40 hover:bg-card/30 cursor-pointer"
-          : "opacity-60 cursor-not-allowed"
-      )}
-    >
-      {/* Hover gradient overlay */}
-      <div className="absolute inset-0 rounded-xl bg-linear-to-br from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-      {/* Icon Container - 고정 크기로 레이아웃 시프트 방지 */}
-      <div className="relative w-16 h-16 mb-4 flex items-center justify-center shrink-0" style={{ minHeight: "64px" }}>
-        {hasIcon && !imageError ? (
-          <>
-            {/* 로딩 플레이스홀더 */}
-            {!imageLoaded && (
-              <div 
-                className="absolute inset-0 bg-muted/10 rounded animate-pulse"
-                style={{ transform: "translateZ(0)" }}
-              />
-            )}
-            <Image
-              src={getIconUrl(service.icon!)}
-              alt={service.name}
-              fill
-              sizes="64px"
-              priority={index < SERVICE_CARD_PRIORITY_THRESHOLD}
-              className={cn(
-                "object-contain transition-opacity duration-300",
-                // Simple Icons만 다크 모드 필터 적용 (로컬 파일은 원본 색상 유지)
-                !service.icon!.includes('.') && "dark:invert dark:brightness-[0.6] dark:saturate-[0.3] dark:opacity-80",
-                imageLoaded ? "opacity-100" : "opacity-0"
-              )}
-              onLoad={() => setImageLoaded(true)}
-              onError={() => {
-                setImageError(true);
-                setImageLoaded(true);
-              }}
-              style={{ transform: "translateZ(0)" }}
-            />
-          </>
-        ) : (
-          <div 
-            className="w-full h-full flex items-center justify-center bg-muted/10 rounded border border-border/20"
-            style={{ transform: "translateZ(0)" }}
-          >
-            <span className="text-xs font-mono text-muted-foreground">
-              {service.name[0]}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-            {service.name}
-          </h3>
-          {isClickable && (
-            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-1" />
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {serviceDescription}
-        </p>
-      </div>
-
-      {/* Status indicator */}
-      <div className="absolute top-4 right-4">
-        <div
-          className={cn(
-            "w-2 h-2 rounded-full transition-colors",
-            isClickable ? "bg-green-500" : "bg-muted-foreground/30"
-          )}
-        />
-      </div>
-    </motion.div>
+    <ServiceCardBody
+      service={service}
+      index={index}
+      isClickable={isClickable}
+      imageLoaded={imageLoaded}
+      imageError={imageError}
+      shouldAnimate={shouldAnimate}
+      description={serviceDescription}
+      onImageLoad={() => setImageLoaded(true)}
+      onImageError={() => {
+        setImageError(true);
+        setImageLoaded(true);
+      }}
+    />
   );
 
   // 다중 URL이 있는 경우 (NGINX Proxy Manager 등)
@@ -189,11 +235,11 @@ export function ServiceCard({ service, index }: ServiceCardProps) {
           <div className="space-y-2">
             {service.urls.map((urlOption) => (
               <Button
-                key={`${urlOption.label}-${urlOption.url}`}
+                key={`${service.id}-${urlOption.url}`}
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
-                  globalThis.open(urlOption.url, '_blank', 'noopener,noreferrer');
+                  globalThis.open(urlOption.url, "_blank", "noopener,noreferrer");
                   setDialogOpen(false);
                 }}
               >

@@ -4,7 +4,7 @@ def SPOT_AGENT_LABEL = 'spot-agent'
 def ONPREM_WATCHTOWER_TRIGGER_AGENT_LABEL = 'onprem-watchtower-trigger'
 def PRIMARY_BUILDX_BUILDER = 'default'
 def FALLBACK_BUILDX_BUILDER = 'multiarch-builder'
-def HARBOR_CREDENTIALS_ID = 'NANGMAN_HARBOR_REGISTRY_CREDENTIALS'
+def HARBOR_CREDENTIALS_ID = 'NANGMAN_HARBOR_ROBOT_ACCOUNT'
 def EXTERNAL_APP_TRIGGER_TOKEN_CREDENTIAL_ID = 'JENKINS_EXTERNAL_APP_TRIGGER_TOKEN'
 
 pipeline {
@@ -44,7 +44,7 @@ pipeline {
         ONPREM_FRONTEND_HEALTH_URL = 'http://172.16.0.25:7777'
         PUBLIC_FRONTEND_HEALTH_URL = 'https://nangman.cloud'
         WATCHTOWER_TOKEN = credentials('nangman-infra-main-web-watchtower-api-token')
-        MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
+        MATTERMOST_WEBHOOK = credentials('NANGMAN_MATTERMOST_WEBHOOK_ENDPOINT')
 
         FAILURE_STAGE = 'Unknown'
         FAILURE_REASON = '배포 중 오류가 발생했습니다.'

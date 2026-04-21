@@ -28,7 +28,7 @@ pipeline {
     }
 
     environment {
-        MATTERMOST_WEBHOOK = credentials('mattermost-webhook-url')
+        MATTERMOST_WEBHOOK = credentials('NANGMAN_MATTERMOST_WEBHOOK_ENDPOINT')
 
         SONARQUBE_INSTALLATION = "${DEFAULT_SONARQUBE_INSTALLATION}"
         SONAR_SCANNER_TOOL = "${DEFAULT_SONAR_SCANNER_TOOL}"

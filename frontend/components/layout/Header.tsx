@@ -12,14 +12,14 @@ import { GitHubIcon } from "@/components/icons/GitHubIcon";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 
 const navItems = [
-  { href: "/", label: { ko: "홈", en: "Home" } },
-  { href: "/about", label: { ko: "소개", en: "About" } },
-  { href: "/services", label: { ko: "서비스", en: "Services" } },
-  { href: "/monitoring", label: { ko: "모니터링", en: "Monitoring" } },
-  { href: "/incidents", label: { ko: "장애 이력", en: "Incidents" } },
-  { href: "/members", label: { ko: "멤버", en: "Members" } },
-  { href: "/projects", label: { ko: "프로젝트", en: "Projects" } },
-  { href: "/blog", label: { ko: "블로그", en: "Blog" } },
+  { href: "/", label: { ko: "Home", en: "Home" } },
+  { href: "/about", label: { ko: "About", en: "About" } },
+  { href: "/services", label: { ko: "Services", en: "Services" } },
+  { href: "/monitoring", label: { ko: "Monitoring", en: "Monitoring" } },
+  { href: "/incidents", label: { ko: "Incidents", en: "Incidents" } },
+  { href: "/members", label: { ko: "Members", en: "Members" } },
+  { href: "/projects", label: { ko: "Projects", en: "Projects" } },
+  { href: "/blog", label: { ko: "Blog", en: "Blog" } },
 ] as const;
 
 function resolveLocaleText(

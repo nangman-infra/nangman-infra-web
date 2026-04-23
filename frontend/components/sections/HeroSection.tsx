@@ -15,15 +15,15 @@ export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
   const copy =
     locale === "ko"
       ? {
-          badge: "시스템 정상 운영 중",
-          titleLead: "우리는",
-          titleAccent: "보이지 않는 기반을 만듭니다.",
-          bodyLead: "인프라 엔지니어링 커뮤니티,",
-          bodyName: "낭만 인프라",
-          bodyEnd: "입니다.",
-          bodySub: "견고한 아키텍처 위에 뜨거운 열정을 담습니다.",
-          primaryCta: "인프라 콘솔 열기",
-          secondaryCta: "터미널 열기",
+          badge: "System Operational",
+          titleLead: "We Build the",
+          titleAccent: "Invisible.",
+          bodyLead: "An infrastructure engineering community,",
+          bodyName: "Nangman Infra",
+          bodyEnd: ".",
+          bodySub: "We bring real passion to reliable systems architecture.",
+          primaryCta: "Open Console",
+          secondaryCta: "Open Terminal",
         }
       : {
           badge: "System Operational",

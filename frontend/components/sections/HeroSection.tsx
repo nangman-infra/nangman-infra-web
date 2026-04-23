@@ -2,7 +2,6 @@
 
 import { motion, MotionValue } from "framer-motion";
 import { Terminal as TerminalIcon } from "lucide-react";
-import { useLocale } from "next-intl";
 
 type HeroSectionProps = Readonly<{
   x: MotionValue<number>;
@@ -10,32 +9,21 @@ type HeroSectionProps = Readonly<{
   setIsTerminalOpen: (open: boolean) => void;
 }>;
 
+const heroCopy = {
+  badge: "System Operational",
+  titleLead: "We Build the",
+  titleAccent: "Invisible.",
+  bodyLead: "An infrastructure engineering community,",
+  bodyName: "Nangman Infra",
+  bodyEnd: ".",
+  bodySub: "We bring real passion to reliable systems architecture.",
+  primaryCta: "Open Console",
+  secondaryCta: "Open Terminal",
+} as const;
+
 export function HeroSection({ x, y, setIsTerminalOpen }: HeroSectionProps) {
-  const locale = useLocale();
-  const copy =
-    locale === "ko"
-      ? {
-          badge: "System Operational",
-          titleLead: "We Build the",
-          titleAccent: "Invisible.",
-          bodyLead: "An infrastructure engineering community,",
-          bodyName: "Nangman Infra",
-          bodyEnd: ".",
-          bodySub: "We bring real passion to reliable systems architecture.",
-          primaryCta: "Open Console",
-          secondaryCta: "Open Terminal",
-        }
-      : {
-          badge: "System Operational",
-          titleLead: "We Build the",
-          titleAccent: "Invisible.",
-          bodyLead: "An infrastructure engineering community,",
-          bodyName: "Nangman Infra",
-          bodyEnd: ".",
-          bodySub: "We bring real passion to reliable systems architecture.",
-          primaryCta: "Open Console",
-          secondaryCta: "Open Terminal",
-        };
+  const copy = heroCopy;
+
   return (
     <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center pb-4 md:pb-6">
       {/* Badge */}

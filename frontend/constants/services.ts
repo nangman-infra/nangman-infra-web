@@ -173,6 +173,17 @@ export const SERVICES: Service[] = [
     category: 'infrastructure',
   },
   {
+    id: 'coder',
+    name: 'Coder',
+    description: {
+      ko: '클라우드 개발 워크스페이스',
+      en: 'Cloud development workspace',
+    },
+    icon: 'visualstudiocode',
+    url: 'https://coder.nangman.cloud',
+    category: 'infrastructure',
+  },
+  {
     id: 'jenkins',
     name: 'Jenkins',
     description: {

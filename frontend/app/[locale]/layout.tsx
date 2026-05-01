@@ -9,14 +9,16 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { routing } from "@/i18n/routing";
 import { getLanguageAlternates, getLocalizedUrl, getOpenGraphLocale } from "@/lib/i18n";
 import { siteSeo } from "@/content/seo";
+import {
+  DEFAULT_OG_IMAGE_URL,
+  DEFAULT_TWITTER_IMAGE_URL,
+  SITE_NAME,
+} from "@/lib/site";
 
 type LocaleLayoutProps = Readonly<{
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }>;
-
-const SITE_URL = "https://nangman.cloud";
-const DEFAULT_OG_IMAGE_URL = `${SITE_URL}/opengraph-image`;
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -31,13 +33,14 @@ export async function generateMetadata({
     : routing.defaultLocale;
 
   return {
+    applicationName: SITE_NAME,
     title: {
       default: siteSeo.title,
-      template: "%s | Nangman Infra",
+      template: `%s | ${SITE_NAME}`,
     },
     description: siteSeo.description[resolvedLocale],
     keywords: siteSeo.keywords[resolvedLocale],
-    authors: [{ name: "Nangman Infra Community" }],
+    authors: [{ name: `${SITE_NAME} Community` }],
     creator: siteSeo.creator,
     publisher: siteSeo.creator,
     formatDetection: {
@@ -52,7 +55,7 @@ export async function generateMetadata({
         .filter((entry) => entry !== resolvedLocale)
         .map((entry) => getOpenGraphLocale(entry)),
       url: getLocalizedUrl(resolvedLocale, "/"),
-      siteName: "Nangman Infra",
+      siteName: SITE_NAME,
       title: siteSeo.title,
       description: siteSeo.openGraphDescription[resolvedLocale],
       images: [
@@ -68,7 +71,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: siteSeo.title,
       description: siteSeo.openGraphDescription[resolvedLocale],
-      images: [DEFAULT_OG_IMAGE_URL],
+      images: [DEFAULT_TWITTER_IMAGE_URL],
     },
     robots: {
       index: true,

@@ -26,6 +26,7 @@ import { CurriculumSection } from "@/components/sections/CurriculumSection";
 import { BlogSection } from "@/components/sections/BlogSection";
 import { AnnouncementsSection } from "@/components/sections/AnnouncementsSection";
 import { ContactSection } from "@/components/sections/ContactSection";
+import { BASE_URL, ORGANIZATION_LOGO_URL, SITE_NAME } from "@/lib/site";
 
 type HomeClientProps = Readonly<{
     latestPosts: BlogPost[];
@@ -118,10 +119,16 @@ export default function HomeClient({
                     __html: JSON.stringify({
                         "@context": "https://schema.org",
                         "@type": "Organization",
-                        name: "Nangman Infra",
+                        name: SITE_NAME,
                         alternateName: organizationAlternateName,
-                        url: "https://nangman.cloud",
-                        logo: "https://nangman.cloud/icon.png",
+                        url: `${BASE_URL}/${locale}`,
+                        logo: {
+                            "@type": "ImageObject",
+                            url: ORGANIZATION_LOGO_URL,
+                            width: 180,
+                            height: 180,
+                        },
+                        image: [ORGANIZATION_LOGO_URL],
                         description: organizationDescription,
                         address: {
                             "@type": "PostalAddress",
@@ -147,8 +154,8 @@ export default function HomeClient({
                     __html: JSON.stringify({
                         "@context": "https://schema.org",
                         "@type": "WebSite",
-                        name: "Nangman Infra",
-                        url: "https://nangman.cloud",
+                        name: SITE_NAME,
+                        url: `${BASE_URL}/${locale}`,
                         description: websiteDescription,
                         inLanguage: locale === "en" ? "en-US" : "ko-KR",
                     }),

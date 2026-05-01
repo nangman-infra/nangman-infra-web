@@ -4,13 +4,9 @@ import { incidentReports } from "@/data/incidentReports";
 import { routing } from "@/i18n/routing";
 
 describe("app/sitemap", () => {
-  it("includes the default root entry", () => {
+  it("does not include the redirecting bare root URL", () => {
     const entries = sitemap();
-    expect(entries[0]).toMatchObject({
-      url: "https://nangman.cloud",
-      changeFrequency: "weekly",
-      priority: 0.4,
-    });
+    expect(entries.some((entry) => entry.url === "https://nangman.cloud")).toBe(false);
   });
 
   it("includes localized static pages with alternates", () => {
@@ -29,6 +25,7 @@ describe("app/sitemap", () => {
         languages: {
           ko: "https://nangman.cloud/ko/about",
           en: "https://nangman.cloud/en/about",
+          "x-default": "https://nangman.cloud/ko/about",
         },
       },
     });

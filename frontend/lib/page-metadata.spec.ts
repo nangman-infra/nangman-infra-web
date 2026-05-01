@@ -15,7 +15,7 @@ describe("page metadata helpers", () => {
     expect(metadata.alternates?.languages).toEqual({
       ko: "https://nangman.cloud/ko/services",
       en: "https://nangman.cloud/en/services",
-      "x-default": "https://nangman.cloud",
+      "x-default": "https://nangman.cloud/ko/services",
     });
     expect(metadata.openGraph?.locale).toBe("en_US");
     expect(metadata.openGraph?.title).toBe("Services | Nangman Infra");

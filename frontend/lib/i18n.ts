@@ -1,6 +1,5 @@
 import { routing, type AppLocale } from "@/i18n/routing";
-
-export const BASE_URL = "https://nangman.cloud";
+import { BASE_URL, DEFAULT_LOCALE } from "@/lib/site";
 
 export function getIntlLocale(locale: AppLocale): string {
   return locale === "ko" ? "ko-KR" : "en-US";
@@ -22,6 +21,14 @@ export function getLocalizedUrl(locale: AppLocale, pathname: string): string {
   return `${BASE_URL}${getLocalizedPath(locale, pathname)}`;
 }
 
+export function getDefaultLocalePath(pathname: string): string {
+  return getLocalizedPath(DEFAULT_LOCALE, pathname);
+}
+
+export function getDefaultLocaleUrl(pathname: string): string {
+  return `${BASE_URL}${getDefaultLocalePath(pathname)}`;
+}
+
 export function getLanguageAlternates(pathname: string): Record<string, string> {
   const entries = routing.locales.map((locale) => [
     locale,
@@ -30,6 +37,6 @@ export function getLanguageAlternates(pathname: string): Record<string, string> 
 
   return {
     ...Object.fromEntries(entries),
-    "x-default": BASE_URL,
+    "x-default": getDefaultLocaleUrl(pathname),
   };
 }

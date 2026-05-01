@@ -16,6 +16,13 @@ import {
   getIncidentStatusLabel,
 } from "@/lib/incidents";
 import { getLanguageAlternates, getLocalizedUrl, getOpenGraphLocale } from "@/lib/i18n";
+import {
+  BASE_URL,
+  DEFAULT_OG_IMAGE_URL,
+  DEFAULT_TWITTER_IMAGE_URL,
+  ORGANIZATION_LOGO_URL,
+  SITE_NAME,
+} from "@/lib/site";
 
 type IncidentDetailPageProps = Readonly<{
   params: Promise<{ locale: AppLocale; slug: string }>;
@@ -38,7 +45,7 @@ export async function generateMetadata({
 
   if (!report) {
     return {
-      metadataBase: new URL("https://nangman.cloud"),
+      metadataBase: new URL(BASE_URL),
       title: locale === "ko" ? "장애 이력" : "Incident Report",
       alternates: {
         canonical: getLocalizedUrl(locale, "/incidents"),
@@ -48,7 +55,7 @@ export async function generateMetadata({
   }
 
   return {
-    metadataBase: new URL("https://nangman.cloud"),
+    metadataBase: new URL(BASE_URL),
     title: report.title,
     description: report.summary,
     alternates: {
@@ -56,11 +63,30 @@ export async function generateMetadata({
       languages: getLanguageAlternates(`/incidents/${report.slug}`),
     },
     openGraph: {
-      title: `${report.title} | Nangman Infra`,
+      title: `${report.title} | ${SITE_NAME}`,
       description: report.summary,
       locale: getOpenGraphLocale(locale),
       url: getLocalizedUrl(locale, `/incidents/${report.slug}`),
       type: "article",
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: DEFAULT_OG_IMAGE_URL,
+          width: 1200,
+          height: 630,
+          alt: SITE_NAME,
+        },
+      ],
+      publishedTime: report.startedAtIso,
+      modifiedTime: report.resolvedAtIso,
+      authors: [SITE_NAME],
+      tags: report.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${report.title} | ${SITE_NAME}`,
+      description: report.summary,
+      images: [DEFAULT_TWITTER_IMAGE_URL],
     },
   };
 }
@@ -93,14 +119,21 @@ export default async function IncidentDetailPage({
     inLanguage: getOpenGraphLocale(locale).replace("_", "-"),
     articleSection: t("schemaSection"),
     keywords: report.tags.join(", "),
+    image: [DEFAULT_OG_IMAGE_URL],
     author: {
       "@type": "Organization",
-      name: "Nangman Infra",
+      name: SITE_NAME,
     },
     publisher: {
       "@type": "Organization",
-      name: "Nangman Infra",
+      name: SITE_NAME,
       url: getLocalizedUrl(locale, "/"),
+      logo: {
+        "@type": "ImageObject",
+        url: ORGANIZATION_LOGO_URL,
+        width: 180,
+        height: 180,
+      },
     },
     mainEntityOfPage: getLocalizedUrl(locale, `/incidents/${report.slug}`),
   };

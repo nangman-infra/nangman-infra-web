@@ -1,9 +1,10 @@
 import { MetadataRoute } from "next";
 import { incidentReports } from "@/data/incidentReports";
 import { routing } from "@/i18n/routing";
+import { getDefaultLocaleUrl } from "@/lib/i18n";
+import { BASE_URL } from "@/lib/site";
 
 const DEFAULT_LAST_MODIFIED = new Date("2026-03-14T00:00:00.000Z");
-const BASE_URL = "https://nangman.cloud";
 const LOCALIZED_PAGES = [
   "",
   "/about",
@@ -54,6 +55,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           ko: `${BASE_URL}/ko${pathname}`,
           en: `${BASE_URL}/en${pathname}`,
+          "x-default": getDefaultLocaleUrl(pathname),
         },
       },
     })),
@@ -68,19 +70,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           ko: `${BASE_URL}/ko/incidents/${report.slug}`,
           en: `${BASE_URL}/en/incidents/${report.slug}`,
+          "x-default": getDefaultLocaleUrl(`/incidents/${report.slug}`),
         },
       },
     })),
   );
 
-  return [
-    {
-      url: BASE_URL,
-      lastModified: DEFAULT_LAST_MODIFIED,
-      changeFrequency: "weekly",
-      priority: 0.4,
-    },
-    ...pageEntries,
-    ...incidentEntries,
-  ];
+  return [...pageEntries, ...incidentEntries];
 }

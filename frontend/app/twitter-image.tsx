@@ -7,6 +7,6 @@ export const size = {
 export const contentType = "image/png";
 export const alt = "Nangman Infra | We Build the Invisible";
 
-export default function OpenGraphImage() {
+export default function TwitterImage() {
   return renderSocialImage();
 }

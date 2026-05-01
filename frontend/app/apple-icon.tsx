@@ -1,15 +1,15 @@
 import { renderBrandIcon } from "@/lib/metadata-images";
 
 export const size = {
-  width: 512,
-  height: 512,
+  width: 180,
+  height: 180,
 };
 export const contentType = "image/png";
 
-export default function Icon() {
+export default function AppleIcon() {
   return renderBrandIcon({
     size: size.width,
-    fontSize: 280,
-    borderRadius: 112,
+    fontSize: 92,
+    borderRadius: 40,
   });
 }

@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  BASE_URL,
   getIntlLocale,
   getLanguageAlternates,
   getLocalizedPath,
   getLocalizedUrl,
   getOpenGraphLocale,
 } from "@/lib/i18n";
+import { BASE_URL } from "@/lib/site";
 
 describe("lib/i18n", () => {
   it("returns the correct Intl locale", () => {
@@ -35,7 +35,7 @@ describe("lib/i18n", () => {
     expect(getLanguageAlternates("/members")).toEqual({
       ko: `${BASE_URL}/ko/members`,
       en: `${BASE_URL}/en/members`,
-      "x-default": BASE_URL,
+      "x-default": `${BASE_URL}/ko/members`,
     });
   });
 });

@@ -6,9 +6,12 @@ import {
   getLocalizedUrl,
   getOpenGraphLocale,
 } from "@/lib/i18n";
-
-const SITE_URL = "https://nangman.cloud";
-const DEFAULT_OG_IMAGE_URL = `${SITE_URL}/opengraph-image`;
+import {
+  BASE_URL,
+  DEFAULT_OG_IMAGE_URL,
+  DEFAULT_TWITTER_IMAGE_URL,
+  SITE_NAME,
+} from "@/lib/site";
 
 type BuildPageMetadataOptions = Readonly<{
   locale: AppLocale;
@@ -30,7 +33,7 @@ export function buildPageMetadata({
   const url = getLocalizedUrl(locale, pathname);
 
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: new URL(BASE_URL),
     title,
     description,
     alternates: {
@@ -41,8 +44,8 @@ export function buildPageMetadata({
       type: openGraphType,
       locale: getOpenGraphLocale(locale),
       url,
-      siteName: "Nangman Infra",
-      title: `${title} | Nangman Infra`,
+      siteName: SITE_NAME,
+      title: `${title} | ${SITE_NAME}`,
       description,
       images: [
         {
@@ -55,9 +58,9 @@ export function buildPageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | Nangman Infra`,
+      title: `${title} | ${SITE_NAME}`,
       description,
-      images: [DEFAULT_OG_IMAGE_URL],
+      images: [DEFAULT_TWITTER_IMAGE_URL],
     },
   };
 }

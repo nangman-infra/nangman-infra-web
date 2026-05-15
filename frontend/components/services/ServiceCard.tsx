@@ -50,6 +50,18 @@ function getIconUrl(iconName: string): string {
   return `https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/${iconName}.svg`;
 }
 
+function getIconClassName(iconName: string): string {
+  if (iconName.includes(".")) {
+    return "";
+  }
+
+  if (iconName === "cisco") {
+    return "dark:invert dark:brightness-125 dark:opacity-100";
+  }
+
+  return "dark:invert dark:brightness-[0.6] dark:saturate-[0.3] dark:opacity-80";
+}
+
 function getDialogDescription(locale: AppLocale): string {
   return locale === "ko"
     ? "접근할 서버를 선택하세요"
@@ -130,8 +142,7 @@ function ServiceCardBody({
               priority={index < SERVICE_CARD_PRIORITY_THRESHOLD}
               className={cn(
                 "object-contain transition-opacity duration-300",
-                !service.icon.includes(".") &&
-                  "dark:invert dark:brightness-[0.6] dark:saturate-[0.3] dark:opacity-80",
+                getIconClassName(service.icon),
                 imageLoaded ? "opacity-100" : "opacity-0",
               )}
               onLoad={onImageLoad}

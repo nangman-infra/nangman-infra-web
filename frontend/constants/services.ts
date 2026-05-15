@@ -173,6 +173,17 @@ export const SERVICES: Service[] = [
     category: 'infrastructure',
   },
   {
+    id: 'cml',
+    name: 'CML',
+    description: {
+      ko: 'Cisco Modeling Labs 네트워크 실습 환경',
+      en: 'Cisco Modeling Labs network lab environment',
+    },
+    icon: 'cisco',
+    url: 'https://cml.console.nangman.cloud/',
+    category: 'infrastructure',
+  },
+  {
     id: 'coder',
     name: 'Coder',
     description: {

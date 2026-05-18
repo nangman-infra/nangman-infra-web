@@ -22,4 +22,15 @@ describe('StaticBlogSourceProviderAdapter', () => {
       profileImage: '/profiles/unseo.jpg',
     });
   });
+
+  it('includes Jaeyoung tistory RSS source', () => {
+    const adapter = new StaticBlogSourceProviderAdapter();
+
+    expect(adapter.getSources()).toContainEqual({
+      name: 'Jaeyoung',
+      rssUrl: 'https://jaeyoung-dev.tistory.com/rss',
+      platform: 'tistory',
+      profileImage: '/profiles/jaeyoung.jpg',
+    });
+  });
 });

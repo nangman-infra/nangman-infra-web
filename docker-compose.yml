@@ -42,6 +42,9 @@ services:
       NUT_UPS_NAME: ${NUT_UPS_NAME}
       NUT_USERNAME: ${NUT_USERNAME}
       NUT_PASSWORD: ${NUT_PASSWORD}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      NEW_RELIC_LOG_LEVEL: ${NEW_RELIC_LOG_LEVEL}
     volumes:
       - /proc:/host/proc:ro
     restart: unless-stopped

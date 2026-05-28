@@ -21,9 +21,9 @@ export function normalizeBlogPostLink(raw: string): string {
 }
 
 function stripTrailingSlashes(pathname: string): string {
-  let end = pathname.length;
-  while (end > 1 && pathname.charCodeAt(end - 1) === 47 /* '/' */) {
-    end--;
+  let result = pathname;
+  while (result.length > 1 && result.endsWith('/')) {
+    result = result.slice(0, -1);
   }
-  return end === 0 ? '/' : pathname.slice(0, end);
+  return result.length === 0 ? '/' : result;
 }

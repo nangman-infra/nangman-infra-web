@@ -1,3 +1,5 @@
+import { BlogPlatform } from './blog-platform';
+
 export interface BlogPost {
   title: string;
   description: string;
@@ -5,6 +7,6 @@ export interface BlogPost {
   date: string; // ISO String
   author: string;
   authorImage?: string;
-  platform: 'tistory' | 'velog' | 'medium' | 'other';
+  platform: BlogPlatform;
   tags: string[];
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ContactModule } from './modules/contact/contact.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
@@ -33,6 +34,7 @@ function resolveEnvFilePriority(): string[] {
       envFilePath: resolveEnvFilePriority(),
       ignoreEnvFile: false,
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: RATE_LIMIT_TTL_MS, // 1시간 (밀리초)

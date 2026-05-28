@@ -26,9 +26,9 @@ describe('getLatestBlogPostsUseCase', () => {
     mockedFetchBlogPostsApi.mockReset();
   });
 
-  it('returns fallback when payload is parseable but empty', async () => {
+  it('returns fallback when payload has no valid posts', async () => {
     mockedFetchBlogPostsApi.mockResolvedValue({
-      data: [{ invalid: true }],
+      data: { posts: [{ invalid: true }], total: 0, page: 1, pageSize: 1, totalPages: 0 },
     });
 
     const result = await getLatestBlogPostsUseCase({
@@ -39,20 +39,26 @@ describe('getLatestBlogPostsUseCase', () => {
     expect(result).toEqual(fallbackPosts);
   });
 
-  it('returns parsed posts when payload is valid', async () => {
+  it('returns parsed posts from the paginated response', async () => {
     mockedFetchBlogPostsApi.mockResolvedValue({
-      data: [
-        {
-          title: 'post',
-          description: 'desc',
-          link: 'https://example.com/post',
-          date: '2026-01-01',
-          author: 'author',
-          authorImage: 'https://example.com/profile.png',
-          platform: 'tistory',
-          tags: ['infra'],
-        },
-      ],
+      data: {
+        posts: [
+          {
+            title: 'post',
+            description: 'desc',
+            link: 'https://example.com/post',
+            date: '2026-01-01',
+            author: '이성원',
+            authorImage: '/profiles/seongwon.png',
+            platform: 'tistory',
+            tags: ['infra'],
+          },
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 1,
+        totalPages: 1,
+      },
     });
 
     const result = await getLatestBlogPostsUseCase({

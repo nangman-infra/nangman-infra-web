@@ -1,40 +1,46 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from '@nestjs/cache-manager';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
-import { GetAllBlogPostsUseCase } from './application/use-cases/get-all-blog-posts.use-case';
-import { BLOG_CACHE } from './domain/ports/blog-cache.port';
+import { GetBlogPostsPageUseCase } from './application/use-cases/get-blog-posts-page.use-case';
+import { SyncBlogPostsUseCase } from './application/use-cases/sync-blog-posts.use-case';
+import { BlogSyncScheduler } from './application/scheduler/blog-sync.scheduler';
 import { BLOG_FEED_READER } from './domain/ports/blog-feed-reader.port';
+import { BLOG_POST_REPOSITORY } from './domain/ports/blog-post-repository.port';
 import { BLOG_SOURCE_PROVIDER } from './domain/ports/blog-source-provider.port';
-import { CacheManagerBlogCacheAdapter } from './infrastructure/cache/cache-manager-blog-cache.adapter';
-import { StaticBlogSourceProviderAdapter } from './infrastructure/config/static-blog-source-provider.adapter';
+import { BLOG_SOURCE_WRITER } from './domain/ports/blog-source-writer.port';
+import { DirectusBlogPostRepositoryAdapter } from './infrastructure/directus/directus-blog-post-repository.adapter';
+import { DirectusBlogSourceProviderAdapter } from './infrastructure/directus/directus-blog-source-provider.adapter';
+import { DirectusBlogSourceWriterAdapter } from './infrastructure/directus/directus-blog-source-writer.adapter';
+import { DirectusHttpClient } from './infrastructure/directus/directus-http-client';
 import { RssBlogFeedReaderAdapter } from './infrastructure/feed/rss-blog-feed-reader.adapter';
 
 @Module({
-  imports: [
-    CacheModule.register({
-      ttl: 3600 * 1000, // 1 hour in ms
-      max: 100, // maximum number of items in cache
-    }),
-  ],
   controllers: [BlogController],
   providers: [
     BlogService,
-    GetAllBlogPostsUseCase,
-    CacheManagerBlogCacheAdapter,
+    GetBlogPostsPageUseCase,
+    SyncBlogPostsUseCase,
+    BlogSyncScheduler,
+    DirectusHttpClient,
+    DirectusBlogSourceProviderAdapter,
+    DirectusBlogPostRepositoryAdapter,
+    DirectusBlogSourceWriterAdapter,
     RssBlogFeedReaderAdapter,
-    StaticBlogSourceProviderAdapter,
     {
-      provide: BLOG_CACHE,
-      useExisting: CacheManagerBlogCacheAdapter,
+      provide: BLOG_SOURCE_PROVIDER,
+      useExisting: DirectusBlogSourceProviderAdapter,
+    },
+    {
+      provide: BLOG_POST_REPOSITORY,
+      useExisting: DirectusBlogPostRepositoryAdapter,
+    },
+    {
+      provide: BLOG_SOURCE_WRITER,
+      useExisting: DirectusBlogSourceWriterAdapter,
     },
     {
       provide: BLOG_FEED_READER,
       useExisting: RssBlogFeedReaderAdapter,
-    },
-    {
-      provide: BLOG_SOURCE_PROVIDER,
-      useExisting: StaticBlogSourceProviderAdapter,
     },
   ],
 })

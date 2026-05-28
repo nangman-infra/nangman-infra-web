@@ -1,10 +1,6 @@
 import { BlogPlatform, BlogPost } from '@/lib/domain/blog';
 import { fetchBlogPostsApi } from '@/lib/infrastructure/http/blog-api-client';
 
-interface BlogProxyResponse {
-  data?: unknown;
-}
-
 function isBlogPlatform(value: unknown): value is BlogPlatform {
   return (
     value === 'tistory' ||
@@ -38,16 +34,21 @@ function isBlogPost(value: unknown): value is BlogPost {
 }
 
 function parseBlogPosts(payload: unknown): BlogPost[] {
-  if (!payload || typeof payload !== 'object') {
+  if (!payload || typeof payload !== 'object' || !('data' in payload)) {
     return [];
   }
 
-  const response = payload as BlogProxyResponse;
-  if (!Array.isArray(response.data)) {
+  const data = (payload as { data: unknown }).data;
+  if (!data || typeof data !== 'object') {
     return [];
   }
 
-  return response.data.filter(isBlogPost);
+  const posts = (data as { posts?: unknown }).posts;
+  if (!Array.isArray(posts)) {
+    return [];
+  }
+
+  return posts.filter(isBlogPost);
 }
 
 interface GetLatestBlogPostsUseCaseInput {
@@ -59,7 +60,8 @@ interface GetLatestBlogPostsUseCaseInput {
 export async function getLatestBlogPostsUseCase(
   input: GetLatestBlogPostsUseCaseInput,
 ): Promise<BlogPost[]> {
-  const { count, fallback, fetcher = fetchBlogPostsApi } = input;
+  const { count, fallback, fetcher = () => fetchBlogPostsApi({ pageSize: count }) } =
+    input;
 
   try {
     const payload = await fetcher();

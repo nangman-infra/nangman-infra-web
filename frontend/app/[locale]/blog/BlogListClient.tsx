@@ -1,27 +1,40 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, CalendarDays } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  Search,
+  SlidersHorizontal,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
 import type { BlogPost } from "@/data/blogPosts";
 import { getIntlLocale } from "@/lib/i18n";
 import { getBlogPostSourceUrl } from "@/lib/blog";
+import {
+  BlogSortOption,
+  fetchBlogAuthorsApi,
+  fetchBlogPostsApi,
+} from "@/lib/infrastructure/http/blog-api-client";
+
+interface InitialPage {
+  posts: BlogPost[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
 type BlogListClientProps = Readonly<{
-  posts: BlogPost[];
+  initialPage: InitialPage;
 }>;
 
-type SortOption = "latest" | "oldest" | "author";
-
-const INITIAL_VISIBLE_COUNT = 8;
-const LOAD_MORE_COUNT = 8;
-
-function parseDate(dateText: string): number {
-  const timestamp = Date.parse(dateText);
-  return Number.isNaN(timestamp) ? 0 : timestamp;
-}
+const PAGE_WINDOW = 5;
+const SEARCH_DEBOUNCE_MS = 350;
 
 function formatDate(dateText: string, locale: string): string {
   const timestamp = Date.parse(dateText);
@@ -36,19 +49,104 @@ function formatDate(dateText: string, locale: string): string {
   }).format(new Date(timestamp));
 }
 
-export default function BlogListClient({ posts }: BlogListClientProps) {
+function buildPageWindow(currentPage: number, totalPages: number): number[] {
+  if (totalPages <= 0) {
+    return [];
+  }
+  if (totalPages <= PAGE_WINDOW) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const half = Math.floor(PAGE_WINDOW / 2);
+  let start = Math.max(1, currentPage - half);
+  const end = Math.min(totalPages, start + PAGE_WINDOW - 1);
+  start = Math.max(1, end - PAGE_WINDOW + 1);
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}
+
+interface PageResponse {
+  data?: {
+    posts?: unknown;
+    total?: unknown;
+    page?: unknown;
+    pageSize?: unknown;
+    totalPages?: unknown;
+  };
+}
+
+interface AuthorsResponse {
+  data?: {
+    authors?: unknown;
+  };
+}
+
+function extractPage(payload: unknown, fallbackPageSize: number): InitialPage {
+  if (!payload || typeof payload !== "object") {
+    return {
+      posts: [],
+      total: 0,
+      page: 1,
+      pageSize: fallbackPageSize,
+      totalPages: 0,
+    };
+  }
+  const data = (payload as PageResponse).data;
+  if (!data || typeof data !== "object") {
+    return {
+      posts: [],
+      total: 0,
+      page: 1,
+      pageSize: fallbackPageSize,
+      totalPages: 0,
+    };
+  }
+  const posts = Array.isArray(data.posts) ? (data.posts as BlogPost[]) : [];
+  const total = typeof data.total === "number" ? data.total : posts.length;
+  const page = typeof data.page === "number" ? data.page : 1;
+  const pageSize =
+    typeof data.pageSize === "number" ? data.pageSize : fallbackPageSize;
+  const totalPages =
+    typeof data.totalPages === "number"
+      ? data.totalPages
+      : pageSize > 0
+        ? Math.ceil(total / pageSize)
+        : 0;
+  return { posts, total, page, pageSize, totalPages };
+}
+
+function extractAuthors(payload: unknown): string[] {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+  const data = (payload as AuthorsResponse).data;
+  if (!data || typeof data !== "object") {
+    return [];
+  }
+  const authors = data.authors;
+  if (!Array.isArray(authors)) {
+    return [];
+  }
+  return authors.filter((a): a is string => typeof a === "string");
+}
+
+export default function BlogListClient({ initialPage }: BlogListClientProps) {
   const locale = useLocale();
-  const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState<InitialPage>(initialPage);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
   const [selectedAuthor, setSelectedAuthor] = useState("all");
-  const [sortOption, setSortOption] = useState<SortOption>("latest");
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [sortOption, setSortOption] = useState<BlogSortOption>("latest");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [authorOptions, setAuthorOptions] = useState<string[]>([]);
+  const requestIdRef = useRef(0);
 
   const copy =
     locale === "ko"
       ? {
           title: "Engineering Log",
-          subtitle: "스캔하기 쉬운 목록으로 최근 기술 기록을 빠르게 탐색할 수 있습니다.",
-          searchPlaceholder: "제목/설명/작성자로 검색",
+          subtitle:
+            "스캔하기 쉬운 목록으로 최근 기술 기록을 빠르게 탐색할 수 있습니다.",
+          searchPlaceholder: "제목/내용 검색",
           allAuthors: "전체 작성자",
           sortLabel: "정렬",
           sortLatest: "최신순",
@@ -58,12 +156,15 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
           readOriginal: "원문 보기",
           empty: "검색 조건에 맞는 글이 없습니다.",
           reset: "필터 초기화",
-          loadMore: "더 보기",
+          prev: "이전",
+          next: "다음",
+          pageLabel: "{page} / {total} 페이지",
         }
       : {
           title: "Engineering Log",
-          subtitle: "Scan recent technical writing quickly with a clean, sortable list.",
-          searchPlaceholder: "Search by title, description, or author",
+          subtitle:
+            "Scan recent technical writing quickly with a clean, sortable list.",
+          searchPlaceholder: "Search title/content",
           allAuthors: "All authors",
           sortLabel: "Sort",
           sortLatest: "Latest",
@@ -73,43 +174,113 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
           readOriginal: "Read Original",
           empty: "No posts matched the current filters.",
           reset: "Reset filters",
-          loadMore: "Load More",
+          prev: "Prev",
+          next: "Next",
+          pageLabel: "Page {page} / {total}",
         };
-  const authorOptions = useMemo(() => {
-    return [...new Set(posts.map((post) => post.author))]
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, getIntlLocale(locale === "ko" ? "ko" : "en")));
-  }, [locale, posts]);
 
-  const filteredPosts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+  useEffect(() => {
+    let active = true;
+    fetchBlogAuthorsApi()
+      .then((payload) => {
+        if (active) {
+          setAuthorOptions(extractAuthors(payload));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setAuthorOptions([]);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-    const baseFiltered = posts.filter((post) => {
-      const matchesQuery =
-        normalizedQuery.length === 0 ||
-        post.title.toLowerCase().includes(normalizedQuery) ||
-        post.description.toLowerCase().includes(normalizedQuery) ||
-        post.author.toLowerCase().includes(normalizedQuery);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+      setPageNumber(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(handler);
+  }, [searchInput]);
 
-      const matchesAuthor =
-        selectedAuthor === "all" || post.author === selectedAuthor;
+  const isInitialView =
+    pageNumber === 1 &&
+    selectedAuthor === "all" &&
+    sortOption === "latest" &&
+    searchQuery.length === 0;
 
-      return matchesQuery && matchesAuthor;
-    });
-
-    return baseFiltered.sort((a, b) => {
-      if (sortOption === "latest") {
-        return parseDate(b.date) - parseDate(a.date);
+  useEffect(() => {
+    if (isInitialView) {
+      // Restore SSR initial page without a fetch, via microtask to avoid
+      // cascading renders during effect body.
+      const requestId = ++requestIdRef.current;
+      Promise.resolve().then(() => {
+        if (requestId === requestIdRef.current) {
+          setCurrentPage(initialPage);
+          setIsLoading(false);
+        }
+      });
+      return;
+    }
+    const requestId = ++requestIdRef.current;
+    Promise.resolve().then(() => {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(true);
       }
-      if (sortOption === "oldest") {
-        return parseDate(a.date) - parseDate(b.date);
-      }
-      return a.author.localeCompare(b.author, getIntlLocale(locale === "ko" ? "ko" : "en"));
     });
-  }, [locale, posts, query, selectedAuthor, sortOption]);
+    fetchBlogPostsApi({
+      page: pageNumber,
+      pageSize: initialPage.pageSize,
+      ...(selectedAuthor !== "all" && { author: selectedAuthor }),
+      ...(searchQuery.length > 0 && { search: searchQuery }),
+      sort: sortOption,
+    })
+      .then((payload) => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+        setCurrentPage(extractPage(payload, initialPage.pageSize));
+      })
+      .catch(() => {
+        if (requestId !== requestIdRef.current) {
+          return;
+        }
+        setCurrentPage({
+          posts: [],
+          total: 0,
+          page: pageNumber,
+          pageSize: initialPage.pageSize,
+          totalPages: 0,
+        });
+      })
+      .finally(() => {
+        if (requestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
+      });
+  }, [
+    initialPage,
+    isInitialView,
+    pageNumber,
+    searchQuery,
+    selectedAuthor,
+    sortOption,
+  ]);
 
-  const visiblePosts = filteredPosts.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredPosts.length;
+  const pageNumbers = useMemo(
+    () => buildPageWindow(currentPage.page, currentPage.totalPages),
+    [currentPage.page, currentPage.totalPages],
+  );
+
+  const handleResetFilters = useCallback(() => {
+    setSearchInput("");
+    setSearchQuery("");
+    setSelectedAuthor("all");
+    setSortOption("latest");
+    setPageNumber(1);
+  }, []);
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 max-w-5xl mx-auto">
@@ -119,9 +290,7 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
         className="mb-10"
       >
         <h1 className="text-4xl font-bold mb-4">{copy.title}</h1>
-        <p className="text-muted-foreground">
-          {copy.subtitle}
-        </p>
+        <p className="text-muted-foreground">{copy.subtitle}</p>
       </motion.div>
 
       <motion.section
@@ -134,11 +303,8 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setVisibleCount(INITIAL_VISIBLE_COUNT);
-              }}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
               placeholder={copy.searchPlaceholder}
               className="w-full h-10 rounded-lg border border-border/60 bg-background/60 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             />
@@ -148,7 +314,7 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
             value={selectedAuthor}
             onChange={(event) => {
               setSelectedAuthor(event.target.value);
-              setVisibleCount(INITIAL_VISIBLE_COUNT);
+              setPageNumber(1);
             }}
             className="h-10 rounded-lg border border-border/60 bg-background/60 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           >
@@ -163,8 +329,8 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
           <select
             value={sortOption}
             onChange={(event) => {
-              setSortOption(event.target.value as SortOption);
-              setVisibleCount(INITIAL_VISIBLE_COUNT);
+              setSortOption(event.target.value as BlogSortOption);
+              setPageNumber(1);
             }}
             className="h-10 rounded-lg border border-border/60 bg-background/60 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             aria-label={copy.sortLabel}
@@ -177,13 +343,18 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
 
         <div className="mt-3 text-xs text-muted-foreground inline-flex items-center gap-1.5">
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          {copy.totalResults.replace("{count}", String(filteredPosts.length))}
+          {copy.totalResults.replace("{count}", String(currentPage.total))}
+          {isLoading && (
+            <span className="inline-flex items-center gap-1 ml-2">
+              <Loader2 className="w-3 h-3 animate-spin" />
+            </span>
+          )}
         </div>
       </motion.section>
 
       <div className="space-y-4">
-        {visiblePosts.length > 0 ? (
-          visiblePosts.map((post, index) => {
+        {currentPage.posts.length > 0 ? (
+          currentPage.posts.map((post, index) => {
             const sourceUrl = getBlogPostSourceUrl(post);
 
             return (
@@ -191,7 +362,7 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
                 key={post.id || sourceUrl || `${post.author}-${index}`}
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(index * 0.04, 0.24) }}
+                transition={{ delay: Math.min(index * 0.02, 0.18) }}
                 className="group relative rounded-2xl border border-border/50 bg-card/35 hover:bg-card/55 transition-colors"
               >
                 <a
@@ -237,7 +408,10 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
                       <>
                         <span>·</span>
                         <span className="line-clamp-1">
-                          {post.tags.slice(0, 3).map((tag) => `#${tag}`).join(" ")}
+                          {post.tags
+                            .slice(0, 3)
+                            .map((tag) => `#${tag}`)
+                            .join(" ")}
                         </span>
                       </>
                     )}
@@ -259,17 +433,10 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
           })
         ) : (
           <div className="rounded-2xl border border-border/50 bg-card/30 p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-2">
-              {copy.empty}
-            </p>
+            <p className="text-sm text-muted-foreground mb-2">{copy.empty}</p>
             <button
               type="button"
-              onClick={() => {
-                setQuery("");
-                setSelectedAuthor("all");
-                setSortOption("latest");
-                setVisibleCount(INITIAL_VISIBLE_COUNT);
-              }}
+              onClick={handleResetFilters}
               className="text-sm font-medium text-primary"
             >
               {copy.reset}
@@ -278,16 +445,90 @@ export default function BlogListClient({ posts }: BlogListClientProps) {
         )}
       </div>
 
-      {hasMore && (
-        <div className="mt-8 text-center">
+      {currentPage.totalPages > 1 && (
+        <nav
+          aria-label="pagination"
+          className="mt-8 flex flex-wrap items-center justify-center gap-2"
+        >
           <button
             type="button"
-            onClick={() => setVisibleCount((prev) => prev + LOAD_MORE_COUNT)}
-            className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-card/40 px-4 py-2 text-sm font-medium hover:bg-card/60 transition-colors"
+            onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+            disabled={currentPage.page === 1 || isLoading}
+            className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm font-medium hover:bg-card/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {copy.loadMore}
+            <ChevronLeft className="w-4 h-4" />
+            {copy.prev}
           </button>
-        </div>
+
+          {pageNumbers[0] > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setPageNumber(1)}
+                disabled={isLoading}
+                className="min-w-[36px] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm hover:bg-card/60 transition-colors disabled:opacity-60"
+              >
+                1
+              </button>
+              {pageNumbers[0] > 2 && (
+                <span className="px-1 text-muted-foreground">…</span>
+              )}
+            </>
+          )}
+
+          {pageNumbers.map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => setPageNumber(n)}
+              disabled={isLoading}
+              aria-current={n === currentPage.page ? "page" : undefined}
+              className={
+                n === currentPage.page
+                  ? "min-w-[36px] rounded-md border border-primary/60 bg-primary/15 px-3 py-2 text-sm font-semibold text-primary"
+                  : "min-w-[36px] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm hover:bg-card/60 transition-colors disabled:opacity-60"
+              }
+            >
+              {n}
+            </button>
+          ))}
+
+          {pageNumbers[pageNumbers.length - 1] < currentPage.totalPages && (
+            <>
+              {pageNumbers[pageNumbers.length - 1] < currentPage.totalPages - 1 && (
+                <span className="px-1 text-muted-foreground">…</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setPageNumber(currentPage.totalPages)}
+                disabled={isLoading}
+                className="min-w-[36px] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm hover:bg-card/60 transition-colors disabled:opacity-60"
+              >
+                {currentPage.totalPages}
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={() =>
+              setPageNumber((p) => Math.min(currentPage.totalPages, p + 1))
+            }
+            disabled={
+              currentPage.page === currentPage.totalPages || isLoading
+            }
+            className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm font-medium hover:bg-card/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {copy.next}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <span className="ml-3 text-xs text-muted-foreground">
+            {copy.pageLabel
+              .replace("{page}", String(currentPage.page))
+              .replace("{total}", String(currentPage.totalPages))}
+          </span>
+        </nav>
       )}
     </div>
   );

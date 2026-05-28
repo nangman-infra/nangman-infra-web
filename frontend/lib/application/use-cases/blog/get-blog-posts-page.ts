@@ -68,13 +68,22 @@ function parsePage(payload: unknown, input: GetBlogPostsPageInput): BlogPostsPag
     typeof record.page === 'number' && record.page > 0
       ? record.page
       : input.page;
-  const totalPages =
-    typeof record.totalPages === 'number' && record.totalPages >= 0
-      ? record.totalPages
-      : pageSize > 0
-        ? Math.ceil(total / pageSize)
-        : 0;
+  const totalPages = resolveTotalPages(record.totalPages, total, pageSize);
   return { posts, total, page, pageSize, totalPages };
+}
+
+function resolveTotalPages(
+  rawTotalPages: unknown,
+  total: number,
+  pageSize: number,
+): number {
+  if (typeof rawTotalPages === 'number' && rawTotalPages >= 0) {
+    return rawTotalPages;
+  }
+  if (pageSize > 0) {
+    return Math.ceil(total / pageSize);
+  }
+  return 0;
 }
 
 function buildFallbackPage(input: GetBlogPostsPageInput): BlogPostsPage {

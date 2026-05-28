@@ -104,13 +104,22 @@ function extractPage(payload: unknown, fallbackPageSize: number): InitialPage {
   const page = typeof data.page === "number" ? data.page : 1;
   const pageSize =
     typeof data.pageSize === "number" ? data.pageSize : fallbackPageSize;
-  const totalPages =
-    typeof data.totalPages === "number"
-      ? data.totalPages
-      : pageSize > 0
-        ? Math.ceil(total / pageSize)
-        : 0;
+  const totalPages = resolveTotalPages(data.totalPages, total, pageSize);
   return { posts, total, page, pageSize, totalPages };
+}
+
+function resolveTotalPages(
+  rawTotalPages: unknown,
+  total: number,
+  pageSize: number,
+): number {
+  if (typeof rawTotalPages === "number") {
+    return rawTotalPages;
+  }
+  if (pageSize > 0) {
+    return Math.ceil(total / pageSize);
+  }
+  return 0;
 }
 
 function extractAuthors(payload: unknown): string[] {
@@ -493,9 +502,9 @@ export default function BlogListClient({ initialPage }: BlogListClientProps) {
             </button>
           ))}
 
-          {pageNumbers[pageNumbers.length - 1] < currentPage.totalPages && (
+          {(pageNumbers.at(-1) ?? 0) < currentPage.totalPages && (
             <>
-              {pageNumbers[pageNumbers.length - 1] < currentPage.totalPages - 1 && (
+              {(pageNumbers.at(-1) ?? 0) < currentPage.totalPages - 1 && (
                 <span className="px-1 text-muted-foreground">…</span>
               )}
               <button

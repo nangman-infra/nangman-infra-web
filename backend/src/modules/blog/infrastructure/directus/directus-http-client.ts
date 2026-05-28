@@ -63,16 +63,18 @@ export class DirectusHttpClient {
     options: RequestOptions,
     token: string | null,
   ): Promise<T> {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    if (options.body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const config: AxiosRequestConfig = {
       method,
       url,
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        Accept: 'application/json',
-        ...(options.body !== undefined
-          ? { 'Content-Type': 'application/json' }
-          : {}),
-      },
+      headers,
       params: options.params,
       data: options.body,
       timeout: this.timeoutMs,

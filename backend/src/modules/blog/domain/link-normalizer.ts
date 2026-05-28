@@ -15,7 +15,15 @@ export function normalizeBlogPostLink(raw: string): string {
   url.search = '';
   url.host = url.host.toLowerCase();
   url.protocol = url.protocol.toLowerCase();
-  url.pathname = url.pathname.replace(/\/+$/, '') || '/';
+  url.pathname = stripTrailingSlashes(url.pathname);
 
   return url.toString();
+}
+
+function stripTrailingSlashes(pathname: string): string {
+  let end = pathname.length;
+  while (end > 1 && pathname.charCodeAt(end - 1) === 47 /* '/' */) {
+    end--;
+  }
+  return end === 0 ? '/' : pathname.slice(0, end);
 }

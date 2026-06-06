@@ -1,8 +1,8 @@
-import { inc20260604Proxy001 } from "./incident-reports/inc-20260604-proxy-001";
-import { inc20260503Npm001 } from "./incident-reports/inc-20260503-npm-001";
-import { inc20260307Auth003 } from "./incident-reports/inc-20260307-auth-003";
-import { inc20260301Auth001 } from "./incident-reports/inc-20260301-auth-001";
-import { inc20260304Auth002 } from "./incident-reports/inc-20260304-auth-002";
+import inc20260301Auth001 from "./incident-reports/inc-20260301-auth-001.json";
+import inc20260304Auth002 from "./incident-reports/inc-20260304-auth-002.json";
+import inc20260307Auth003 from "./incident-reports/inc-20260307-auth-003.json";
+import inc20260503Npm001 from "./incident-reports/inc-20260503-npm-001.json";
+import inc20260604Proxy001 from "./incident-reports/inc-20260604-proxy-001.json";
 import type { IncidentReport } from "./incident-reports/types";
 
 export type {
@@ -13,9 +13,9 @@ export type {
 } from "./incident-reports/types";
 
 export const incidentReports: IncidentReport[] = [
-  inc20260604Proxy001,
-  inc20260503Npm001,
-  inc20260307Auth003,
-  inc20260301Auth001,
-  inc20260304Auth002,
+  inc20260604Proxy001 as IncidentReport,
+  inc20260503Npm001 as IncidentReport,
+  inc20260307Auth003 as IncidentReport,
+  inc20260301Auth001 as IncidentReport,
+  inc20260304Auth002 as IncidentReport,
 ];

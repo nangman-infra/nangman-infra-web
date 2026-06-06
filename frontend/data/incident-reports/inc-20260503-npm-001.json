@@ -70,17 +70,17 @@
     "하위 프록시 웹 서비스와 Teleport 세션 복구 확인"
   ],
   "followUp": {
-    "title": "Ingress Maintenance Safety Standard",
-    "scope": "NPM, Teleport, 인증, VPN 등 운영 진입점 또는 원격 관리 경로에 영향을 주는 컨테이너 변경 작업",
+    "title": "Standard Update Impact Review and Notice Policy",
+    "scope": "NPM, Teleport, 인증, VPN 등 운영 진입점 또는 원격 관리 경로에 영향을 줄 수 있는 표준 업데이트 작업",
     "checklist": [
-      "운영 진입점 컨테이너 업데이트 시 docker compose down 사용 금지",
-      "표준 업데이트 명령을 docker compose pull && docker compose up -d로 통일",
+      "표준 업데이트 작업 전 영향 대상 서비스와 관리 경로를 사전 식별",
+      "NPM 하위 프록시 서비스와 Teleport 의존성에 대한 영향도 확인",
+      "영향 가능성이 있는 사용자 또는 운영자에게 작업 시간과 예상 영향 사전 공지",
       "작업 전 독립 SSH 우회 경로와 방화벽/ACG 허용 상태 확인",
-      "작업 전 NPM 하위 프록시 서비스와 Teleport 의존성 목록 확인",
       "작업 후 하위 프록시 웹 서비스와 Teleport 세션을 각각 검증",
-      "Nangman Infra 운영 가이드와 기술 블로그에 장애 사례 및 복구 절차 문서화"
+      "작업 결과와 실제 영향 범위를 운영 기록에 남김"
     ],
-    "exitCriteria": "진입점 서비스 변경 전 독립 관리 경로 확인, 의존성 점검, 작업 후 서비스/Teleport 검증 증적이 모두 남아야 작업 종료"
+    "exitCriteria": "표준 업데이트 작업 전 영향도 확인과 사전 공지가 완료되고, 작업 후 서비스/Teleport 검증 증적이 모두 남아야 작업 종료"
   },
   "tags": [
     "#incident",

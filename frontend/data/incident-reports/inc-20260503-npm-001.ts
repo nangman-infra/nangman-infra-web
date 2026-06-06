@@ -1,0 +1,103 @@
+import type { IncidentReport } from "./types";
+
+export const inc20260503Npm001: IncidentReport = {
+  id: "INC-20260503-NPM-001",
+  slug: "inc-20260503-npm-001",
+  title: "NPM 업데이트 중 Teleport 및 프록시 서비스 유실",
+  status: "resolved",
+  severity: "SEV-1",
+  startedAtIso: "2026-05-03T16:40:00+09:00",
+  resolvedAtIso: "2026-05-03T17:00:00+09:00",
+  startedAt: "2026-05-03 16:40 KST",
+  resolvedAt: "2026-05-03 17:00 KST",
+  owner: "리포터: 운영 기록 기준 미확인 / 작업자: 운영 기록 기준 미확인",
+  impactedService:
+    "서울 및 대전 NPM 하위 프록시 웹 서비스, Teleport 원격 관리 콘솔",
+  summary:
+    "서울/대전 Nginx Proxy Manager 업데이트 중 docker compose down 실행 직후 프록시 컨테이너가 중단되며 하위 웹 서비스와 Teleport 원격 관리 경로가 함께 유실되었습니다. 기본 SSH 경로로 우회 접속한 뒤 docker compose up -d를 실행해 NPM 컨테이너와 Teleport 접근을 복구했습니다.",
+  technicalImpact:
+    "NPM이 외부 HTTPS 프록시와 Teleport 진입점 역할을 동시에 담당하고 있어, NPM 컨테이너 중단 직후 서울/대전 하위 프록시 서비스와 Teleport 세션이 약 20분 동안 접근 불가 상태가 되었습니다.",
+  topology: [
+    "Client -> HTTPS 443 -> Nginx Proxy Manager (Seoul/Daejeon)",
+    "Nginx Proxy Manager -> 하위 프록시 웹 서비스",
+    "Operator -> Teleport Web/Proxy -> Nginx Proxy Manager 경유 관리 경로",
+    "Emergency Operator -> SSH 22 -> 대상 서버 직접 접속",
+  ],
+  rootCause:
+    "docker compose down으로 NPM 컨테이너와 관련 네트워크가 중지/제거되면서 프록시 경로가 사라졌고, Teleport 진입점도 해당 NPM 경로에 의존하고 있어 운영자가 후속 up 명령을 실행할 원격 관리 세션까지 동시에 잃었습니다.",
+  contributingFactors: [
+    "Teleport 원격 관리 경로가 NPM 프록시 컨테이너에 의존하는 구조였으나 작업 전 의존성 점검이 부족했음",
+    "운영 진입점 역할을 하는 NPM에 docker compose down 명령을 사용해 프록시 공백기를 직접 발생시킴",
+    "작업 전 독립 SSH 우회 경로와 방화벽/ACG 허용 상태를 명시적으로 확인하는 체크리스트가 없었음",
+    "서울/대전 하위 프록시 서비스와 관리 콘솔 영향 범위를 분리해 검증하는 변경 관리 절차가 부족했음",
+  ],
+  evidence: [
+    "2026-05-03 16:40 KST docker compose down 실행 직후 원격 터미널 및 Teleport 세션 Disconnect 발생",
+    "기본 SSH 포트와 외부 방화벽/ACG 허용 정책은 유지되어 있어 직접 SSH 우회 접속 성공",
+    "docker compose up -d 실행 후 NPM 하위 프록시 웹 서비스 및 Teleport 세션 복구 확인",
+    "Docker Compose 공식 문서 기준 down은 up으로 생성된 컨테이너와 네트워크를 중지 및 제거하는 명령",
+    "사용자 제공 정부통합전산센터 장애등급 산정 기준 PDF를 참고해 P1/SEV-1로 분류",
+  ],
+  timeline: [
+    {
+      at: "2026-05-03 16:35",
+      event: "서울/대전 서버 NPM 최신 상태 업데이트 작업 시작",
+    },
+    {
+      at: "2026-05-03 16:37",
+      event: "대상 서버 접속 후 /home/seongwon/nginx-proxy-manager/ 이동",
+    },
+    {
+      at: "2026-05-03 16:38",
+      event: "docker compose pull 수행 완료",
+    },
+    {
+      at: "2026-05-03 16:40",
+      event: "docker compose down 실행 직후 원격 터미널 및 Teleport 세션 끊김",
+    },
+    {
+      at: "2026-05-03 16:47",
+      event: "Teleport 인증/Proxy 경로가 NPM 컨테이너에 의존하고 있음을 확인",
+    },
+    {
+      at: "2026-05-03 16:47",
+      event: "기본 SSH 경로를 통한 우회 복구 요청 및 접속 절차 진행",
+    },
+    {
+      at: "2026-05-03 17:00",
+      event: "내부 터미널에서 NPM 컨테이너 복구 및 Teleport 연결 재개 확인",
+    },
+  ],
+  resolution: [
+    "Teleport 경로는 차단되었지만 기본 SSH 포트와 외부 방화벽/ACG 허용 정책은 유지되어 있음을 확인",
+    "일반 SSH 프로토콜로 서버에 직접 우회 접속",
+    "/home/seongwon/nginx-proxy-manager/ 디렉토리에서 docker compose up -d 실행",
+    "NPM 프록시 컨테이너 재구동 및 요청된 최신 이미지 업데이트 반영",
+    "하위 프록시 웹 서비스와 Teleport 세션 복구 확인",
+  ],
+  followUp: {
+    title: "Ingress Maintenance Safety Standard",
+    scope:
+      "NPM, Teleport, 인증, VPN 등 운영 진입점 또는 원격 관리 경로에 영향을 주는 컨테이너 변경 작업",
+    checklist: [
+      "운영 진입점 컨테이너 업데이트 시 docker compose down 사용 금지",
+      "표준 업데이트 명령을 docker compose pull && docker compose up -d로 통일",
+      "작업 전 독립 SSH 우회 경로와 방화벽/ACG 허용 상태 확인",
+      "작업 전 NPM 하위 프록시 서비스와 Teleport 의존성 목록 확인",
+      "작업 후 하위 프록시 웹 서비스와 Teleport 세션을 각각 검증",
+      "Nangman Infra 운영 가이드와 기술 블로그에 장애 사례 및 복구 절차 문서화",
+    ],
+    exitCriteria:
+      "진입점 서비스 변경 전 독립 관리 경로 확인, 의존성 점검, 작업 후 서비스/Teleport 검증 증적이 모두 남아야 작업 종료",
+  },
+  tags: [
+    "#incident",
+    "#sev-1",
+    "#npm",
+    "#nginx-proxy-manager",
+    "#teleport",
+    "#docker-compose",
+    "#ingress",
+    "#runbook",
+  ],
+};

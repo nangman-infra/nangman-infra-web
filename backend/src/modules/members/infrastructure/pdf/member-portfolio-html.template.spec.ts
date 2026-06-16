@@ -183,7 +183,9 @@ describe('buildMemberPortfolioHtml', () => {
       },
     });
 
-    expect(html).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    expect(html).toContain(
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;',
+    );
     expect(html).not.toContain('<script>alert("xss")</script>');
   });
 });

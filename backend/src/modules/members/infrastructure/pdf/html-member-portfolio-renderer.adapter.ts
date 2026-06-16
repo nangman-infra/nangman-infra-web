@@ -249,14 +249,18 @@ export class HtmlMemberPortfolioRendererAdapter
           error instanceof Error
             ? error.message
             : 'Chromium 브라우저 실행 중 알 수 없는 오류가 발생했습니다.';
-        const summarizedMessage = summarizeBrowserLaunchErrorMessage(rawMessage);
+        const summarizedMessage =
+          summarizeBrowserLaunchErrorMessage(rawMessage);
         const detail = buildBrowserLaunchLogDetail(rawMessage);
 
-        this.logger.error('Failed to launch Chromium for member portfolio PDF', {
-          executablePath,
-          error: summarizedMessage,
-          detail,
-        });
+        this.logger.error(
+          'Failed to launch Chromium for member portfolio PDF',
+          {
+            executablePath,
+            error: summarizedMessage,
+            detail,
+          },
+        );
 
         throw new Error(summarizedMessage);
       });
@@ -275,7 +279,10 @@ export class HtmlMemberPortfolioRendererAdapter
       return profileImage;
     }
 
-    if (profileImage.startsWith('http://') || profileImage.startsWith('https://')) {
+    if (
+      profileImage.startsWith('http://') ||
+      profileImage.startsWith('https://')
+    ) {
       return this.fetchAsDataUrl(profileImage);
     }
 

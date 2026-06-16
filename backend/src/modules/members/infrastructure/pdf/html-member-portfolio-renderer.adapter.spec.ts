@@ -12,7 +12,10 @@ describe('HtmlMemberPortfolioRendererAdapter helpers', () => {
     const args = getChromiumLaunchArgs();
 
     expect(args).toEqual(
-      expect.arrayContaining(['--disable-crash-reporter', '--disable-crashpad']),
+      expect.arrayContaining([
+        '--disable-crash-reporter',
+        '--disable-crashpad',
+      ]),
     );
   });
 

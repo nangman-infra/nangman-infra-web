@@ -298,7 +298,11 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
         }
 
         if ('type' in message && message.type === 'shutdown') {
-          reject(new Error('포트폴리오 워커가 예기치 않게 종료 응답을 반환했습니다.'));
+          reject(
+            new Error(
+              '포트폴리오 워커가 예기치 않게 종료 응답을 반환했습니다.',
+            ),
+          );
           return;
         }
 
@@ -378,7 +382,10 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
       };
 
       const timeoutId = setTimeout(() => {
-        void worker.terminate().catch(() => 0).finally(finalize);
+        void worker
+          .terminate()
+          .catch(() => 0)
+          .finally(finalize);
       }, WORKER_SHUTDOWN_TIMEOUT_MS);
 
       worker.once('exit', handleExit);
@@ -389,7 +396,10 @@ export class WorkerThreadMemberPortfolioJobManagerAdapter
         worker.postMessage(payload);
       } catch {
         clearTimeout(timeoutId);
-        void worker.terminate().catch(() => 0).finally(finalize);
+        void worker
+          .terminate()
+          .catch(() => 0)
+          .finally(finalize);
       }
     });
   }

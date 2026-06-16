@@ -105,7 +105,10 @@ function renderFocusAreas(member: MemberProfile): string {
       ${renderSectionHeading('Focus', 'Core Areas')}
       <div class="badge-list">
         ${specialties
-          .map((specialty) => `<span class="badge">${escapeHtml(specialty)}</span>`)
+          .map(
+            (specialty) =>
+              `<span class="badge">${escapeHtml(specialty)}</span>`,
+          )
           .join('')}
       </div>
     </section>
@@ -374,7 +377,9 @@ function renderCoverSheet(
           <div class="hero-copy">
             <p class="hero-eyebrow">
               ${escapeHtml(
-                member.category === 'senior' ? 'Mentor Portfolio' : 'Mentee Portfolio',
+                member.category === 'senior'
+                  ? 'Mentor Portfolio'
+                  : 'Mentee Portfolio',
               )}
             </p>
             <h1 class="hero-name">${escapeHtml(member.name)}</h1>

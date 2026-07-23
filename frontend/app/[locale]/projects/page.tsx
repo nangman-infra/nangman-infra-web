@@ -19,6 +19,16 @@ interface Project {
 
 const projects: Project[] = [
   {
+    id: "korea-monitor",
+    name: "Korea Monitor",
+    description: {
+      ko: "지진·긴급재난문자·기상특보 등 재난 정보와 실시간 방송, 대기질, 시장 지표를 한 화면에 모아 보여주는 대한민국 실시간 상황 모니터링 대시보드입니다.",
+      en: "A real-time situational awareness dashboard for South Korea that aggregates disaster information—earthquakes, emergency alerts, and weather advisories—alongside live broadcasts, air quality, and market data in a single view.",
+    },
+    status: "live",
+    url: "https://koreamonitor.nangman.cloud",
+  },
+  {
     id: "when2work",
     name: "When2Work",
     description: {

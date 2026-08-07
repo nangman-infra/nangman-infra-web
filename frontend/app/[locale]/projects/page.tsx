@@ -36,7 +36,7 @@ const projects: Project[] = [
       en: "A scheduling service that collects team availability through a single link and quickly surfaces the most overlapping time slots.",
     },
     status: "live",
-    url: "https://when2work.whitejbb.cloud",
+    url: "https://when2meet.devtrail.kr",
   },
   {
     id: "touch-browser",

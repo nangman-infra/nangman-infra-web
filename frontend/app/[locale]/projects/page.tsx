@@ -57,7 +57,7 @@ const projects: Project[] = [
       en: "A web application that assists with network construction and communication workflows.",
     },
     status: "live",
-    url: "https://netlab.wisoft.io/",
+    url: "https://netlab.wisoft.dev/",
   },
   {
     id: "lunar",
@@ -67,7 +67,7 @@ const projects: Project[] = [
       en: "A web service for checking the current moon phase in real time and looking up the moon on specific dates.",
     },
     status: "live",
-    url: "https://lunar.wisoft.io/",
+    url: "https://lunar.wisoft.dev/",
   },
   {
     id: "skt-usim",
@@ -77,7 +77,7 @@ const projects: Project[] = [
       en: "An information site that consolidates the timeline, breach analysis, and response actions for the SK Telecom USIM hacking incident.",
     },
     status: "live",
-    url: "https://skt-hack.wisoft.io/",
+    url: "https://skt-hack.wisoft.dev/",
   },
   {
     id: "transnote",

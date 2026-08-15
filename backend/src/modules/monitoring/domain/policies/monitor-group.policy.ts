@@ -37,8 +37,8 @@ const MANUAL_GROUP_MAP: Readonly<Record<string, string>> = {
   // 4. Applications (애플리케이션)
   'nangman.cloud': 'Applications',
   'ban-o.art': 'Applications',
-  'netlab.wisoft.io': 'Applications',
-  'skt-hack.wisoft.io': 'Applications',
+  'netlab.wisoft.dev': 'Applications',
+  'skt-hack.wisoft.dev': 'Applications',
   'wisoft-seongwon-app-server': 'Applications',
   'matrix.nangman.cloud': 'Applications',
   'matrixrtc.nangman.cloud': 'Applications',
@@ -242,7 +242,7 @@ function isApplication(nameLower: string, monitorName: string): boolean {
 
   // 도메인 패턴 (단, console.nangman.cloud, analytics 제외)
   if (
-    /\.(cloud|art|io|com|net|org)$/i.test(monitorName) &&
+    /\.(cloud|art|io|dev|com|net|org)$/i.test(monitorName) &&
     !nameLower.includes('console.nangman.cloud') &&
     !nameLower.includes('analytics') &&
     !nameLower.includes('harbor') &&

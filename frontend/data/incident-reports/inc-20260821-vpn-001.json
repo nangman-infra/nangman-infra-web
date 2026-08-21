@@ -1,0 +1,106 @@
+{
+  "id": "INC-20260821-VPN-001",
+  "slug": "inc-20260821-vpn-001",
+  "title": "낭만 서비스 전체 접속 장애",
+  "status": "resolved",
+  "severity": "SEV-1",
+  "startedAtIso": "2026-08-21T01:57:00+09:00",
+  "resolvedAtIso": "2026-08-21T02:35:00+09:00",
+  "startedAt": "2026-08-21 01:57 KST",
+  "resolvedAt": "2026-08-21 02:35 이후 KST (정확한 복구 시각 미기록)",
+  "owner": "리포터: 운영 기록 기준 미확인 / 작업자: 운영 기록 기준 미확인",
+  "impactedService": "Teleport, Mattermost, Huly, Now Down 등 AWS VPC 및 석촌-AWS 연결 경로에 의존하는 서비스",
+  "summary": "Mattermost와 Huly 접속 불가를 시작으로 Teleport, Mattermost, Now Down 등 AWS VPC 내 주요 서비스의 외부 접속 장애가 확인되었습니다. EC2와 AWS 서비스 자체는 정상 상태였으며, 석촌 OPNsense와 AWS VPC 사이의 VPN 터널이 Down된 것이 확인되었습니다. OPNsense 대시보드에서 VPN 터널을 복구한 뒤 서비스 접속을 재확인했습니다.",
+  "technicalImpact": "석촌 인프라와 AWS VPC 사이의 VPN 터널이 중단되어 두 환경 간 네트워크 경로가 단절되었습니다. AWS VPC 내부의 EC2와 서비스 프로세스는 정상적으로 구동 중이었지만 해당 연결 경로에 의존하는 NPM 및 주요 서비스에 외부에서 접근할 수 없었습니다. 초기에는 일부 서비스 장애로 파악했으나 이후 전체 장애임을 확인했습니다.",
+  "topology": [
+    "Client / Internet -> 석촌 네트워크 진입 경로",
+    "석촌 OPNsense -> AWS VPN Tunnel",
+    "AWS VPN Tunnel -> AWS VPC",
+    "AWS VPC -> NPM 및 Teleport / Mattermost / Huly / Now Down 등 서비스"
+  ],
+  "rootCause": "석촌 측 OPNsense에서 AWS VPC로 연결되는 VPN 터널이 중단되면서 석촌 인프라와 AWS VPC 사이의 네트워크 경로가 단절되었습니다. AWS 내부 리소스에는 이상이 없었으나 해당 경로에 의존하는 서비스의 외부 접근이 불가능해졌습니다.",
+  "contributingFactors": [
+    "AWS VPC 내 여러 서비스가 석촌-AWS VPN 연결 경로를 공유해 터널 중단의 영향이 동시에 전파됨",
+    "장애 당시 AWS VPN 터널 Down 상태를 즉시 감지하는 별도 모니터링 및 알림이 없었음",
+    "낭만 홈페이지는 정상 동작해 AWS 또는 NPM 전체 장애 여부를 판단하는 데 추가 확인이 필요했음",
+    "초기 모니터링에서는 일부 서비스 장애로 파악했으나 이후 영향 범위가 전체 장애로 확대 확인됨"
+  ],
+  "evidence": [
+    "2026-08-21 02:00 KST 모니터링 페이지에서 Teleport, Mattermost, Now Down의 Down 상태 확인",
+    "영향을 받은 서비스들이 AWS VPC 환경에서 운영 중임을 확인",
+    "AWS 콘솔에서 EC2 인스턴스와 주요 AWS 서비스에 이상이 없음을 확인",
+    "AWS VPC 내부의 개별 서비스 프로세스가 정상 구동 중임을 확인",
+    "낭만 홈페이지 경로에서는 OPNsense 접근이 불가능했으나 WG 대역의 172.16.0.1로 대시보드 접근 성공",
+    "OPNsense 대시보드에서 AWS VPN 터널 Down 상태 확인",
+    "VPN 터널 복구 후 서비스 접속 상태 재확인",
+    "정확한 VPN 복구 완료 시각은 운영 기록에 남아 있지 않음"
+  ],
+  "timeline": [
+    {
+      "at": "2026-08-21 01:57",
+      "event": "Mattermost 및 Huly 접속 불가 확인"
+    },
+    {
+      "at": "2026-08-21 02:00",
+      "event": "모니터링 페이지에서 Teleport, Mattermost, Now Down 장애 확인"
+    },
+    {
+      "at": "2026-08-21 02:00 이후",
+      "event": "영향 서비스가 AWS VPC에서 운영 중임을 확인하고 AWS 인프라 장애 가능성 우선 검토"
+    },
+    {
+      "at": "2026-08-21 02:00 이후",
+      "event": "AWS 콘솔에서 EC2와 주요 AWS 서비스 상태가 정상임을 확인"
+    },
+    {
+      "at": "2026-08-21 02:00 이후",
+      "event": "다른 서비스의 외부 진입 불가 현상을 확인하고 NPM 장애 가능성 검토"
+    },
+    {
+      "at": "2026-08-21 02:35",
+      "event": "석촌 측 네트워크 장비 또는 AWS 연결 구간 문제로 잠정 판단"
+    },
+    {
+      "at": "2026-08-21 02:35 이후",
+      "event": "WG 대역의 172.16.0.1을 통해 OPNsense 대시보드 접근"
+    },
+    {
+      "at": "2026-08-21 02:35 이후",
+      "event": "AWS VPN 터널 Down 상태 확인"
+    },
+    {
+      "at": "2026-08-21 02:35 이후",
+      "event": "AWS VPN 터널 복구 및 서비스 접속 상태 재확인"
+    }
+  ],
+  "resolution": [
+    "AWS 콘솔에서 EC2 및 관련 서비스 상태 확인",
+    "서비스별 외부 접속 상태 재확인",
+    "NPM과 석촌 네트워크 장비를 포함하도록 조사 범위 확대",
+    "WG 대역의 172.16.0.1을 통해 OPNsense 대시보드 접근",
+    "AWS VPN 터널 Down 상태 확인 및 터널 복구",
+    "VPN 복구 이후 서비스 접속 상태 재확인"
+  ],
+  "followUp": {
+    "title": "AWS VPN Tunnel Health Monitoring",
+    "scope": "석촌 OPNsense와 AWS VPC 사이의 VPN 터널 및 해당 경로에 의존하는 서비스",
+    "checklist": [
+      "AWS VPN 터널 상태를 독립적으로 확인하는 모니터링 추가",
+      "VPN 터널 Down 발생 시 운영 채널 알림 구성",
+      "터널 상태와 서비스 접근 장애를 함께 확인하는 대응 절차 작성",
+      "WG 대역을 통한 OPNsense 비상 접근 경로를 장애 대응 문서에 명시",
+      "복구 작업의 시작 및 완료 시각을 운영 기록에 남기는 절차 추가"
+    ],
+    "exitCriteria": "AWS VPN 터널 Down 상태가 자동 탐지되어 운영 채널에 알림이 전달되고, 비상 접근과 복구 후 서비스 검증 절차가 문서화되어야 종료"
+  },
+  "tags": [
+    "#incident",
+    "#sev-1",
+    "#aws",
+    "#vpn",
+    "#opnsense",
+    "#wireguard",
+    "#network",
+    "#vpc"
+  ]
+}

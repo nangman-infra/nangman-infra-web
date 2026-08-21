@@ -8,7 +8,7 @@
   "resolvedAtIso": "2026-08-21T02:35:00+09:00",
   "startedAt": "2026-08-21 01:57 KST",
   "resolvedAt": "2026-08-21 02:35 이후 KST (정확한 복구 시각 미기록)",
-  "owner": "리포터: 운영 기록 기준 미확인 / 작업자: 운영 기록 기준 미확인",
+  "owner": "리포터: 태성우 / 작업자: 태성우",
   "impactedService": "Teleport, Mattermost, Huly, Now Down 등 AWS VPC 및 석촌-AWS 연결 경로에 의존하는 서비스",
   "summary": "Mattermost와 Huly 접속 불가를 시작으로 Teleport, Mattermost, Now Down 등 AWS VPC 내 주요 서비스의 외부 접속 장애가 확인되었습니다. EC2와 AWS 서비스 자체는 정상 상태였으며, 석촌 OPNsense와 AWS VPC 사이의 VPN 터널이 Down된 것이 확인되었습니다. OPNsense 대시보드에서 VPN 터널을 복구한 뒤 서비스 접속을 재확인했습니다.",
   "technicalImpact": "석촌 인프라와 AWS VPC 사이의 VPN 터널이 중단되어 두 환경 간 네트워크 경로가 단절되었습니다. AWS VPC 내부의 EC2와 서비스 프로세스는 정상적으로 구동 중이었지만 해당 연결 경로에 의존하는 NPM 및 주요 서비스에 외부에서 접근할 수 없었습니다. 초기에는 일부 서비스 장애로 파악했으나 이후 전체 장애임을 확인했습니다.",

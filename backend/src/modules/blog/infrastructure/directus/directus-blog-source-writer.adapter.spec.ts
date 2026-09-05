@@ -31,7 +31,7 @@ describe('DirectusBlogSourceWriterAdapter', () => {
     await adapter.recordError(7, longMessage);
 
     const body = http.patch.mock.calls[0][1] as { last_error: string };
-    expect(body.last_error.length).toBe(1000);
+    expect(body.last_error).toHaveLength(1000);
     expect(body.last_error.endsWith('...')).toBe(true);
   });
 

@@ -49,7 +49,7 @@ type SystemResourcesSectionProps = Readonly<{
 
 type LogSectionProps = Readonly<{
   logs: InsightsLogEntry[];
-  ups?: UpsInsights;
+  ups: UpsInsights;
 }>;
 
 const MIN_CHART_DATA_POINTS = 2;

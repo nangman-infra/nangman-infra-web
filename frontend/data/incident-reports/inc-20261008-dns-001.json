@@ -1,0 +1,125 @@
+{
+  "id": "INC-20261008-DNS-001",
+  "slug": "inc-20261008-dns-001",
+  "title": "낭만 노트 backend 기동 실패 (RDS DNS 해석 차단)",
+  "status": "resolved",
+  "severity": "SEV-2",
+  "startedAtIso": "2026-10-08T08:23:00+09:00",
+  "resolvedAtIso": "2026-10-08T09:06:00+09:00",
+  "startedAt": "2026-10-08 08:23 KST",
+  "resolvedAt": "2026-10-08 09:06 KST",
+  "owner": "리포터: 이성원 / 작업자: 이성원",
+  "impactedService": "낭만 노트(온프렘 Pi Docker Compose) backend API 및 frontend 전체 기능",
+  "summary": "온프렘 Pi에서 낭만 노트를 재기동한 직후 backend가 RDS 주소를 해석하지 못해(ENOTFOUND) 재시작을 반복했고, frontend는 API 프록시에 실패했습니다. 석촌 OPNsense Unbound의 DNS rebind 보호가 사설 IP로 해석되는 RDS 응답을 삭제한 것이 원인이었습니다. Route 53 Resolver inbound endpoint를 만들고 OPNsense에서 RDS 도메인 조회를 VPN 경유로 전달하도록 구성해 DNS를 복구했습니다. 이후 드러난 IAM 인증 첫 연결 지연에 대비해 DB 연결 timeout도 상향했습니다.",
+  "technicalImpact": "backend(NestJS)가 기동 시 DB 연결에 실패해 약 43분 동안 crash loop 상태였고, 그동안 frontend의 모든 API 요청이 ECONNREFUSED로 실패했습니다. RDS, 보안그룹, NACL, Site-to-Site VPN, TLS 경로는 모두 정상이었습니다. 문제는 석촌 DNS가 RDS의 사설 IP 응답을 지운 것이었습니다. 장애 이전 백업에도 같은 DNS 설정이 있었으므로, 원래 있던 문제가 재기동하면서 새로 DNS를 조회하는 순간 드러난 것입니다.",
+  "topology": [
+    "낭만 노트 backend (온프렘 Pi, network_mode: host)",
+    "Pi -> 석촌 OPNsense Unbound DNS",
+    "석촌 OPNsense -> AWS Site-to-Site VPN Tunnel",
+    "AWS VPN Tunnel -> AWS VPC -> RDS PostgreSQL (IAM DB 인증, TLS)",
+    "OPNsense Unbound -> VPN -> Route 53 Resolver inbound endpoint (조치 후 추가)"
+  ],
+  "rootCause": "RDS private endpoint는 공용 DNS에서 VPC 사설 IP로 해석됩니다. 석촌 OPNsense Unbound에는 DNS rebind 보호가 켜져 있었습니다. 이 기능은 10.0.0.0/8 같은 사설 대역이 담긴 응답을 삭제하는데, 예외 도메인(Private Domains)이 비어 있었습니다. 그 결과 Pi는 answer가 빈 NOERROR 응답을 받았고, Node.js는 이를 ENOTFOUND로 처리해 TypeORM 연결 재시도 끝에 프로세스가 종료되었습니다.",
+  "contributingFactors": [
+    "온프렘에서 AWS private 리소스 이름을 VPC 내부 DNS가 아닌 공용 재귀 조회로 해석하고 있었음",
+    "backend가 기동 시 한 번만 DNS를 조회하고 연결 풀을 유지해, 컨테이너가 오래 떠 있는 동안에는 DNS 문제가 드러나지 않았음",
+    "DNS를 복구한 직후 RDS IAM 인증 첫 연결이 약 24초 걸렸고, 앱 연결 timeout 기본값 5초를 넘겨 추가 재시작이 발생함",
+    "온프렘 DNS 경유 RDS 이름 해석 여부와 backend 재시작 횟수를 감시하는 모니터링이 없었음",
+    "OPNsense가 policy 기반 IPsec이라서, 방화벽이 직접 보내는 DNS 질의는 출발지를 LAN 주소로 지정해야 VPN을 통과함"
+  ],
+  "evidence": [
+    "backend 로그에서 getaddrinfo ENOTFOUND <rds-endpoint> 및 exited with code 1 (restarting) 반복 확인",
+    "frontend 로그에서 Failed to proxy http://localhost:9999 ... ECONNREFUSED 반복 확인",
+    "석촌 DNS 질의는 NOERROR지만 answer가 없었고, 공용 DNS(1.1.1.1, 8.8.8.8)는 같은 이름을 VPC 사설 IP로 정상 응답",
+    "사설 IP를 반환하는 다른 테스트 도메인도 석촌 DNS에서 동일하게 빈 응답이 나와 rebind 보호가 원인임을 확인",
+    "OPNsense Unbound 설정에서 Private Address에 10.0.0.0/8 등 16개 대역이 등록되어 있고 Private Domains가 비어 있음을 확인",
+    "장애 이전 OPNsense 설정 백업에도 같은 rebind 설정이 있어 방화벽 설정 변경이 원인이 아님을 확인",
+    "AWS에서 RDS available, 보안그룹 5432는 온프렘 LAN과 ECS SG에만 허용, 기본 NACL 전체 허용, VPN 두 터널 UP 확인",
+    "Pi에서 RDS 5432로 PostgreSQL SSLRequest를 보내 'S' 응답(11~21ms)을 받고 STARTTLS TLS 핸드셰이크 성공을 확인",
+    "DNS 복구 후 실제 IAM 토큰 연결이 처음에는 24,215ms 걸리고 이후 441~637ms로 정상화된 것을 측정",
+    "RDS PostgreSQL 로그에서 온프렘 클라이언트의 'could not receive data from client: Connection reset by peer' 기록 확인"
+  ],
+  "timeline": [
+    {
+      "at": "2026-10-08 08:23",
+      "event": "온프렘 Pi에서 낭만 노트 docker compose down/up 후 backend crash loop 시작"
+    },
+    {
+      "at": "2026-10-08 08:24",
+      "event": "backend ENOTFOUND, frontend ECONNREFUSED 로그로 장애 인지"
+    },
+    {
+      "at": "2026-10-08 08:25",
+      "event": "석촌 DNS가 RDS 이름에 빈 응답을 주고 공용 DNS는 사설 IP로 응답하는 것을 확인",
+      "evidence": "dig @<opnsense> NOERROR/no answer, dig @1.1.1.1 -> 10.x"
+    },
+    {
+      "at": "2026-10-08 08:27",
+      "event": "Pi에서 RDS 5432 경로와 PostgreSQL 응답을 확인해 네트워크 경로 정상 판단"
+    },
+    {
+      "at": "2026-10-08 08:29",
+      "event": "AWS에서 RDS, 보안그룹, NACL, Site-to-Site VPN 상태 정상 확인"
+    },
+    {
+      "at": "2026-10-08 08:36",
+      "event": "OPNsense Unbound에서 rebind 보호 설정과 비어 있는 Private Domains를 확인해 원인 확정"
+    },
+    {
+      "at": "2026-10-08 08:46",
+      "event": "Route 53 Resolver inbound endpoint(2개 AZ)와 DNS 전용 보안그룹 생성, Pi에서 직접 질의 성공"
+    },
+    {
+      "at": "2026-10-08 08:47",
+      "event": "OPNsense에 RDS 도메인 Query Forwarding과 Private Domains 추가, Outgoing Interface를 LAN으로 지정"
+    },
+    {
+      "at": "2026-10-08 08:59",
+      "event": "forward 항목이 DNS over TLS로 잘못 저장된 것을 확인하고 일반 forward로 다시 만들어 석촌 DNS의 RDS 해석 복구"
+    },
+    {
+      "at": "2026-10-08 09:00",
+      "event": "backend 오류가 Connection terminated due to connection timeout으로 바뀐 것을 확인, IAM 인증 첫 연결이 24초 걸린 것 측정"
+    },
+    {
+      "at": "2026-10-08 09:06",
+      "event": "backend DB 연결 성공 및 healthy, /health 200, frontend ECONNREFUSED 0건 확인"
+    },
+    {
+      "at": "2026-10-08 09:14",
+      "event": "DB_CONNECTION_TIMEOUT_MS를 20000으로 올리고 backend 재생성, 재시작 0회 확인"
+    }
+  ],
+  "resolution": [
+    "AWS VPC private 서브넷 2개 AZ에 Route 53 Resolver inbound endpoint 생성",
+    "inbound endpoint 전용 보안그룹을 만들고 UDP/TCP 53을 온프렘 LAN 대역에서만 허용",
+    "OPNsense Unbound에 RDS 도메인 Query Forwarding 추가 (inbound endpoint 2개 IP)",
+    "OPNsense Unbound Private Domains에 같은 RDS 도메인만 예외로 등록하고 나머지 rebind 보호는 유지",
+    "OPNsense Unbound Outgoing Interface를 LAN으로 지정해 방화벽 발신 DNS 질의가 policy 기반 VPN을 통과하도록 구성",
+    "낭만 노트 .env에 DB_CONNECTION_TIMEOUT_MS=20000을 추가하고 backend 재생성",
+    "장애 내용을 낭만 노트 저장소 troubleshooting 문서로 기록"
+  ],
+  "followUp": {
+    "title": "On-prem AWS Private DNS Resolution Monitoring",
+    "scope": "석촌 온프렘에서 AWS private 리소스(RDS 등) 이름을 해석하는 DNS 경로와 이에 의존하는 온프렘 서비스",
+    "checklist": [
+      "석촌 DNS 경유 RDS 이름 해석 여부를 확인하는 모니터링 추가",
+      "낭만 노트 backend health와 재시작 횟수 알림 구성",
+      "새 AWS private 도메인을 온프렘에서 사용할 때 Query Forwarding과 Private Domains를 함께 등록하는 절차 문서화",
+      "OPNsense API로 query forward를 만들 때 add_forward를 사용하도록 운영 절차에 명시",
+      "Route 53 Resolver inbound endpoint 비용과 상태를 주기적으로 점검"
+    ],
+    "exitCriteria": "석촌 DNS의 AWS private 이름 해석 실패와 backend 반복 재시작이 자동으로 탐지되어 운영 채널에 알림이 전달되고, private 도메인 추가 절차가 문서화되어야 종료"
+  },
+  "tags": [
+    "#incident",
+    "#sev-2",
+    "#dns",
+    "#opnsense",
+    "#unbound",
+    "#route53",
+    "#rds",
+    "#vpn",
+    "#nangman-note"
+  ]
+}

@@ -1189,7 +1189,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 wrap-break-word">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 whitespace-pre-line wrap-break-word">
                       {project.description}
                     </p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">

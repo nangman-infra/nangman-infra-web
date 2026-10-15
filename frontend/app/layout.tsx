@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -41,11 +40,6 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        <Script
-          id="newrelic-browser-agent"
-          src="/newrelic-browser.js"
-          strategy="beforeInteractive"
-        />
         {children}
       </body>
     </html>

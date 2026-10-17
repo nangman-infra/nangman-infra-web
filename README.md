@@ -23,15 +23,21 @@
 - **기술 블로그**: 문제 해결 과정과 기술적 인사이트 공유
 - **학습 커리큘럼**: 리눅스, 네트워크, 클라우드부터 실무까지의 학습 경로
 - **실시간 모니터링**: 시스템 상태를 실시간으로 확인하는 대시보드
+- **실시간 보안 현황**: OPNsense의 탐지·차단 이벤트를 조회 전용으로 표시하며, 별도 이벤트 이력은 저장하지 않음
 
 ## 기술 스택
 
-- **Framework**: Next.js 15.x
-- **Language**: TypeScript
+- **Framework**: Next.js 16.4.2 / NestJS 12.1.3
+- **Language**: TypeScript 6.0.3
 - **Styling**: Tailwind CSS
 - **UI Components**: shadcn/ui
 - **Animation**: Framer Motion
-- **Package Manager**: pnpm
+- **Runtime**: Node.js 24.22.0
+- **Package Manager**: pnpm 12.14.0
+
+Docker 빌드와 Jenkins 테스트는 같은 Node.js·pnpm 버전을 사용합니다. 각 프로젝트의 `pnpm-lock.yaml`과 `pnpm-workspace.yaml`을 함께 유지하고 `pnpm install --frozen-lockfile`로 설치합니다. TypeScript는 현재 테스트·린트 도구가 지원하는 6.0.3을 사용합니다.
+
+운영 이미지는 개발 의존성과 pnpm을 포함하지 않고 일반 사용자로 실행합니다. Jenkins는 Docker의 `test-results` 단계에서 테스트와 커버리지를 생성하며, 테스트가 실패하면 배포 승인 단계로 넘어가지 않습니다. 메인 푸시 후에도 기존 Jenkins 배포 승인이 필요합니다.
 
 ## 구조
 

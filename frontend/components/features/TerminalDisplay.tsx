@@ -102,6 +102,7 @@ export function TerminalDisplay({ commands, onCycleComplete }: TerminalDisplayPr
 
   useEffect(() => {
     if (currentPhase === "command" && currentCommand) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset the animation frame when starting a new command.
       setTypedText("");
       return startTypingAnimation(currentCommand.command, setTypedText, () => {
         setCurrentPhase("output");

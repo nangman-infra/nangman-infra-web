@@ -54,6 +54,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset localized terminal output when its translation source changes.
     setLogs([
       createLogEntry("system", t("welcome")),
       createLogEntry("system", t("helpHint")),
@@ -62,6 +63,7 @@ export function Terminal({ isOpen, setIsOpen }: Readonly<TerminalProps>) {
 
   // Prevent hydration mismatch
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep the existing client-only terminal hydration boundary.
     setMounted(true);
   }, []);
 

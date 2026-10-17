@@ -4,10 +4,10 @@
 
 ## 기술 스택
 
-- **Framework:** Nest.js 11.x
-- **Language:** TypeScript
-- **Package Manager:** pnpm
-- **Node.js:** 22.x
+- **Framework:** NestJS 12.1.3
+- **Language:** TypeScript 6.0.3
+- **Package Manager:** pnpm 12.14.0
+- **Node.js:** 24.22.0
 
 ## 시작하기
 

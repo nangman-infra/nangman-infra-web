@@ -16,7 +16,7 @@ services:
     networks:
       - nangman-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/ko',r=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -42,13 +42,25 @@ services:
       NUT_UPS_NAME: ${NUT_UPS_NAME}
       NUT_USERNAME: ${NUT_USERNAME}
       NUT_PASSWORD: ${NUT_PASSWORD}
+      SECURITY_OPNSENSE_URL: ${SECURITY_OPNSENSE_URL:-}
+      SECURITY_OPNSENSE_CREDENTIALS_FILE: /run/secrets/nangman-security/api-key.txt
+      SECURITY_OPNSENSE_CA_FILE: /run/secrets/nangman-security/appliance.pem
+      SECURITY_OPNSENSE_CERT_SHA256: ${SECURITY_OPNSENSE_CERT_SHA256:-}
+      SECURITY_WAN_INTERFACES: ${SECURITY_WAN_INTERFACES:-}
+      SECURITY_PROTECTED_ADDRESSES: ${SECURITY_PROTECTED_ADDRESSES:-}
+      SECURITY_SOURCE_UTC_OFFSET: ${SECURITY_SOURCE_UTC_OFFSET:-+09:00}
+      SECURITY_GEOIP_FILE: /run/secrets/nangman-security/dbip-country-lite.csv.gz
     volumes:
       - /proc:/host/proc:ro
+      - type: bind
+        source: ${SECURITY_FILES_DIR:-/opt/nangman-infra/security}
+        target: /run/secrets/nangman-security
+        read_only: true
     restart: unless-stopped
     networks:
       - nangman-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3333/api/v1/contact/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3333/api/v1/contact/health',r=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3

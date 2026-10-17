@@ -355,6 +355,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
   useEffect(() => {
     const restored = readPortfolioJobStateMap();
     jobStateByMemberRef.current = restored;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Browser storage is restored after hydration before resuming existing PDF jobs.
     setIsJobStateLoaded(true);
   }, []);
 
@@ -486,6 +487,7 @@ export function ProfileModal({ member, isOpen, onClose }: ProfileModalProps) {
 
     currentMemberKeyRef.current = memberJobKey;
     if (!memberJobKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the existing per-member job state when the selected member changes.
       applyMemberState(createEmptyPortfolioJobUiState());
       return;
     }

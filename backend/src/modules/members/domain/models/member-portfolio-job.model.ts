@@ -1,8 +1,5 @@
 export type MemberPortfolioJobStatus =
-  | 'queued'
-  | 'running'
-  | 'completed'
-  | 'failed';
+  'queued' | 'running' | 'completed' | 'failed';
 
 export interface MemberPortfolioJobSnapshot {
   jobId: string;

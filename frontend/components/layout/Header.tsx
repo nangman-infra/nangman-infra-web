@@ -16,6 +16,7 @@ const navItems = [
   { href: "/about", label: { ko: "About", en: "About" } },
   { href: "/services", label: { ko: "Services", en: "Services" } },
   { href: "/monitoring", label: { ko: "Monitoring", en: "Monitoring" } },
+  { href: "/security", label: { ko: "Security", en: "Security" } },
   { href: "/incidents", label: { ko: "Incidents", en: "Incidents" } },
   { href: "/members", label: { ko: "Members", en: "Members" } },
   { href: "/projects", label: { ko: "Projects", en: "Projects" } },

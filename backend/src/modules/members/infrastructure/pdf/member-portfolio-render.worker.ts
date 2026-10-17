@@ -15,7 +15,7 @@ type WorkerPayload = RenderPayload | ShutdownPayload;
 
 interface RenderSuccessMessage {
   ok: true;
-  content: Uint8Array;
+  content: Uint8Array<ArrayBuffer>;
 }
 
 interface ShutdownSuccessMessage {
@@ -29,9 +29,7 @@ interface RenderErrorMessage {
 }
 
 type RenderMessage =
-  | RenderSuccessMessage
-  | ShutdownSuccessMessage
-  | RenderErrorMessage;
+  RenderSuccessMessage | ShutdownSuccessMessage | RenderErrorMessage;
 
 if (!parentPort) {
   throw new Error('Worker parent port is not available.');

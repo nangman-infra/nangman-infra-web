@@ -37,9 +37,7 @@ interface WorkerErrorMessage {
 }
 
 type WorkerMessage =
-  | WorkerSuccessMessage
-  | WorkerShutdownMessage
-  | WorkerErrorMessage;
+  WorkerSuccessMessage | WorkerShutdownMessage | WorkerErrorMessage;
 
 interface RenderWorkerPayload {
   type: 'render';

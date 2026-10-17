@@ -10,6 +10,7 @@ const LOCALIZED_PAGES = [
   "/about",
   "/services",
   "/monitoring",
+  "/security",
   "/incidents",
   "/members",
   "/projects",
@@ -21,7 +22,7 @@ const LOCALIZED_PAGES = [
 function getChangeFrequency(
   pathname: (typeof LOCALIZED_PAGES)[number],
 ): "hourly" | "weekly" | "monthly" {
-  if (pathname === "/monitoring") {
+  if (pathname === "/monitoring" || pathname === "/security") {
     return "hourly";
   }
 

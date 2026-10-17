@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as Parser from 'rss-parser';
+import Parser from 'rss-parser';
 import axios from 'axios';
 import { BlogFeedItem } from '../../domain/blog-feed-item';
 import { BlogFeedReaderPort } from '../../domain/ports/blog-feed-reader.port';

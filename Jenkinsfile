@@ -92,9 +92,13 @@ pipeline {
                     env.FAILURE_REASON = 'SonarQube 분석에 실패해 배포 승인 요청을 보내지 못했습니다.'
 
                     sh '''
-                        cd frontend && pnpm install --frozen-lockfile && pnpm test:cov || true
-                        cd ../backend && pnpm install --frozen-lockfile && pnpm test:cov || true
-                        cd ..
+                        set -eu
+                        docker build --target test-results \
+                            --output "type=local,dest=$WORKSPACE/frontend/coverage" \
+                            "$WORKSPACE/frontend"
+                        docker build --target test-results \
+                            --output "type=local,dest=$WORKSPACE/backend/coverage" \
+                            "$WORKSPACE/backend"
                     '''
 
                     echo "🔎 SonarQube project: ${env.SONAR_PROJECT_NAME} (${env.SONAR_PROJECT_KEY})"

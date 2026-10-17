@@ -112,6 +112,7 @@ backend/.env.production
 
 # Local development
 .local/
+.secrets/
 
 # Local CMS persistence (bind mounts)
 cms/

@@ -8,6 +8,7 @@ import { BlogModule } from './modules/blog/blog.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { MembersModule } from './modules/members/members.module';
 import { NoticesModule } from './modules/notices/notices.module';
+import { SecurityModule } from './modules/security/security.module';
 import {
   RATE_LIMIT_REQUESTS_PER_HOUR,
   RATE_LIMIT_TTL_MS,
@@ -47,6 +48,7 @@ function resolveEnvFilePriority(): string[] {
     BlogModule,
     MembersModule,
     NoticesModule,
+    SecurityModule,
   ],
 })
 export class AppModule {}

@@ -1,32 +1,33 @@
-# Build stage
-FROM node:22-alpine AS builder
+ARG NODE_VERSION=24.22.0
+ARG PNPM_VERSION=12.14.0
 
+FROM node:${NODE_VERSION}-bookworm-slim AS package-manager
+ARG PNPM_VERSION
 WORKDIR /app
+RUN npm install --global pnpm@${PNPM_VERSION} && npm cache clean --force
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
-
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install dependencies
+FROM package-manager AS builder
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY nest-cli.json tsconfig.json ./
+COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src ./src
-
-# Build application
 RUN pnpm build
 
-# Production stage
-FROM node:22-bookworm-slim AS production
+FROM builder AS test
+COPY jest.config.js ./
+RUN pnpm test:cov --runInBand
 
+FROM scratch AS test-results
+COPY --from=test /app/coverage /
+
+FROM package-manager AS production-dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+FROM node:${NODE_VERSION}-bookworm-slim AS production
 WORKDIR /app
 
-# Install pnpm and system dependencies.
-# Use Debian Chromium in production because Alpine Chromium crashes during
-# headless PDF rendering inside Docker.
+# Debian Chromium is required for the existing profile PDF renderer.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates \
@@ -34,31 +35,21 @@ RUN apt-get update && \
       fonts-freefont-ttf \
       iputils-ping \
       nut-client && \
-    groupadd --system app && \
-    useradd --system --create-home --home-dir /home/app --gid app --shell /usr/sbin/nologin app && \
+    groupadd --system --gid 10001 app && \
+    useradd --system --uid 10001 --create-home --home-dir /home/app --gid app --shell /usr/sbin/nologin app && \
     install -d -o app -g app /home/app/.cache /home/app/.config /home/app/.local/share && \
-    rm -rf /var/lib/apt/lists/* && \
-    corepack enable && corepack prepare pnpm@10.24.0 --activate
+    rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
-
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy built application from builder
+COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY package.json ./
 
-# Expose port
+ENV NODE_ENV=production
+ENV HOME=/home/app
+USER app
 EXPOSE 3333
 
-ENV HOME=/home/app
-
-USER app
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3333/api/v1/contact/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://127.0.0.1:3333/api/v1/contact/health',r=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
 
-# Start application
 CMD ["node", "dist/main.js"]

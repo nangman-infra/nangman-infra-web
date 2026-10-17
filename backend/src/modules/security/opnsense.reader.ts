@@ -47,10 +47,11 @@ export class OpnsenseReader {
     );
     if (!pairs.get('key') || !pairs.get('secret'))
       throw new SecurityReadError('configuration');
-    const expected = fingerprint.toLowerCase().replace(/:/g, '');
+    const expected = fingerprint.toLowerCase().replaceAll(':', '');
     if (!/^[a-f0-9]{64}$/.test(expected))
       throw new SecurityReadError('configuration');
-    this.authorization = `Basic ${Buffer.from(`${pairs.get('key')}:${pairs.get('secret')}`).toString('base64')}`;
+    const credentials = `${pairs.get('key')}:${pairs.get('secret')}`;
+    this.authorization = `Basic ${Buffer.from(credentials).toString('base64')}`;
     this.agent = new Agent({
       keepAlive: true,
       maxSockets: 4,

@@ -18,6 +18,7 @@ ENV NODE_ENV=production
 RUN pnpm build
 
 FROM builder AS test
+ENV NODE_ENV=test
 RUN pnpm test:cov
 
 FROM scratch AS test-results

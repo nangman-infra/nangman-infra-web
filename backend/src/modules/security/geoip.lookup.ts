@@ -4,6 +4,11 @@ import { ipNumber, isPublicAddress } from './security-normalizer';
 
 type CountryRange = { start: bigint; end: bigint; country: string };
 
+function compareRanges(a: CountryRange, b: CountryRange): number {
+  if (a.start < b.start) return -1;
+  return a.start > b.start ? 1 : 0;
+}
+
 /** Offline DB-IP Country Lite lookup. No addresses are sent to a third party. */
 export class GeoIpLookup {
   private readonly ranges = new Map<number, CountryRange[]>([
@@ -30,16 +35,14 @@ export class GeoIpLookup {
         if (!from || !to || !/^[A-Z]{2}$/.test(country || '')) continue;
         const start = ipNumber(from);
         const end = ipNumber(to);
-        if (start && end && start.version === end.version) {
+        if (start && start.version === end?.version) {
           this.ranges
             .get(start.version)
             ?.push({ start: start.value, end: end.value, country });
         }
       }
       for (const ranges of this.ranges.values()) {
-        ranges.sort((a, b) =>
-          a.start < b.start ? -1 : a.start > b.start ? 1 : 0,
-        );
+        ranges.sort(compareRanges);
       }
       this.available = [...this.ranges.values()].some(
         (ranges) => ranges.length > 0,

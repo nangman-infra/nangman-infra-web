@@ -22,6 +22,18 @@ import type {
   SecuritySourceState,
 } from './security.types';
 
+function interfaceDescription(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  const description = (value as RawRecord).description;
+  return typeof description === 'string' ? description : '';
+}
+
+function engineStatus(value: unknown): SecuritySnapshot['engine']['status'] {
+  if (value === 'running' || value === 'stopped') return value;
+  return null;
+}
+
 @Injectable()
 export class SecurityService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SecurityService.name);
@@ -40,11 +52,11 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     ids: this.initialState('ids', 5000),
     firewall: this.initialState('firewall', 1000),
   };
-  private engine: SecuritySnapshot['engine'] = {
+  private readonly engine: SecuritySnapshot['engine'] = {
     status: null,
     enabledRulesets: null,
   };
-  private options = {
+  private readonly options = {
     wanInterfaces: new Set<string>(),
     protectedAddresses: new Set<string>(),
     offset: '+09:00',
@@ -110,79 +122,76 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private async discoverWanInterfaces(reader: OpnsenseReader): Promise<void> {
+    if (this.options.wanInterfaces.size) return;
+    const names = await reader.read<RawRecord>(
+      '/api/diagnostics/interface/get_interface_names',
+    );
+    for (const [device, value] of Object.entries(names)) {
+      if (/\bwan\b/i.test(interfaceDescription(value)) || device === 'wan')
+        this.options.wanInterfaces.add(device);
+    }
+    if (!this.options.wanInterfaces.size)
+      throw new SecurityReadError('configuration');
+  }
+
+  private async sourceRows(
+    reader: OpnsenseReader,
+    source: SecuritySource,
+  ): Promise<RawRecord[]> {
+    const result =
+      source === 'ids'
+        ? await reader.read<{ rows?: RawRecord[] }>(
+            '/api/ids/service/query_alerts',
+            { current: 1, rowCount: 5000, searchPhrase: '' },
+          )
+        : await reader.read<RawRecord[]>('/api/diagnostics/firewall/log');
+    const rows = Array.isArray(result) ? result : result.rows;
+    if (!Array.isArray(rows)) throw new SecurityReadError('connection');
+    return rows
+      .filter((row) => row && typeof row === 'object')
+      .slice(0, this.states[source].limit);
+  }
+
+  private replaceSourceSnapshot(
+    source: SecuritySource,
+    rows: RawRecord[],
+  ): void {
+    const now = Date.now();
+    const timestampField = source === 'ids' ? 'timestamp' : '__timestamp__';
+    const times = rows
+      .map((row) => parseEventTime(row[timestampField], this.options.offset))
+      .filter((time): time is number => time !== null && time <= now + 60_000);
+    const unique = new Map<string, SecurityEvent>();
+    for (const row of rows) {
+      const event = normalizeEvent(
+        source,
+        row,
+        (ip) => this.geo.lookup(ip),
+        this.options,
+      );
+      if (event && event.timestamp <= now + 60_000) unique.set(event.id, event);
+    }
+    this.events[source] = [...unique.values()];
+    this.states[source] = {
+      source,
+      limit: this.states[source].limit,
+      lastSuccess: new Date(now).toISOString(),
+      oldest: times.length ? new Date(Math.min(...times)).toISOString() : null,
+      newest: times.length ? new Date(Math.max(...times)).toISOString() : null,
+      received: rows.length,
+      matched: unique.size,
+      stale: false,
+      error: null,
+    };
+  }
+
   private async readSource(source: SecuritySource): Promise<void> {
     if (!this.reader || this.stopped) return;
     try {
-      if (source === 'firewall' && !this.options.wanInterfaces.size) {
-        const names = await this.reader.read<RawRecord>(
-          '/api/diagnostics/interface/get_interface_names',
-        );
-        for (const [device, value] of Object.entries(names)) {
-          const name =
-            typeof value === 'string'
-              ? value
-              : value && typeof value === 'object'
-                ? String((value as RawRecord).description ?? '')
-                : '';
-          if (/\bwan\b/i.test(name) || device === 'wan')
-            this.options.wanInterfaces.add(device);
-        }
-        if (!this.options.wanInterfaces.size)
-          throw new SecurityReadError('configuration');
-      }
-      const result =
-        source === 'ids'
-          ? await this.reader.read<{ rows?: RawRecord[] }>(
-              '/api/ids/service/query_alerts',
-              { current: 1, rowCount: 5000, searchPhrase: '' },
-            )
-          : await this.reader.read<RawRecord[]>(
-              '/api/diagnostics/firewall/log',
-            );
-      if (this.stopped) return;
-      const raw = Array.isArray(result) ? result : result.rows;
-      if (!Array.isArray(raw)) throw new SecurityReadError('connection');
-      const rows = raw
-        .filter((row) => row && typeof row === 'object')
-        .slice(0, this.states[source].limit);
-      const now = Date.now();
-      const times = rows
-        .map((row) =>
-          parseEventTime(
-            source === 'ids' ? row.timestamp : row.__timestamp__,
-            this.options.offset,
-          ),
-        )
-        .filter(
-          (time): time is number => time !== null && time <= now + 60_000,
-        );
-      const unique = new Map<string, SecurityEvent>();
-      for (const row of rows) {
-        const event = normalizeEvent(
-          source,
-          row,
-          (ip) => this.geo.lookup(ip),
-          this.options,
-        );
-        if (event && event.timestamp <= now + 60_000)
-          unique.set(event.id, event);
-      }
-      this.events[source] = [...unique.values()];
-      this.states[source] = {
-        source,
-        limit: this.states[source].limit,
-        lastSuccess: new Date(now).toISOString(),
-        oldest: times.length
-          ? new Date(Math.min(...times)).toISOString()
-          : null,
-        newest: times.length
-          ? new Date(Math.max(...times)).toISOString()
-          : null,
-        received: rows.length,
-        matched: unique.size,
-        stale: false,
-        error: null,
-      };
+      if (source === 'firewall') await this.discoverWanInterfaces(this.reader);
+      const rows = await this.sourceRows(this.reader, source);
+      if (!this.stopped) this.replaceSourceSnapshot(source, rows);
     } catch (error) {
       this.states[source].error =
         error instanceof SecurityReadError ? error.kind : 'connection';
@@ -195,12 +204,7 @@ export class SecurityService implements OnModuleInit, OnModuleDestroy {
       const result = await this.reader.read<{ status?: string }>(
         '/api/ids/service/status',
       );
-      this.engine.status =
-        result.status === 'running'
-          ? 'running'
-          : result.status === 'stopped'
-            ? 'stopped'
-            : null;
+      this.engine.status = engineStatus(result.status);
     } catch {
       this.engine.status = null;
     }

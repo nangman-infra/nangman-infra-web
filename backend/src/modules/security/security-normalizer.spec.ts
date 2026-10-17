@@ -130,4 +130,40 @@ describe('security event normalization', () => {
       ),
     ).toBe('SCAN [ip] [ip] [url] [email]');
   });
+
+  it('redacts long IPv6 and email candidates without ambiguous repetition', () => {
+    const repeatedAddress = `${'abcd:'.repeat(20_000)}1`;
+    const repeatedMailbox = `${'sender'.repeat(20_000)}@example.com`;
+    expect(publicSignature(repeatedAddress)).toBe('[ip]');
+    expect(publicSignature(repeatedMailbox)).toBe('[email]');
+    expect(publicSignature(`${'name'.repeat(20_000)}@localhost`)).toHaveLength(
+      180,
+    );
+    expect(publicSignature('service:443 admin@example.com. ::1')).toBe(
+      'service:443 [email] [ip]',
+    );
+  });
+
+  it.each([null, undefined, '', -1, 65536, 1.5, 'invalid'])(
+    'does not expose an invalid destination port %s',
+    (dest_port) => {
+      expect(
+        normalizeEvent('ids', { ...ids, dest_port }, () => 'US', options)?.port,
+      ).toBeNull();
+    },
+  );
+
+  it('includes configured public destinations and rejects unknown timestamps', () => {
+    const publicTarget = { ...ids, dest_ip: '1.1.1.1' };
+    expect(normalizeEvent('ids', publicTarget, () => '', options)).toBeNull();
+    expect(
+      normalizeEvent('ids', publicTarget, () => '', {
+        ...options,
+        protectedAddresses: new Set(['1.1.1.1']),
+      }),
+    ).toMatchObject({ country: 'ZZ', port: 443 });
+    expect(
+      normalizeEvent('ids', { ...ids, timestamp: null }, () => 'US', options),
+    ).toBeNull();
+  });
 });

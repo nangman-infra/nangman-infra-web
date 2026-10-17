@@ -31,7 +31,7 @@ export function ipNumber(
     halves.length === 2
       ? [
           ...left,
-          ...Array<string>(8 - left.length - right.length).fill('0'),
+          ...new Array<string>(8 - left.length - right.length).fill('0'),
           ...right,
         ]
       : left;
@@ -97,12 +97,25 @@ function text(value: unknown): string {
 
 export function publicSignature(value: unknown): string {
   return text(value)
-    .replace(/https?:\/\/\S+/gi, '[url]')
-    .replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[ip]')
-    .replace(/\b(?:[a-f0-9]{0,4}:){2,}[a-f0-9:.]*\b/gi, '[ip]')
-    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, '[email]')
-    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replaceAll(/https?:\/\/\S+/gi, '[url]')
+    .replaceAll(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[ip]')
+    .replaceAll(/[a-f\d:.]+/gi, redactIpv6Token)
+    .replaceAll(/\S+/g, redactEmailToken)
+    .replaceAll(/[\u0000-\u001f\u007f]/g, ' ')
     .slice(0, 180);
+}
+
+function redactIpv6Token(token: string): string {
+  const firstColon = token.indexOf(':');
+  const secondColon = token.indexOf(':', firstColon + 1);
+  return firstColon !== -1 && secondColon !== -1 ? '[ip]' : token;
+}
+
+function redactEmailToken(token: string): string {
+  const at = token.lastIndexOf('@');
+  if (at <= 0) return token;
+  const dot = token.indexOf('.', at + 2);
+  return dot !== -1 && dot < token.length - 1 ? '[email]' : token;
 }
 
 export function signatureCategory(value: string): string {
@@ -119,63 +132,96 @@ export function signatureCategory(value: string): string {
   return 'Other';
 }
 
+interface NormalizationOptions {
+  wanInterfaces: Set<string>;
+  protectedAddresses: Set<string>;
+  offset: string;
+}
+
+const SOURCE_FIELDS = {
+  ids: {
+    origin: 'src_ip',
+    destination: 'dest_ip',
+    timestamp: 'timestamp',
+    port: 'dest_port',
+    protocol: 'proto',
+  },
+  firewall: {
+    origin: 'src',
+    destination: 'dst',
+    timestamp: '__timestamp__',
+    port: 'dstport',
+    protocol: 'protoname',
+  },
+} as const;
+
+function isIncludedEvent(
+  source: SecurityEvent['source'],
+  raw: RawRecord,
+  destination: string,
+  options: NormalizationOptions,
+): boolean {
+  if (source === 'ids') {
+    return (
+      isPrivateAddress(destination) ||
+      options.protectedAddresses.has(destination)
+    );
+  }
+  return (
+    raw.action === 'block' &&
+    raw.dir === 'in' &&
+    options.wanInterfaces.has(text(raw.interface))
+  );
+}
+
+function destinationPort(value: unknown): number | null {
+  if (value === null || value === undefined || text(value) === '') return null;
+  const port = Number(value);
+  return Number.isInteger(port) && port >= 0 && port <= 65535 ? port : null;
+}
+
+function eventIdentity(
+  source: SecurityEvent['source'],
+  raw: RawRecord,
+  sourceIp: string,
+  destination: string,
+  port: number | null,
+): unknown[] {
+  if (source === 'firewall' && raw.__digest__) return [source, raw.__digest__];
+  return [
+    source,
+    raw[SOURCE_FIELDS[source].timestamp],
+    raw.flow_id,
+    raw.alert_sid,
+    sourceIp,
+    destination,
+    raw.src_port ?? raw.srcport,
+    port,
+    raw.proto ?? raw.protoname,
+    raw.seq,
+  ];
+}
+
 export function normalizeEvent(
-  source: 'ids' | 'firewall',
+  source: SecurityEvent['source'],
   raw: RawRecord,
   countryFor: (ip: string) => string,
-  options: {
-    wanInterfaces: Set<string>;
-    protectedAddresses: Set<string>;
-    offset: string;
-  },
+  options: NormalizationOptions,
 ): SecurityEvent | null {
-  const sourceIp = text(source === 'ids' ? raw.src_ip : raw.src);
-  if (!isPublicAddress(sourceIp)) return null;
-  const destination = text(source === 'ids' ? raw.dest_ip : raw.dst);
-  if (source === 'ids') {
-    if (
-      !isPrivateAddress(destination) &&
-      !options.protectedAddresses.has(destination)
-    )
-      return null;
-  } else if (
-    raw.action !== 'block' ||
-    raw.dir !== 'in' ||
-    !options.wanInterfaces.has(text(raw.interface))
-  ) {
+  const fields = SOURCE_FIELDS[source];
+  const sourceIp = text(raw[fields.origin]);
+  const destination = text(raw[fields.destination]);
+  if (
+    !isPublicAddress(sourceIp) ||
+    !isIncludedEvent(source, raw, destination, options)
+  )
     return null;
-  }
-  const timestampValue = source === 'ids' ? raw.timestamp : raw.__timestamp__;
-  const timestamp = parseEventTime(timestampValue, options.offset);
+  const timestamp = parseEventTime(raw[fields.timestamp], options.offset);
   if (timestamp === null) return null;
-  const portValue = source === 'ids' ? raw.dest_port : raw.dstport;
-  const parsedPort = Number(portValue);
-  const port =
-    portValue !== null &&
-    portValue !== undefined &&
-    text(portValue) !== '' &&
-    Number.isInteger(parsedPort) &&
-    parsedPort >= 0 &&
-    parsedPort <= 65535
-      ? parsedPort
-      : null;
+  const port = destinationPort(raw[fields.port]);
   const signature =
     source === 'ids' ? publicSignature(raw.alert) : 'Firewall policy';
-  const identity =
-    source === 'firewall' && raw.__digest__
-      ? [source, raw.__digest__]
-      : [
-          source,
-          timestampValue,
-          raw.flow_id,
-          raw.alert_sid,
-          sourceIp,
-          destination,
-          raw.src_port ?? raw.srcport,
-          port,
-          raw.proto ?? raw.protoname,
-          raw.seq,
-        ];
+  const identity = eventIdentity(source, raw, sourceIp, destination, port);
   return {
     id: createHash('sha256').update(JSON.stringify(identity)).digest('hex'),
     timestamp,
@@ -188,9 +234,9 @@ export function normalizeEvent(
     category: source === 'ids' ? signatureCategory(signature) : 'Firewall',
     signature,
     protocol:
-      text(source === 'ids' ? raw.proto : raw.protoname)
+      text(raw[fields.protocol])
         .toUpperCase()
-        .replace(/[^A-Z0-9]/g, '')
+        .replaceAll(/[^A-Z0-9]/g, '')
         .slice(0, 12) || 'OTHER',
     port,
   };

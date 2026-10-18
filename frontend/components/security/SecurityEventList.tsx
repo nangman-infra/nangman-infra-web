@@ -1,12 +1,13 @@
 import { Radio, ShieldCheck, ScanLine } from "lucide-react";
 import { getSecurityCopy, type SecurityCopy } from "@/content/security";
-import { categoryName, countryName, eventTime, type SecurityLocale, type SecuritySnapshot } from "@/lib/domain/security";
+import { countryName, eventName, eventTime, type SecurityLocale, type SecuritySnapshot } from "@/lib/domain/security";
 
 type SecurityEvent = SecuritySnapshot["events"][number];
 
 function EventRow({ event, locale, copy }: Readonly<{ event: SecurityEvent; locale: SecurityLocale; copy: SecurityCopy }>) {
   const blocked = event.action === "blocked";
   const Icon = blocked ? ShieldCheck : ScanLine;
+  const label = eventName(event, locale);
   return <tr className="transition-colors hover:bg-muted/15">
     <td className="whitespace-nowrap px-5 py-3.5 font-mono text-[11px] text-muted-foreground sm:px-6">
       <time dateTime={event.timestamp} title={eventTime(event.timestamp, locale, true)}>
@@ -19,9 +20,7 @@ function EventRow({ event, locale, copy }: Readonly<{ event: SecurityEvent; loca
       {countryName(event.country, locale)}
     </td>
     <td className="max-w-[160px] px-3 py-3.5 sm:max-w-[300px]">
-      <p className="truncate font-medium" title={event.signature}>
-        {event.source === "firewall" ? categoryName("Firewall", locale) : event.signature}
-      </p>
+      <p className="truncate font-medium" title={label}>{label}</p>
       <p className="mt-1 text-[10px] text-muted-foreground">
         {event.source === "ids" ? "SURICATA" : "FIREWALL"}
         <span className="sm:hidden"> · {countryName(event.country, locale)}</span>

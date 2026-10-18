@@ -9,6 +9,7 @@ export interface SecurityEvent {
   action: 'detected' | 'blocked';
   country: string;
   category: string;
+  /** Broad category only; retained for clients that previously read rule text. */
   signature: string;
   protocol: string;
   port: number | null;

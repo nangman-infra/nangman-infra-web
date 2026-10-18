@@ -95,7 +95,8 @@ function text(value: unknown): string {
     : '';
 }
 
-export function publicSignature(value: unknown): string {
+/** Strip embedded values before classification; this text is never published. */
+export function ruleClassificationText(value: unknown): string {
   return text(value)
     .replaceAll(/https?:\/\/\S+/gi, '[url]')
     .replaceAll(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, '[ip]')
@@ -219,8 +220,10 @@ export function normalizeEvent(
   const timestamp = parseEventTime(raw[fields.timestamp], options.offset);
   if (timestamp === null) return null;
   const port = destinationPort(raw[fields.port]);
-  const signature =
-    source === 'ids' ? publicSignature(raw.alert) : 'Firewall policy';
+  const category =
+    source === 'ids'
+      ? signatureCategory(ruleClassificationText(raw.alert))
+      : 'Firewall';
   const identity = eventIdentity(source, raw, sourceIp, destination, port);
   return {
     id: createHash('sha256').update(JSON.stringify(identity)).digest('hex'),
@@ -231,8 +234,9 @@ export function normalizeEvent(
         ? 'blocked'
         : 'detected',
     country: countryFor(sourceIp) || 'ZZ',
-    category: source === 'ids' ? signatureCategory(signature) : 'Firewall',
-    signature,
+    category,
+    // Keep the response shape for existing clients, without publishing rule text.
+    signature: category,
     protocol:
       text(raw[fields.protocol])
         .toUpperCase()

@@ -6,7 +6,7 @@ The page refreshes every ten seconds while visible. Concurrent requests share th
 
 The overview cards describe both sources. The source selector filters country, category, port, and event exploration. IDS requests are bounded to 5,000 records and firewall responses to 1,000 records. Each source reports its actual oldest/newest timestamps and matched count. These are not daily or all-time totals. IPS blocks are a subset of IDS detections, and firewall policy blocks do not establish malicious intent.
 
-Only public-origin inbound IDS events targeting private or explicitly protected addresses and inbound WAN firewall blocks are included. Raw IP addresses, payloads, interface addresses and credentials never enter the public response. Country lookup uses a local DB-IP Country Lite CSV or CSV.GZ file.
+Only public-origin inbound IDS events targeting private or explicitly protected addresses and inbound WAN firewall blocks are included. Raw IP addresses, payloads, interface addresses, credentials and rule text never enter the public response. Rules are reduced to a fixed set of broad categories before entering the in-memory event snapshot. The existing `signature` field carries only that category for compatibility. The page renders localized category and action labels, including generic labels for unknown categories. Country lookup uses a local DB-IP Country Lite CSV or CSV.GZ file.
 
 ## Server configuration
 

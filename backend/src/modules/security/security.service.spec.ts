@@ -99,6 +99,66 @@ describe('transient security overview', () => {
     expect(JSON.stringify(all)).not.toMatch(/192\.168|8\.8\.8\.8|1\.1\.1\.1/);
   });
 
+  it.each(['all', 'ids', 'firewall'] as const)(
+    'only publishes broad categories for the %s filter, including stale responses',
+    async (filter) => {
+      rows = [
+        ...rows,
+        {
+          ...rows[0],
+          alert:
+            'ET CINS Active Threat Intelligence Poor Reputation IP group 17',
+          alert_sid: 1234,
+        },
+        {
+          ...rows[0],
+          alert: 'ET DROP Dshield Block Listed Source group 1',
+          alert_sid: 5678,
+        },
+        {
+          ...rows[0],
+          alert: 'Unrecognized private rule secret-rule-marker',
+          alert_sid: 9999,
+          alert_action: 'allowed',
+        },
+      ];
+      const initial = await service.snapshot(filter);
+      if (filter !== 'firewall') {
+        expect(initial.events).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              category: 'Scanning',
+              signature: 'Scanning',
+            }),
+            expect.objectContaining({
+              category: 'Reputation',
+              signature: 'Reputation',
+            }),
+            expect.objectContaining({
+              category: 'Other',
+              signature: 'Other',
+              action: 'detected',
+            }),
+          ]),
+        );
+      }
+      failIds = true;
+      jest.advanceTimersByTime(10_001);
+      const stale = await service.snapshot(filter);
+      for (const snapshot of [initial, stale]) {
+        expect(JSON.stringify(snapshot)).not.toMatch(
+          /ET SCAN|CINS|Dshield|group 17|group 1|secret-rule-marker/,
+        );
+        for (const event of snapshot.events) {
+          expect(event.signature).toBe(event.category);
+          expect(event).not.toHaveProperty('alert_sid');
+        }
+      }
+      expect(stale.summary).toEqual(initial.summary);
+      expect(stale.sources[0].stale).toBe(true);
+    },
+  );
+
   it('replaces a snapshot instead of accumulating or retaining disappeared events', async () => {
     await service.snapshot('all');
     rows = [];

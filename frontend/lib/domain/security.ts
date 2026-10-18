@@ -34,6 +34,7 @@ export interface SecuritySnapshot {
     action: "detected" | "blocked";
     country: string;
     category: string;
+    /** Broad category only. Event labels must not render this legacy field. */
     signature: string;
     protocol: string;
     port: number | null;
@@ -73,5 +74,25 @@ const CATEGORIES: Record<string, [string, string]> = {
 
 export function categoryName(name: string, locale: SecurityLocale): string {
   return CATEGORIES[name]?.[locale === "ko" ? 0 : 1] ?? name;
+}
+
+const EVENT_LABELS: Record<string, Record<"blocked" | "detected", [string, string]>> = {
+  Reputation: { blocked: ["평판 기반 차단", "Reputation-based block"], detected: ["평판 기반 탐지", "Reputation-based detection"] },
+  Scanning: { blocked: ["스캔 차단", "Scan blocked"], detected: ["스캔 탐지", "Scan detected"] },
+  Exploit: { blocked: ["취약점 공격 차단", "Exploit blocked"], detected: ["취약점 공격 탐지", "Exploit detected"] },
+  Malware: { blocked: ["악성코드 관련 차단", "Malware-related block"], detected: ["악성코드 관련 탐지", "Malware-related detection"] },
+  Web: { blocked: ["웹 공격 차단", "Web attack blocked"], detected: ["웹 공격 탐지", "Web attack detected"] },
+  DNS: { blocked: ["DNS 관련 차단", "DNS-related block"], detected: ["DNS 관련 탐지", "DNS-related detection"] },
+  Policy: { blocked: ["정책 기반 차단", "Policy-based block"], detected: ["정책 알림", "Policy alert"] },
+  Other: { blocked: ["기타 차단", "Other block"], detected: ["기타 탐지", "Other detection"] },
+};
+
+export function eventName(
+  event: Pick<SecuritySnapshot["events"][number], "source" | "category" | "action">,
+  locale: SecurityLocale,
+): string {
+  if (event.source === "firewall") return categoryName("Firewall", locale);
+  const category = Object.hasOwn(EVENT_LABELS, event.category) ? event.category : "Other";
+  return EVENT_LABELS[category][event.action][locale === "ko" ? 0 : 1];
 }
 import countryNames from "@/data/security-country-names.json";

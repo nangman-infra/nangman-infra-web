@@ -2,7 +2,7 @@ import {
   isPublicAddress,
   normalizeEvent,
   parseEventTime,
-  publicSignature,
+  ruleClassificationText,
 } from './security-normalizer';
 
 const options = {
@@ -54,7 +54,7 @@ describe('security event normalization', () => {
     expect(isPublicAddress(ip)).toBe(true),
   );
 
-  it('publishes a sanitized incoming IDS event, not raw addresses or payload', () => {
+  it('publishes an incoming IDS category without rule text, addresses or payload', () => {
     const event = normalizeEvent(
       'ids',
       { ...ids, payload: 'secret-content' },
@@ -64,11 +64,12 @@ describe('security event normalization', () => {
     expect(event).toMatchObject({
       action: 'blocked',
       category: 'Scanning',
+      signature: 'Scanning',
       country: 'US',
       port: 443,
     });
     expect(JSON.stringify(event)).not.toMatch(
-      /8\.8\.8\.8|192\.168\.10\.20|secret-content/,
+      /8\.8\.8\.8|192\.168\.10\.20|secret-content|ET SCAN|Service scan/,
     );
     expect(
       normalizeEvent(
@@ -125,7 +126,7 @@ describe('security event normalization', () => {
     );
     expect(parseEventTime('bad')).toBeNull();
     expect(
-      publicSignature(
+      ruleClassificationText(
         'SCAN 192.168.1.2 2606:4700::1111 https://private.example/ admin@example.com',
       ),
     ).toBe('SCAN [ip] [ip] [url] [email]');
@@ -134,12 +135,12 @@ describe('security event normalization', () => {
   it('redacts long IPv6 and email candidates without ambiguous repetition', () => {
     const repeatedAddress = `${'abcd:'.repeat(20_000)}1`;
     const repeatedMailbox = `${'sender'.repeat(20_000)}@example.com`;
-    expect(publicSignature(repeatedAddress)).toBe('[ip]');
-    expect(publicSignature(repeatedMailbox)).toBe('[email]');
-    expect(publicSignature(`${'name'.repeat(20_000)}@localhost`)).toHaveLength(
-      180,
-    );
-    expect(publicSignature('service:443 admin@example.com. ::1')).toBe(
+    expect(ruleClassificationText(repeatedAddress)).toBe('[ip]');
+    expect(ruleClassificationText(repeatedMailbox)).toBe('[email]');
+    expect(
+      ruleClassificationText(`${'name'.repeat(20_000)}@localhost`),
+    ).toHaveLength(180);
+    expect(ruleClassificationText('service:443 admin@example.com. ::1')).toBe(
       'service:443 [email] [ip]',
     );
   });

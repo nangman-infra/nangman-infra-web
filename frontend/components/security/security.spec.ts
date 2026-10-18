@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SecurityLocale, SecuritySnapshot } from "@/lib/domain/security";
+import { eventName, type SecurityLocale, type SecuritySnapshot } from "@/lib/domain/security";
 import { securityView } from "@/lib/domain/security-view";
 import { getSecurityCopy } from "@/content/security";
 import { SecurityPage } from "@/components/security/SecurityPage";
@@ -61,7 +61,8 @@ describe.each(["ko", "en"] as const)("security presentation in %s", (locale) => 
       expect(html).toContain(label);
     }
     expect(html).toContain(">4,117</p>");
-    expect(html).toContain("ET SCAN example");
+    expect(html).toContain(locale === "ko" ? "스캔 탐지" : "Scan detected");
+    expect(html).not.toContain("ET SCAN example");
     expect(html).toContain("443 / TCP");
     expect(html).toContain(`2${copy.countryCountSuffix}`);
     expect(html).toMatch(/<output[^>]*>.*LIVE<\/output>/);
@@ -156,11 +157,28 @@ describe("security view consistency", () => {
     expect(located).toContain("stroke-dasharray");
   });
 
-  it("escapes signature markup instead of interpreting source text as HTML", () => {
+  it("does not render raw rule text from an older server, including tooltips", () => {
     const events = snapshot().events;
     events[0].signature = "<script>alert(1)</script>";
     const html = renderToStaticMarkup(createElement(SecurityEventList, { events, locale: "en", loading: false }));
-    expect(html).toContain("&lt;script&gt;");
-    expect(html).not.toContain("<script>");
+    expect(html).toContain('title="Scan detected"');
+    expect(html).not.toContain("script");
+    expect(html).not.toContain("alert(1)");
+  });
+
+  it.each(["ko", "en"] as const)("summarizes reputation blocks without changing action or service data in %s", (locale) => {
+    const events = snapshot().events;
+    events[0] = { ...events[0], category: "Reputation", action: "blocked", signature: "ET CINS Active Threat Intelligence Poor Reputation IP group 17" };
+    const html = renderToStaticMarkup(createElement(SecurityEventList, { events, locale, loading: false }));
+    expect(html).toContain(locale === "ko" ? "평판 기반 차단" : "Reputation-based block");
+    expect(html).toContain("443 / TCP");
+    expect(html).toContain(getSecurityCopy(locale).blocked);
+    expect(html).not.toMatch(/CINS|group 17|Poor Reputation/);
+  });
+
+  it.each(["private-rule-name", "<script>secret</script>", "toString", "__proto__"])("never falls back to the raw unknown category %s", (category) => {
+    const event = { ...snapshot().events[0], category };
+    expect(eventName(event, "ko")).toBe("기타 탐지");
+    expect(eventName({ ...event, action: "blocked" }, "en")).toBe("Other block");
   });
 });

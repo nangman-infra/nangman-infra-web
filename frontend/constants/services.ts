@@ -237,6 +237,17 @@ export const SERVICES: Service[] = [
     category: 'security',
   },
   {
+    id: 'sentinel',
+    name: 'Sentinel',
+    description: {
+      ko: 'OPNsense 네트워크·보안 실시간 모니터링',
+      en: 'Real-time OPNsense network and security monitoring',
+    },
+    icon: 'sentinel.svg',
+    url: 'https://sentinel.console.nangman.cloud',
+    category: 'security',
+  },
+  {
     id: 'rustfs',
     name: 'RustFS',
     description: {

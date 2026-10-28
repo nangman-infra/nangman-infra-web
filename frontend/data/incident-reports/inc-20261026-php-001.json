@@ -120,5 +120,27 @@
     "#ecs",
     "#opnsense",
     "#vulnerability-response"
+  ],
+  "references": [
+    {
+      "title": "PHP2Shell FAQ - watchTowr",
+      "url": "https://watchtowr.com/intelligence/php-cve-2026-109618-faq/"
+    },
+    {
+      "title": "CVE-2026-109618 & 109619 분석 - OX Security",
+      "url": "https://www.ox.security/blog/cve-2026-109618-cve-2026-109619-two-vulnerabilities-allow-unauthenticated-rce-in-php/"
+    },
+    {
+      "title": "수정 버전 안내 - Brandefense",
+      "url": "https://brandefense.io/blog/php2shell-php-rce-cve-2026-109618-109619/"
+    },
+    {
+      "title": "OPNsense 26.7.7 핫픽스 공지",
+      "url": "https://forum.opnsense.org/index.php?topic=53191.0"
+    },
+    {
+      "title": "Zabbix 7.4.16 릴리스 노트",
+      "url": "https://www.zabbix.com/rn/rn7.4.16"
+    }
   ]
 }

@@ -10,6 +10,7 @@ import inc20261026Php001 from "./incident-reports/inc-20261026-php-001.json";
 import type { IncidentReport } from "./incident-reports/types";
 
 export type {
+  IncidentReference,
   IncidentReport,
   IncidentSeverity,
   IncidentStatus,

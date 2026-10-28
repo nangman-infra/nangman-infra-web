@@ -38,7 +38,8 @@
     "resolution": "Resolution",
     "followUpScope": "Scope",
     "exitCriteria": "Exit Criteria",
-    "tags": "Tags"
+    "tags": "Tags",
+    "references": "References"
   },
   "Terminal": {
     "welcome": "Connected to Nangman Infra terminal v1.0.0",

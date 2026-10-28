@@ -34,4 +34,21 @@ describe("incident helpers", () => {
     expect(getIncidentStatusLabel("mitigated", "en")).toBe("Mitigated");
     expect(getIncidentStatusLabel("investigating", "en")).toBe("Investigating");
   });
+
+  it("exposes optional references with absolute http(s) urls and titles", () => {
+    const withReferences = getIncidentReports().filter(
+      (report) => report.references !== undefined,
+    );
+
+    expect(withReferences.length).toBeGreaterThan(0);
+
+    for (const report of withReferences) {
+      expect(report.references?.length).toBeGreaterThan(0);
+
+      for (const reference of report.references ?? []) {
+        expect(reference.title.trim().length).toBeGreaterThan(0);
+        expect(reference.url).toMatch(/^https?:\/\//);
+      }
+    }
+  });
 });

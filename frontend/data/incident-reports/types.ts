@@ -7,6 +7,11 @@ export interface IncidentTimelineEntry {
   evidence?: string;
 }
 
+export interface IncidentReference {
+  title: string;
+  url: string;
+}
+
 export interface IncidentReport {
   id: string;
   slug: string;
@@ -34,4 +39,5 @@ export interface IncidentReport {
     exitCriteria: string;
   };
   tags: string[];
+  references?: IncidentReference[];
 }

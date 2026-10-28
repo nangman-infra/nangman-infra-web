@@ -4,8 +4,10 @@ import { getTranslations } from "next-intl/server";
 import type { AppLocale } from "@/i18n/routing";
 import {
   AlertTriangle,
+  BookOpen,
   ClipboardList,
   Clock3,
+  ExternalLink,
   Network,
   UserCircle2,
 } from "lucide-react";
@@ -322,6 +324,33 @@ export default async function IncidentDetailPage({
             ))}
           </div>
         </section>
+
+        {report.references && report.references.length > 0 && (
+          <section
+            className={`rounded-xl border border-border/30 bg-card/20 p-5 md:p-6 ${revealClassName}`}
+            style={getRevealStyle(11)}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <h2 className="text-lg font-semibold">{t("references")}</h2>
+            </div>
+            <ul className="space-y-1.5 text-sm">
+              {report.references.map((reference) => (
+                <li key={reference.url}>
+                  <a
+                    href={reference.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 transition-colors break-all"
+                  >
+                    <span>{reference.title}</span>
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
       </div>
     </>

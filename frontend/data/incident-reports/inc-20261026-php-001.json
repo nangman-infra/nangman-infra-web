@@ -1,0 +1,124 @@
+{
+  "id": "INC-20261026-PHP-001",
+  "slug": "inc-20261026-php-001",
+  "title": "PHP2Shell(CVE-2026-109618/109619) 취약점 대응 (Zabbix 웹 PHP 패치)",
+  "status": "resolved",
+  "severity": "SEV-3",
+  "startedAtIso": "2026-10-21T00:00:00+09:00",
+  "resolvedAtIso": "2026-10-26T18:00:00+09:00",
+  "startedAt": "2026-10-21 KST (PHP 패치 공개, 취약 자산 노출 시작)",
+  "resolvedAt": "2026-10-26 KST (Zabbix 웹 패치 이미지 교체 완료)",
+  "owner": "리포터: 정택준 / 작업자: 정택준",
+  "impactedService": "AWS ECS Fargate의 Zabbix 웹 프론트엔드(취약한 PHP 8.5.10 포함). 온프레미스 서버 24대와 OPNsense는 영향 없음. 조치 과정에서 Zabbix Server 수집 약 7분 공백",
+  "summary": "PHP 코어의 인증 없는 원격 코드 실행 취약점 2건(PHP2Shell, CVSS v4 9.2)에 대해 낭만인프라 자산 전체의 영향 범위를 점검했습니다. 온프레미스 서버 24대에는 PHP가 없었고 OPNsense는 이미 패치 버전(26.7.7)이었습니다. 영향 자산은 AWS ECS에서 운영 중인 Zabbix 웹 프론트엔드 1건으로, 다이제스트가 고정된 7.4.15 이미지에 취약한 PHP 8.5.10이 포함되어 있었습니다. Zabbix가 7.4.15 이미지를 재빌드하지 않았기 때문에 PHP 8.5.12가 포함된 7.4.16 이미지로 교체했고, 웹과 서버의 버전을 맞추기 위해 Zabbix Server도 7.4.16으로 함께 올렸습니다.",
+  "technicalImpact": "Zabbix 웹 프론트엔드가 취약한 PHP-FPM 8.5.10으로 약 5일간 운영되었습니다. 앞단 NLB는 internal 체계여서 인터넷에서 직접 접근할 수는 없었지만 VPC 내부와 VPN 경로로는 접근할 수 있었습니다. 악용 흔적은 확인되지 않았고 서비스 중단은 없었습니다. 조치 과정에서 HA가 비활성화된 Zabbix Server를 동시 실행 없이 교체하기 위해 기존 태스크를 먼저 종료했고, 기존 태스크 중지(17:23)부터 새 태스크 시작(17:30)까지 약 7분의 수집 공백이 발생했습니다. 이 기간의 데이터는 Proxy와 Agent에 버퍼링된 뒤 재전송되었습니다. Zabbix 웹은 상태가 없고 태스크가 2개여서 기본 롤링 배포로 중단 없이 교체했습니다.",
+  "topology": [
+    "사용자 / VPN -> internal NLB -> ECS Fargate Zabbix 웹 (nginx + PHP-FPM)",
+    "Zabbix 웹 -> Zabbix Server (ECS Fargate, HA 비활성) -> PostgreSQL",
+    "Zabbix Proxy / Agent -> Zabbix Server",
+    "AWX -> 온프레미스 서버 24대 (LAN 대역 8대, WireGuard 대역 16대) 점검",
+    "OPNsense 웹 GUI (PHP, 26.7.7)"
+  ],
+  "rootCause": "PHP2Shell은 PHP 코어의 메모리 관리 경로에서 발생하는 취약점 2건입니다. CVE-2026-109618은 메모리 고갈(OOM) 시점에 정리 단계를 건너뛰면서 내부 상태가 오염되는 문제이고, CVE-2026-109619는 Use-After-Free와 오래된 전역 상태 문제로 session.upload_progress를 지원하는 PHP 5.4.0 이후 모든 버전이 영향을 받습니다. PHP-FPM, mod_php처럼 워커 프로세스를 재사용하는 실행 모델이 주로 노출됩니다. 낭만인프라에서는 Zabbix 웹 ECS 태스크 정의가 2026-09-25 빌드의 7.4.15 이미지를 다이제스트까지 고정하고 있었고, 이 이미지에 취약한 php85-fpm-8.5.10이 포함되어 있었습니다. Zabbix는 해당 태그를 재빌드하지 않았으므로 태그를 유지한 채로는 패치를 받을 수 없었습니다.",
+  "contributingFactors": [
+    "ECS Fargate 태스크가 AWX 인벤토리 밖에 있어 런타임 인벤토리가 없었고, Zabbix 웹의 위치를 찾는 데 시간이 걸렸음",
+    "Zabbix System information의 Up to date 표시는 Zabbix 소프트웨어 버전만 비교하므로, Zabbix는 최신인데 컨테이너 안의 PHP는 취약한 상태가 동시에 성립했음",
+    "이미지 다이제스트 고정은 재현성을 보장하지만 보안 패치가 자동으로 반영되지 않고, 이를 보완하는 정기 이미지 스캔이 없었음",
+    "PHP 패치 포함 여부는 Zabbix 버전이 아니라 이미지 빌드 시점으로 결정되어, 같은 태그라도 빌드 시점에 따라 PHP 버전이 다를 수 있었음",
+    "Zabbix 웹 이미지에는 PHP CLI 패키지가 없고 php85-fpm만 있어 php -v가 아닌 패키지 목록으로 확인해야 했음",
+    "OPNsense 웹 GUI는 PHP로 동작하고 기본 설정에서 root 권한으로 모든 인터페이스에 바인딩되어 위험도가 가장 높은 자산이었으나, 이미 패치 버전이어서 영향은 없었음"
+  ],
+  "evidence": [
+    "AWX ad-hoc 스크립트로 온프레미스 24대의 호스트 PHP(php -v), PHP 관련 프로세스(php-fpm, php-cgi, apache2, httpd, lighttpd), 컨테이너 내부 PHP를 세 계층으로 교차 점검해 모두 없음 확인",
+    "watchtower 등 셸이 없는 최소 이미지 컨테이너 2개는 exec: sh not found로 검사에 실패했으나, Go 바이너리 이미지로 PHP가 존재할 수 없어 영향 없음으로 판단",
+    "OPNsense 버전이 패치된 PHP가 처음 포함된 커뮤니티 에디션 26.7.7임을 확인",
+    "ECS 태스크 정의에서 Zabbix 웹 이미지가 zabbix-web-nginx-pgsql:alpine-7.4.15 다이제스트(sha256:8c139abe...)로 고정되어 있음을 확인",
+    "온프레미스 도커 호스트에서 같은 다이제스트를 pull해 빌드 일시 2026-09-25, Alpine 3.24.2, php85-fpm-8.5.10-r0(취약) 확인",
+    "alpine-7.4.15 태그는 재빌드되지 않아 다이제스트가 동일했고, alpine-7.4-latest와 alpine-7.4.16은 2026-10-22 빌드로 php85-fpm-8.5.12-r0을 포함함을 확인",
+    "Zabbix 웹 앞단 NLB 체계가 internal이어서 인터넷 직접 접근은 불가하고 VPC 내부와 VPN 경로로만 접근 가능함을 확인",
+    "Zabbix Server 로그에서 Starting Zabbix Server. Zabbix 7.4.16 기동과 required mandatory version 07040000 = current database version 07040000 확인 (스키마 변경 없음)",
+    "ECS 서비스 이벤트에서 기존 Zabbix Server 태스크 중지 17:23, 새 태스크 시작 17:30, 배포 중 실행 태스크가 2개가 된 순간이 없음을 확인",
+    "Zabbix 웹 교체 전 배포할 다이제스트(sha256:898f2806...) 내부에서 php85-fpm-8.5.12-r0 확인, 롤링 배포로 무중단 교체 완료"
+  ],
+  "timeline": [
+    {
+      "at": "2026-09-25",
+      "event": "Zabbix 웹 alpine-7.4.15 이미지 빌드 (PHP 8.5.10 포함, 이후 취약 판정)"
+    },
+    {
+      "at": "2026-10-20",
+      "event": "PHP 재단이 10/21 보안 릴리스를 사전 예고, 같은 날 상세 내용 유출"
+    },
+    {
+      "at": "2026-10-21",
+      "event": "PHP 패치 공개. 일부 배포업체가 엠바고 시간보다 먼저 패치 이미지를 공개한 사실이 논란이 됨"
+    },
+    {
+      "at": "2026-10-22",
+      "event": "Zabbix가 PHP 8.5.12를 포함한 7.4.16 이미지 재빌드"
+    },
+    {
+      "at": "2026-10-26",
+      "event": "AWX ad-hoc으로 온프레미스 24대 점검, 호스트·프로세스·컨테이너 모두 PHP 없음 확인"
+    },
+    {
+      "at": "2026-10-26",
+      "event": "OPNsense 26.7.7(패치 버전) 확인"
+    },
+    {
+      "at": "2026-10-26",
+      "event": "ECS Zabbix 웹 태스크 정의의 고정 다이제스트를 pull해 php85-fpm-8.5.10-r0 취약 확인",
+      "evidence": "docker run --entrypoint sh <image> -c 'apk info -v | grep -i fpm'"
+    },
+    {
+      "at": "2026-10-26",
+      "event": "교체 후보 비교 후 alpine-7.4.16(sha256:898f2806..., PHP 8.5.12) 채택, 서버 먼저 웹 나중 순서 결정"
+    },
+    {
+      "at": "2026-10-26 17:23",
+      "event": "Zabbix Server 기존 태스크 중지 (배포 설정 0% / 100%, AZ 리밸런싱 끔, 실패 시 롤백)",
+      "evidence": "ECS 서비스 이벤트, NLB 등록 해제 후 SIGTERM으로 캐시 데이터 DB 기록"
+    },
+    {
+      "at": "2026-10-26 17:30",
+      "event": "Zabbix Server 7.4.16 새 태스크 시작, DB 스키마 변경 없이 정상 기동 (약 7분 수집 공백)"
+    },
+    {
+      "at": "2026-10-26 17:30 이후",
+      "event": "Zabbix 웹 태스크 정의 새 리비전(alpine-7.4.16) 롤링 배포, 중단 없이 PHP 8.5.12 이미지로 교체 완료"
+    }
+  ],
+  "resolution": [
+    "AWX ad-hoc 한 줄 스크립트로 온프레미스 24대의 호스트 PHP, PHP 프로세스, 컨테이너 내부 PHP를 점검 (여러 줄 스크립트의 do 구문 오류와 Jinja 중괄호 해석 문제를 피하도록 수정)",
+    "OPNsense 버전이 패치 버전 26.7.7인지 확인",
+    "ECS 태스크 정의의 이미지 다이제스트를 확인하고, 온프레미스 도커 호스트에서 같은 다이제스트를 pull해 이미지 내부 PHP 패키지 버전을 직접 확인 (PHP CLI가 없어 php85-fpm 패키지 기준)",
+    "Zabbix Server 태스크 정의를 zabbix-server-pgsql:alpine-7.4.16(sha256:546f7cae..., Linux/ARM64 멀티 아키텍처 인덱스)으로 새 리비전 생성",
+    "HA 비활성 Zabbix Server의 동시 실행을 막기 위해 서비스 배포 설정을 원하는 작업 수 1, 최소/최대 0% / 100%, 가용 영역 리밸런싱 끔, 실패 시 롤백으로 변경 후 배포",
+    "Zabbix 웹 태스크 정의를 zabbix-web-nginx-pgsql:alpine-7.4.16(sha256:898f2806...)으로 새 리비전 생성, 배포 전 php85-fpm-8.5.12-r0 확인 후 기본 롤링 배포(100% / 200%)로 무중단 교체",
+    "서비스 업데이트에서 리비전이 반영되지 않은 문제는 새 리비전을 다시 선택해 재적용으로 해결"
+  ],
+  "followUp": {
+    "title": "Runtime Inventory and Container Image Patch Tracking",
+    "scope": "ECS Fargate 등 AWX 인벤토리 밖의 런타임과 다이제스트 고정 컨테이너 이미지의 보안 패치 추적",
+    "checklist": [
+      "OPNsense 26.7.7 패치 이후 PHP 프로세스 재시작(또는 재부팅) 여부 확인",
+      "ECS Fargate 태스크를 포함해 PHP 등 런타임이 실행되는 자산을 모두 담은 런타임 인벤토리 작성",
+      "애플리케이션 버전과 런타임(PHP 등) 버전을 별도로 추적하는 점검 항목 추가 (Up to date 표시에 의존하지 않음)",
+      "다이제스트 고정 이미지에 대한 정기 이미지 스캔 도입",
+      "HA 비활성 Zabbix Server의 배포 절차(0% / 100%, 리밸런싱 끔, 서버 먼저 웹 나중)를 운영 문서에 명시"
+    ],
+    "exitCriteria": "OPNsense 재시작 여부가 확인되고, ECS 태스크를 포함한 런타임 인벤토리와 다이제스트 고정 이미지의 정기 스캔이 갖춰져야 종료"
+  },
+  "tags": [
+    "#incident",
+    "#sev-3",
+    "#security",
+    "#cve",
+    "#php",
+    "#php2shell",
+    "#zabbix",
+    "#ecs",
+    "#opnsense",
+    "#vulnerability-response"
+  ]
+}

@@ -323,7 +323,7 @@ export const members: Member[] = [
     },
     projects: [
       {
-        title: "When2Work",
+        title: "When2Meet",
         description: "링크 하나로 참여자의 가능 시간을 모으고, 가장 많이 겹치는 시간대를 빠르게 찾을 수 있는 일정 조율 서비스",
         technologies: ["React", "일정 조율", "시간 선택 UI", "히트맵"],
         industry: "협업",

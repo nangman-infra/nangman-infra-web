@@ -29,14 +29,14 @@ const projects: Project[] = [
     url: "https://koreamonitor.nangman.cloud",
   },
   {
-    id: "when2work",
-    name: "When2Work",
+    id: "when2meet",
+    name: "When2Meet",
     description: {
       ko: "링크 하나로 팀원의 가능한 시간을 모으고, 가장 많이 겹치는 시간대를 빠르게 찾을 수 있는 일정 조율 서비스입니다.",
       en: "A scheduling service that collects team availability through a single link and quickly surfaces the most overlapping time slots.",
     },
     status: "live",
-    url: "https://when2meet.devtrail.kr",
+    url: "https://when2meet.nangman.cloud",
   },
   {
     id: "touch-browser",

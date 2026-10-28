@@ -1,0 +1,126 @@
+{
+  "id": "INC-20261016-TELEPORT-001",
+  "slug": "inc-20261016-teleport-001",
+  "title": "Teleport 경유 Outline(docs) 접속 장애 (앱 에이전트의 구 IP 참조)",
+  "status": "resolved",
+  "severity": "SEV-3",
+  "startedAtIso": "2026-10-16T12:15:00+09:00",
+  "resolvedAtIso": "2026-10-16T14:58:00+09:00",
+  "startedAt": "2026-10-16 12:15 KST 인지 (실제 시작 시각 미확인)",
+  "resolvedAt": "2026-10-16 14:58 KST (사용자 확인 시각)",
+  "owner": "리포터: 이성원 / 작업자: 태성우",
+  "impactedService": "Teleport 경유 Outline(docs.console.nangman.cloud). 같은 앱 에이전트가 중계하는 NPM, OPNsense, NAS 등 다른 앱은 영향 없음",
+  "summary": "Teleport를 통한 Outline(docs) 접속이 Context Deadline Exceeded로 실패했습니다. Outline 서버와 앱 자체는 정상이었고, Teleport 앱 에이전트의 docs 앱 uri가 DHCP 변경 전 주소(.83)를 그대로 참조하고 있던 것이 원인이었습니다. uri를 현재 주소(.82)로 수정하고 앱 에이전트를 재시작해 복구했습니다.",
+  "technicalImpact": "Teleport 앱 에이전트가 더 이상 존재하지 않는 주소(.83:3000)로 Outline에 접속을 시도해 응답을 받지 못했습니다. 연결 거부가 아니라 timeout으로 나타나 네트워크 장애처럼 보였지만, 화곡 서버의 Outline, Redis, Postgres 컨테이너와 Docker 포트 규칙은 모두 정상이었습니다. 복구 과정에서 Auth/Proxy 서버를 잘못 재시작해 다른 앱의 중계가 일시적으로 끊겼으나 설정 변경은 없어 곧바로 회복되었습니다.",
+  "topology": [
+    "사용자 -> Teleport Proxy (console.nangman.cloud, Auth/Proxy 서버)",
+    "Teleport Proxy -> Teleport 앱 에이전트 (docs 앱)",
+    "Teleport 앱 에이전트 -> 화곡 LAN의 Outline (.82:3000, 장애 중에는 .83을 참조)"
+  ],
+  "rootCause": "화곡 서버의 DHCP 주소가 2026-09-28 새벽에 .83에서 .82로 바뀌었습니다. 그러나 Teleport 앱 에이전트의 teleport.yaml에서 docs 앱 uri는 여전히 .83:3000을 가리키고 있었고, 바뀐 주소로 갱신되지 않았습니다. 에이전트는 응답하지 않는 주소로 요청을 보내다가 timeout에 걸렸고, 사용자에게는 Context Deadline Exceeded로 나타났습니다.",
+  "contributingFactors": [
+    "서비스 서버가 고정 IP나 DHCP 고정 매핑 없이 동적 주소(DHCP)를 사용하고 있었음",
+    "Teleport 앱 설정이 호스트 이름이 아닌 IP를 직접 참조하고 있어 주소 변경이 자동으로 반영되지 않았음",
+    "서버 IP가 바뀌었을 때 참조처를 점검하는 절차가 없었음",
+    "장애가 연결 거부가 아닌 timeout으로 나타나 서버와 네트워크 쪽 점검에 시간이 많이 소요됨",
+    "Auth/Proxy 서버와 앱 에이전트 서버의 설정 파일 경로가 같아(teleport.yaml) 복구 중 Auth/Proxy 서버를 잘못 재시작함 (설정은 변경하지 않아 영향은 일시적 중계 끊김)"
+  ],
+  "evidence": [
+    "화곡 서버에서 Outline /_health가 200을 반환하고 컨테이너 상태가 healthy임을 확인",
+    "Outline의 Redis 에러가 최근 24시간 0건이고 redis 이름이 정상 해석됨을 확인",
+    "iptables에 3000 포트 DNAT/ACCEPT 규칙이 존재함을 확인",
+    "systemd-networkd 로그에서 서버 주소가 09-28 02:43 KST경 .83에서 .82로 바뀐 것을 확인",
+    "Teleport 에러 메시지의 인스턴스 ID로 docs 앱을 중계하는 앱 에이전트 호스트를 특정",
+    "앱 에이전트의 teleport.yaml에서 docs 앱 uri가 .83:3000임을 확인",
+    "앱 에이전트에서 .82:3000으로 curl 요청 시 즉시 301로 응답해 새 주소 경로가 정상임을 확인",
+    "uri 수정과 에이전트 재시작 후 Outline 접속 복구를 사용자가 확인"
+  ],
+  "timeline": [
+    {
+      "at": "2026-09-25 14:03",
+      "event": "화곡 서버가 .83 주소 사용 중 (마지막 정상 기록)"
+    },
+    {
+      "at": "2026-09-28 02:27~02:43",
+      "event": "DHCP lease 상실 후 .82 주소 획득",
+      "evidence": "systemd-networkd 로그"
+    },
+    {
+      "at": "2026-10-02 09:46",
+      "event": "화곡 서버 재부팅, .82 주소 유지"
+    },
+    {
+      "at": "2026-10-15 15:51",
+      "event": "자동 업데이트(systemd 등) 적용, IP 변화 없음"
+    },
+    {
+      "at": "2026-10-16 04:10",
+      "event": "Teleport 프록시가 약 10초간 HTTP 502 응답 후 복구 (장애와의 연관 미확인)"
+    },
+    {
+      "at": "2026-10-16 12:15",
+      "event": "Outline 접속 불가 확인, 조사 시작",
+      "evidence": "Teleport 웹에서 Context Deadline Exceeded"
+    },
+    {
+      "at": "2026-10-16 12:21~13:49",
+      "event": "화곡 서버 점검: Outline, Redis, Postgres, Docker 포트 규칙 정상 확인"
+    },
+    {
+      "at": "2026-10-16 13:45",
+      "event": "systemd-networkd 로그로 서버 주소 변경 시점이 09-28임을 확인"
+    },
+    {
+      "at": "2026-10-16 14:33",
+      "event": "앱 에이전트 설정에서 docs 앱 uri가 .83임을 확인"
+    },
+    {
+      "at": "2026-10-16 14:41",
+      "event": "앱 에이전트에서 .82:3000 도달 확인",
+      "evidence": "curl 즉시 301 응답"
+    },
+    {
+      "at": "2026-10-16 14:54",
+      "event": "Auth/Proxy 서버를 잘못 재시작 (설정 변경 없음, 일시적 중계 끊김)"
+    },
+    {
+      "at": "2026-10-16 14:56",
+      "event": "앱 에이전트의 docs 앱 uri를 .82:3000으로 수정하고 teleport 서비스 재시작"
+    },
+    {
+      "at": "2026-10-16 14:58",
+      "event": "Teleport 웹에서 Outline 접속 복구 확인"
+    }
+  ],
+  "resolution": [
+    "화곡 서버의 Outline, Redis, Postgres, Docker 포트 규칙 상태 점검",
+    "systemd-networkd 로그로 서버 주소 변경 시점(09-28) 확인",
+    "Teleport 에러의 인스턴스 ID로 docs 앱을 중계하는 앱 에이전트 호스트 특정",
+    "앱 에이전트의 teleport.yaml에서 docs 앱 uri를 현재 주소(.82:3000)로 수정",
+    "앱 에이전트에서 teleport 서비스 재시작",
+    "Teleport 웹에서 Outline 접속 복구 확인"
+  ],
+  "followUp": {
+    "title": "Service Server IP Pinning and Reference Audit",
+    "scope": "화곡 LAN의 서비스 서버와 Teleport 앱 에이전트 등 사설 IP를 직접 참조하는 설정",
+    "checklist": [
+      "OPNsense에서 화곡 서버 MAC 주소를 현재 IP(.82)로 DHCP 고정 매핑",
+      "사설 IP 참조처(teleport.yaml, NPM 호스트 설정, 모니터링 대상, 구성도)를 이전 주소(.83) 기준으로 검색해 잔여 참조 제거",
+      "IP 변경 시 점검 체크리스트(공인 IP, 사설 IP, 참조처) 작성",
+      "설정 파일 수정 전 hostname 확인 절차를 대응 문서에 명시 (Auth/Proxy 서버와 앱 에이전트 혼동 방지)",
+      "복구 중 만든 토큰 포함 설정 백업 파일(teleport.yaml.bak) 삭제",
+      "앱 에이전트 호스트에서 5초마다 실패하는 AWS credential endpoint 안내 systemd 서비스와 로드 평균 12.5의 원인 확인"
+    ],
+    "exitCriteria": "서버 IP가 DHCP 고정 매핑되고, 사설 IP 참조처 점검이 끝나며, IP 변경 시 점검 체크리스트가 문서화되어야 종료"
+  },
+  "tags": [
+    "#incident",
+    "#sev-3",
+    "#teleport",
+    "#outline",
+    "#dhcp",
+    "#app-agent",
+    "#configuration",
+    "#network"
+  ]
+}
